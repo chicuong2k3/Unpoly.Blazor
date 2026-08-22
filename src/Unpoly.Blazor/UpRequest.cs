@@ -61,6 +61,29 @@ public static class UpRequest
         return true;
     }
 
+    /// <summary>
+    /// True when either branch asks for one of <paramref name="selectors"/>.
+    ///
+    /// Selectors are compared as strings, modifiers stripped — there is no DOM on the server
+    /// to match against. So this answers "did the client name this exact selector", not
+    /// "would this selector match some element".
+    /// </summary>
+    public static bool UpWantsAny(this HttpContext c, string selectors)
+    {
+        if (!c.IsUnpoly()) return false;
+
+        var mine = selectors.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var asked in c.UpTargets().Concat(c.UpFailTargets()))
+        {
+            var bare = BaseTarget(asked);
+            foreach (var m in mine)
+                if (bare == m)
+                    return true;
+        }
+        return false;
+    }
+
     /// <summary>X-Up-Fail-Target, split and trimmed. Empty when the header is absent.</summary>
     public static string[] UpFailTargets(this HttpContext c) =>
         c.UpFailTarget() is { Length: > 0 } t

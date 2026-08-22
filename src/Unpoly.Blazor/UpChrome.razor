@@ -7,7 +7,7 @@
 
     📖 https://unpoly.com/optimizing-responses
 *@
-@if (Ctx?.IsUpFragment() != true)
+@if (Ctx?.IsUpFragment() != true || Ctx.UpWantsAny(Provides ?? ""))
 {
     @ChildContent
 }
@@ -16,6 +16,15 @@
     // Null outside static SSR (e.g. an interactive render mode), which renders the chrome.
     // That is the safe default.
     [CascadingParameter] public HttpContext? Ctx { get; set; }
+
+    /// <summary>
+    /// Comma separated selectors this chrome contains, e.g. ".site-nav, .cart-badge".
+    ///
+    /// Without it, a client targeting something INSIDE the chrome gets a response the
+    /// chrome was stripped from, and the swap silently finds nothing. Declare anything a
+    /// link or form is allowed to target from outside.
+    /// </summary>
+    [Parameter] public string? Provides { get; set; }
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
 }

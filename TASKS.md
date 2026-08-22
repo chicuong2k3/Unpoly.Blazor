@@ -12,7 +12,7 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 | Phase | **A complete**; B and C code complete — browser checks still open |
 | Protocol coverage | **12 / 24** headers |
 | Build | 4 projects, 0 errors |
-| Checks | 54 passing |
+| Checks | 62 passing |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -187,8 +187,7 @@ Spec: <https://unpoly.com/up.protocol>
 sample. They are candidate work, not bugs — pick them up alongside the phase that fits:
 
 - `UpEvictCache()` `UpKeepCache()` — need a cart, so Phase D or F
-- Target lists and `:after` — infinite scroll in Phase E
-- `InstantAllLinks` / `PreloadAllLinks` — both off; turn on and watch the request log
+- `:before` / `:after` — infinite scroll in Phase E
 - Widening `up.network.config.fail` (§3 of `/failed-responses`) — needs a 401 route
 
 ## Open questions

@@ -16,8 +16,18 @@ appears here.
 | 🚫 | deliberately declined — the reason is stated |
 
 **Sample** points into `sample/Jubin/` as `file:line · token`. Lines drift; grep the token.
-A dash means the sample does not exercise it — collected under
-[Implemented but never exercised](#implemented-but-never-exercised).
+
+The empty cell was doing four different jobs, so it is now explicit:
+
+| | |
+|---|---|
+| `file · token` | the sample exercises it |
+| `n/a` | nothing a sample could show — a JS-only API, or a structural row |
+| `todo` | demonstrable, not built yet — the work is listed in `TASKS.md` |
+
+"No C# side" (➖) does **not** imply `n/a`. The sample is a web app: most client-side
+concepts are demonstrable in its markup, and treating ➖ as "nothing to show" is how seven
+target-syntax variants went unexercised until a playground was added.
 
 ---
 
@@ -28,8 +38,8 @@ A dash means the sample does not exercise it — collected under
 | § | Concept | Status | Sample |
 |---|---|---|---|
 | 1 | Following all links | ✅ `HandleAllLinksAndForms`, default **on** | `Program.cs:8` · `AddUnpoly` |
-| 2 | Following all links on mousedown | ✅ `InstantAllLinks`, default **off** | — |
-| 3 | Preloading all links | ✅ `PreloadAllLinks`, default **off** | — |
+| 2 | Following all links on mousedown | ✅ `InstantAllLinks`, default **off** | `Home.razor` · `up-instant` |
+| 3 | Preloading all links | ✅ `PreloadAllLinks`, default **off** | `Home.razor` · `up-preload` |
 | 4 | Handling all forms | ✅ same option | `Login.razor:22` · `EditForm` |
 | 5 | Fixing legacy JavaScript code | ➖ Phase G territory | — |
 | 6 | Customizing navigation defaults | ➖ `ExtraScript` carries `navigateOptions` | — |
@@ -46,23 +56,23 @@ server load — sweeping a mouse across a product grid fires one request per car
 | § | Concept | Status | Sample |
 |---|---|---|---|
 | 1 | Swapping a fragment | ✅ explicit `[up-target]` now used, not only `mainTargets` | `Home.razor` · `up-target` · `Shop.razor` · `refresh` |
-| 2 | Updating multiple fragments | ✅ `UpTargets()` splits lists; checked | — |
-| 3 | Optional targets | ✅ `:maybe` stripped by `BaseTarget()` | — |
+| 2 | Updating multiple fragments | ✅ `UpTargets()` splits lists; checked | `Home.razor` · playground |
+| 3 | Optional targets | ✅ `:maybe` stripped by `BaseTarget()` | `Home.razor` · playground |
 | 4 | Targeting the main element | ✅ `:main` is whole-page; checked | `Program.cs:11` · `MainTargets` |
-| 5 | Targeting the entire layer | ✅ `:layer` is whole-page; checked | — |
-| 6 | Targeting an element object | ➖ JS API | — |
-| 7 | Appending or prepending children | ✅ `:after` / `:before` stripped; checked | — |
-| 8 | Replacing all children | ✅ `:content` stripped; checked | — |
+| 5 | Targeting the entire layer | ✅ `:layer` is whole-page; checked | todo — Phase D |
+| 6 | Targeting an element object | ➖ JS API | n/a |
+| 7 | Appending or prepending children | ✅ `:after` / `:before` stripped; checked | todo — infinite scroll, Phase E |
+| 8 | Replacing all children | ✅ `:content` stripped; checked | `Home.razor` · playground |
 | 9 | Targeting nothing | ✅ `WantsNothing()` → 204, 0 bytes | `ProductDetail.razor` · `up-target=":none"` |
-| 10 | Resolving ambiguous selectors | ➖ client-side matching | — |
-| 11 | Targeting an ancestor element | ➖ selector syntax | — |
-| 12 | Targeting a sibling element | ➖ selector syntax | — |
-| 13 | Disabling region-aware matching | ➖ client config | — |
-| 14 | Referring to the origin element | ➖ `:origin` resolves to a derived selector before the header is sent | — |
-| 15 | Dealing with missing targets | ➖ client-side | — |
+| 10 | Resolving ambiguous selectors | ➖ client-side matching | n/a |
+| 11 | Targeting an ancestor element | ➖ selector syntax | n/a |
+| 12 | Targeting a sibling element | ➖ selector syntax | n/a |
+| 13 | Disabling region-aware matching | ➖ client config | n/a |
+| 14 | Referring to the origin element | ➖ resolves to a derived selector before the header is sent | `Home.razor` · playground |
+| 15 | Dealing with missing targets | ➖ client-side | `Home.razor` · playground |
 | 16 | Providing a fallback target | ➖ resolved on the client | `Home.razor` · `up-fallback` |
-| 17 | Falling back to the main target | ➖ `{ fallback: true }` | — |
-| 18 | Making targets optional | ✅ same `:maybe` handling as §3 | — |
+| 17 | Falling back to the main target | ➖ `{ fallback: true }` | `Home.razor` · playground |
+| 18 | Making targets optional | ✅ same `:maybe` handling as §3 | `Home.razor` · playground |
 | 19 | Changing the target in-flight | ✅ `UpRetarget()` — the server half | `Shop.razor` · `UpRetarget` |
 
 `BaseTarget()` exists because §3, §7, §8 and §18 all append a modifier to a selector.
@@ -103,7 +113,7 @@ up.network.config.fail = (response) => badStatus(response) || response.header('X
 
 | § | Concept | Status | Sample |
 |---|---|---|---|
-| 1 | Optimizing responses | ✅ optional; full documents stay valid | — |
+| 1 | Optimizing responses | ✅ optional; full documents stay valid | n/a |
 | 2 | Omitting content that isn't targeted | ✅ `UpChrome` | `App.razor:11` head · `MainLayout.razor:10,34` |
 | 3 | Example | — | `/p/dam-4`: 1865 → 459 bytes |
 | 4 | Note (the `Vary` requirement) | ✅ `UpVary()` + `UseUnpoly()` | `Program.cs:36` |
@@ -111,6 +121,12 @@ up.network.config.fail = (response) => badStatus(response) || response.header('X
 | 6 | Rendering different content for Unpoly requests | ✅ `IsUnpoly()` | `Program.cs:28` |
 | 7 | Example | — | — |
 | 8 | Rendering content that depends on layer context | ⬜ **Phase D** — needs `X-Up-Context` | — |
+
+`UpChrome` alone was wrong for any target that lives **inside** the chrome. A link asking
+for `.content, .site-nav` got the chrome stripped, so `.site-nav` was absent from the
+response and the swap found nothing — silently. `<UpChrome Provides=".site-nav">` declares
+what a chrome contains, and `UpWantsAny()` checks both branches against it. The optimisation
+stays granular: targeting `.site-nav` brings back the header and still omits the footer.
 
 ### [/up.protocol.config](https://unpoly.com/up.protocol.config)
 
@@ -282,13 +298,16 @@ Passes unit checks, never runs in the sample. Gaps in the *lab*, not the library
 | Not exercised | Where it fits |
 |---|---|
 | `UpEvictCache()` `UpKeepCache()` | need a cart — Phase D or F |
-| Target lists, `:before` / `:maybe` / `:content` | infinite scroll — Phase E |
-| `InstantAllLinks` `PreloadAllLinks` | both off; turn on and watch the request log |
+| `:before` / `:after` | infinite scroll — Phase E |
 | `up.network.config.fail` widening (§3 of /failed-responses) | a 401 route |
 
-Closed this round: `UpRetarget`, `UpExpireCache`, `WantsNothing`/`:none`, explicit
-`[up-target]`, `[up-fallback]`, and `Catalog.Touch()` — the last of which turned the
-conditional-request path from *fresh direction only* into a two-way proof.
+Closed so far: `UpRetarget`, `UpExpireCache`, `WantsNothing`/`:none`, explicit
+`[up-target]`, `[up-fallback]`, `Catalog.Touch()`, and — through the target-syntax
+playground on the home page — target lists, `:maybe`, `:content`, `:origin`, missing-target
+fallback, `[up-instant]` and `[up-preload]`.
+
+The playground paid for itself immediately: its `.content, .site-nav` link exposed that
+`UpChrome` broke any target living inside the chrome.
 
 ---
 

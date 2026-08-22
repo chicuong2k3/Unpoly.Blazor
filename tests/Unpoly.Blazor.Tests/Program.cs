@@ -173,4 +173,21 @@ var head = Cond(ifNoneMatch: "\"v1\"");
 head.Request.Method = "HEAD";
 Check(head.UpNotModified("\"v1\""), "HEAD is safe, so it still gets 304");
 
+// ── UpChrome.Provides ───────────────────────────────────────────────────
+// A client may target something that lives INSIDE the chrome. Without declaring it,
+// the chrome is stripped, the target is absent from the response, and the swap finds
+// nothing — silently, with no error anywhere.
+
+Check(Val(target: ".content, .site-nav").UpWantsAny(".site-nav"), "a targeted chrome selector is wanted");
+Check(!Val(target: ".content").UpWantsAny(".site-nav"), "an untargeted chrome selector is not");
+Check(Val(target: ".site-nav:after").UpWantsAny(".site-nav"), "modifiers are stripped before matching");
+Check(Val(target: ".a", failTarget: ".site-nav").UpWantsAny(".site-nav"), "the fail branch counts too");
+Check(Val(target: ".content").UpWantsAny(".site-nav, .site-header") == false, "a list of provided selectors, none asked for");
+Check(Val(target: ".site-header").UpWantsAny(".site-nav, .site-header"), "a list of provided selectors, one asked for");
+Check(!Val(target: ".content").UpWantsAny(""), "providing nothing wants nothing");
+
+var plain = new DefaultHttpContext();
+plain.Request.Headers["X-Up-Target"] = ".site-nav";
+Check(!plain.UpWantsAny(".site-nav"), "a non-Unpoly request wants nothing");
+
 Console.WriteLine($"OK — {passed} checks passed (Phase A + B + C)");

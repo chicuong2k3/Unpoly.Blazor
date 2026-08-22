@@ -7,7 +7,9 @@
    Open the Network tab and compare the two response sizes to see it.
    📖 https://unpoly.com/optimizing-responses
    ───────────────────────────────────────────────────────────────────────*@
-<UpChrome>
+@* Provides: .site-nav lives in here, so a request targeting it must get the chrome back.
+   Without this, [up-target=".content, .site-nav"] swaps nothing and reports nothing. *@
+<UpChrome Provides=".site-nav, .site-header">
     <header class="site-header">
         <h1 class="brand"><a href="/">JUBIN</a></h1>
         <p class="tagline">The perfect wardrobe for petite girls</p>

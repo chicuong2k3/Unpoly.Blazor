@@ -90,7 +90,8 @@ The library is built phase by phase. **Only these exist**; everything else throw
 | Components | |
 |---|---|
 | `<UnpolyHead />` | assets, config, CSRF wiring. Once, in `<head>` |
-| `<UpChrome>…</UpChrome>` | content rendered only on full-page requests |
+| `<UpChrome Provides=".nav">…</UpChrome>` | content rendered only on full-page requests. **`Provides` is required** if anything inside can be targeted from outside |
+| `Ctx.UpWantsAny(".nav")` | did either branch ask for one of these selectors |
 
 **Never existed, do not reach for them:** `UpClearCache` (in no current guide) and
 `UpReloadFromTime` (deprecated by Unpoly — use `Last-Modified` through `UpNotModified`).
@@ -161,6 +162,11 @@ inventing one.
 
 6. **The `.content` element is missing from a fragment response.** The target itself was
    wrapped in `<UpChrome>`. Wrap the chrome around it, never the target.
+
+10. **A swap that targets the nav, a cart badge, or anything else inside the chrome does
+    nothing.** `UpChrome` stripped it from the response, so the selector is absent and the
+    swap finds nothing — no error, no console message. Declare it:
+    `<UpChrome Provides=".site-nav, .cart-badge">`.
 
 9. **An invalid form submission looks like a success.** The handler answered 200. Unpoly
    treats anything outside 2xx and 304 as failure — answer **422** so the fail target is
