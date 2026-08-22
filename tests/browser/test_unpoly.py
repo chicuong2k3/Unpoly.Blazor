@@ -122,6 +122,23 @@ class Probe:
         await asyncio.sleep(settle)
         return True
 
+    async def poll(self, expr, timeout=3.0, step=0.05):
+        """True if `expr` becomes truthy at any point. Needed for states that exist only
+        while a request is in flight -- a settled page never shows them."""
+        waited = 0.0
+        while waited < timeout:
+            if await self.js(expr):
+                return True
+            await asyncio.sleep(step)
+            waited += step
+        return False
+
+    async def mouse_at(self, selector):
+        c = await self.center(selector)
+        if c:
+            await self._mouse("mouseMoved", c[0], c[1], buttons=0)
+        return c
+
     def since(self, mark, path_contains=None, exact=None):
         out = self.requests[mark:]
         if exact:
@@ -276,6 +293,110 @@ async def main():
            f"X-Up-Target: {t}")
     nav = await p.js("!!document.querySelector('.site-nav')")
     record("UpChrome Provides kept the nav alive", bool(nav), f".site-nav present: {nav}")
+
+    # ---------------------------------------------------------------- progress bar
+    print("\n== Progress bar ==", flush=True)
+
+    await p.goto("/lab")
+    c = await p.center("a[href='/lab/slow?case=progress']")
+    await p._mouse("mouseMoved", c[0], c[1], buttons=0)
+    await p._mouse("mousePressed", c[0], c[1])
+    await p._mouse("mouseReleased", c[0], c[1])
+    shown = await p.poll("!!document.querySelector('up-progress-bar')", timeout=2.5)
+    record("the progress bar appears on a slow response", shown,
+           "up-progress-bar seen while the 1.2s route was loading")
+    await asyncio.sleep(1.5)
+    gone = await p.js("!document.querySelector('up-progress-bar')")
+    record("and disappears once it settles", bool(gone))
+
+    await p.goto("/lab")
+    c = await p.center("a[href='/lab/slow?case=background']")
+    await p._mouse("mouseMoved", c[0], c[1], buttons=0)
+    await p._mouse("mousePressed", c[0], c[1])
+    await p._mouse("mouseReleased", c[0], c[1])
+    bg = await p.poll("!!document.querySelector('up-progress-bar')", timeout=2.0)
+    record("[up-background] shows no bar even when slow", not bg,
+           "no up-progress-bar for a background request")
+    await asyncio.sleep(PACE)
+
+    # ---------------------------------------------------------------- staleness
+    print("\n== Cache staleness after a mutation ==", flush=True)
+
+    await p.goto("/shop")
+    before = await p.js("document.querySelector('.meta')?.textContent?.trim()")
+    await p.click("form.refresh button[type=submit]", settle=1.8)
+    after = await p.js("document.querySelector('.meta')?.textContent?.trim()")
+    record("a mutation is reflected, not served stale", before != after,
+           f"version {before} -> {after}")
+    await asyncio.sleep(PACE)
+
+    # ---------------------------------------------------------------- form state
+    print("\n== Form state while in flight ==", flush=True)
+
+    await p.goto("/login")
+    await p.js("(() => { const e=document.querySelector('#email'); e.value='a@b.com';"
+               " e.dispatchEvent(new Event('input',{bubbles:true}));"
+               " const w=document.querySelector('#password'); w.value='secret123';"
+               " w.dispatchEvent(new Event('input',{bubbles:true})); })()")
+    await asyncio.sleep(1.2)
+
+    c = await p.center("form button[type=submit]")
+    await p._mouse("mouseMoved", c[0], c[1], buttons=0)
+    await p._mouse("mousePressed", c[0], c[1])
+    await p._mouse("mouseReleased", c[0], c[1])
+    busy = await p.poll("(() => { const f=document.querySelector('form');"
+                        " return f && (f.matches('[aria-busy=true]')"
+                        " || !!f.querySelector('input:disabled, button:disabled')); })()",
+                        timeout=2.5)
+    record("[up-disable] disables the form while in flight", busy,
+           "form was aria-busy or had disabled controls mid-submit")
+    await asyncio.sleep(1.5)
+    recovered = await p.poll("!document.querySelector('form input:disabled')", timeout=2.0)
+    record("and it recovers afterwards", recovered)
+    await asyncio.sleep(PACE)
+
+    # ---------------------------------------------------------------- validation writes nothing
+    print("\n== A validating request must not act ==", flush=True)
+
+    await p.goto("/login")
+    await p.js("(() => { const e=document.querySelector('#email'); e.value='a@b.com';"
+               " e.dispatchEvent(new Event('input',{bubbles:true}));"
+               " const w=document.querySelector('#password'); w.value='secret123';"
+               " w.dispatchEvent(new Event('input',{bubbles:true})); })()")
+    await asyncio.sleep(1.8)
+    succeeded = await p.js("document.body.textContent.includes('thành công')")
+    record("a VALID field passing validation does not log the user in", not succeeded,
+           "the success state never appeared, though the values were valid")
+    await asyncio.sleep(PACE)
+
+    # ---------------------------------------------------------------- autosubmit
+    print("\n== Autosubmit filter ==", flush=True)
+
+    await p.goto("/shop")
+    n_before = await p.js("document.querySelectorAll('.card').length")
+    m = p.mark()
+    await p.js("(() => { const s=document.querySelector(\'select[name=maxPrice]\');"
+               " s.value='400000'; s.dispatchEvent(new Event('change',{bubbles:true})); })()")
+    await asyncio.sleep(2.0)
+    n_after = await p.js("document.querySelectorAll('.card').length")
+    fired = len(p.since(m, "/shop"))
+    record("[up-autosubmit] submits on change", fired >= 1, f"{fired} request(s)")
+    record("and the grid actually filtered", n_after < n_before,
+           f"{n_before} cards -> {n_after}")
+
+    # Three rapid changes landing on a value not requested before, so a cache hit cannot
+    # masquerade as debouncing. Without [up-watch-delay] this would be three requests.
+    m = p.mark()
+    await p.js("(() => { const s=document.querySelector('select[name=maxPrice]');"
+               " for (const v of ['600000','400000','900000']) {"
+               "   s.value=v; s.dispatchEvent(new Event('change',{bubbles:true})); } })()")
+    await asyncio.sleep(2.5)
+    burst = len(p.since(m, "/shop"))
+    record("[up-watch-delay] collapses a burst into one request", burst == 1,
+           f"3 rapid changes -> {burst} request(s); 0 proves nothing (cache), 3 means no debounce")
+    landed = await p.js("document.querySelector('select[name=maxPrice]')?.value")
+    record("and the value that was sent is the last one", landed == "900000", f"value: {landed}")
+    await asyncio.sleep(PACE)
 
     # ---------------------------------------------------------------- summary
     ok = sum(1 for _, o, _ in results if o)

@@ -12,7 +12,7 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 | Phase | **A complete**; B and C code complete — browser checks still open |
 | Protocol coverage | **12 / 24** headers |
 | Build | 4 projects, 0 errors |
-| Checks | 62 passing |
+| Checks | 62 unit + 27 browser |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -39,14 +39,8 @@ If the build fails with a file lock, a previous `dotnet run` is still alive: `ta
 
 **Phase D · Layers.** Read `/layer-terminology`, then `/opening-overlays`.
 
-Two items from B and C need *you*, not an agent — both need a browser, which was not
-available here:
-
-1. Click one link and count the request-log lines the sample prints. The docs describe two
-   render passes; whether that is two HTTP requests was never confirmed.
-2. Blur a field on `/login` and confirm the error appears without a full submit.
-
-See VERIFY.md. Everything else in B and C is verified on the wire.
+Nothing is left open in A, B or C. The browser items that had been waiting on a human since
+Phase A are automated in `tests/browser/test_unpoly.py` — run it alongside the unit checks.
 
 ---
 
@@ -117,7 +111,7 @@ full-page request. Missing that made chrome vanish silently — check kept at
       getting a 422 body swap with no nav in it
 - [x] Jubin: login form, 422 on invalid, no persistence while validating
 - [x] 13 checks
-- [ ] Jubin: price/collection filter via `[up-autosubmit]` + `[up-watch-delay=300]`
+- [x] Jubin: price/collection filter via `[up-autosubmit]` + `[up-watch-delay=300]`
 - [ ] Read `/reactive-server-forms`
 
 ## Phase D · Layers

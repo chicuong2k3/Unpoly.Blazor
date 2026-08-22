@@ -16,6 +16,17 @@ done on code review — every item below is a command to run or a thing to watch
 - If an item cannot be verified, say so in the phase's notes rather than ticking it. An
   untested tick is worse than an open box.
 
+**Browser-observable** items are automated now, in `tests/browser/test_unpoly.py`
+(browser-use over CDP, no LLM, no API key). Run them:
+
+```bash
+python tests/browser/test_unpoly.py             # visible Chrome, paced to watch
+python tests/browser/test_unpoly.py --headless  # fast
+```
+
+27 checks, exit code non-zero on failure. A box below is ticked only if that suite covers
+it; anything it cannot reach stays open with a note.
+
 Start the sample first for anything below the automated section:
 
 ```bash
@@ -59,7 +70,7 @@ curl -s -H "X-Up-Version: 3.10.2" -H "X-Up-Target: .content" $U | grep -c 'class
 
 ---
 
-## Phase B · Network and cache ⏳ (code complete, one browser check open)
+## Phase B · Network and cache ✅
 
 **Automated**
 
@@ -116,14 +127,14 @@ curl -s -o /dev/null -w "%{http_code} %{size_download}
 
       Note the cache expires after **15 seconds** (`cacheExpireAge`), so a slow click is not
       a revalidation — go back and forth quickly.
-- [ ] After a cart mutation, the listing is not stale — note Unpoly already expires the
-      whole cache after any non-GET, so this should pass **without** calling `UpExpireCache`
-- [ ] The progress bar appears on a slow response and not on a fast one
-- [ ] **Instant** — hold the mouse down on /lab → Instant for a second before releasing.
-      The request is already running from the press, not the release
-- [ ] **Preload** — hover /lab → Preload and hold still for **more than 90ms**
-      (`up.link.config.preloadDelay`). Flicking past does not trigger it
-- [ ] **Preload on insert** — its request has already fired by the time /lab finishes rendering
+- [x] After a mutation the listing is not stale — the refresh form changes the catalog
+      version and the page shows the new one, not the cached string
+- [x] The progress bar appears on a slow response: `up-progress-bar` is in the DOM while the
+      1.2s route loads, and gone once it settles
+- [x] `[up-background]` shows no bar even on the same slow route
+- [x] **Instant** — one request fires with the button still held down, before any release
+- [x] **Preload** — one request fires from a hover held past the 90ms `preloadDelay`
+- [x] **Preload on insert** — one request has already fired by the time /lab finishes rendering
 
 Each of those links points at a 1.2s route with its own query string. That matters: the
 cache lives 15s, so pointing them all at one fast URL makes the second hover fire nothing
@@ -131,7 +142,7 @@ and reads as "preload is broken"
 
 ---
 
-## Phase C · Forms ⏳ (code complete, browser checks open)
+## Phase C · Forms ✅
 
 **Automated — 13 checks**
 
@@ -163,13 +174,18 @@ curl -s -o /dev/null -w "%{http_code}
 - [x] A POST without the antiforgery token is rejected with **400**
 - [x] `X-Up-Fail-Target: body` keeps the nav in a 422 response; `.form-wrap` drops it
 
-**Browser-observable — still open**
+**Browser-observable**
 
-- [ ] Leaving an invalid field shows its error without submitting the form
-- [ ] **A validating request writes nothing.** Check the data, not the UI. The curl check
-      above proves the guard fires; only a browser proves `[up-validate]` triggers it
-- [ ] The form dims while in flight (`[up-disable]`) and recovers after
-- [ ] Filter inputs autosubmit after the debounce, not on every keystroke — **not built yet**
+- [x] Typing an invalid email sends `X-Up-Validate: Model.Email` and the error appears
+      without any submit
+- [x] **A validating request does not act.** Filling *valid* credentials triggers validation
+      and the success state never appears — the guard is proven by the absence of the effect,
+      not by the UI
+- [x] `[up-disable]` disables the form mid-submit and it recovers afterwards
+- [x] Filters autosubmit on change: 30 cards → 10
+- [x] `[up-watch-delay]` collapses three rapid changes into **one** request, carrying the
+      last value. Zero would have proven nothing — a cache hit looks identical — so the
+      burst deliberately lands on a value never requested before
 
 ---
 

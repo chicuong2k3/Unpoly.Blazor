@@ -12,6 +12,32 @@
 
 @* [up-etag] gives this fragment its own version, so reloading just this region can be
    answered 304 independently of the page. \📖 https://unpoly.com/conditional-requests *@
+@* [up-autosubmit] submits as soon as a value changes; [up-watch-delay] debounces so a
+   slider or a text box does not fire per keystroke. No C# involved in either.
+   📖 https://unpoly.com/watch-options *@
+<form method="get" class="filters" up-autosubmit up-watch-delay="300" up-target=".listing">
+    <label>
+        Bộ sưu tập
+        <select name="collection">
+            <option value="">Tất cả</option>
+            @foreach (var (slug, name) in Catalog.Collections)
+            {
+                <option value="@slug" selected="@(Collection == slug)">@name</option>
+            }
+        </select>
+    </label>
+    <label>
+        Giá tối đa
+        <select name="maxPrice">
+            <option value="">Không giới hạn</option>
+            <option value="400000" selected="@(MaxPrice == 400000)">400.000₫</option>
+            <option value="600000" selected="@(MaxPrice == 600000)">600.000₫</option>
+            <option value="900000" selected="@(MaxPrice == 900000)">900.000₫</option>
+        </select>
+    </label>
+    <noscript><button class="btn-quiet" type="submit">Lọc</button></noscript>
+</form>
+
 <div class="listing" up-etag="@Catalog.ETag">
     <ProductGrid Products="Items" />
 </div>
@@ -35,6 +61,9 @@
     [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
 
     [Parameter] public string? Category { get; set; }
+
+    [SupplyParameterFromQuery] public string? Collection { get; set; }
+    [SupplyParameterFromQuery] public int? MaxPrice { get; set; }
 
     List<Product> Items = [];
     bool NotModified;
@@ -70,6 +99,14 @@
         // 📖 https://unpoly.com/conditional-requests
         NotModified = Ctx.UpNotModified(Catalog.ETag, Catalog.LastModified);
 
-        Items = NotModified ? [] : [.. Catalog.ByCategory(Category)];
+        var q = Catalog.ByCategory(Category);
+
+        if (!string.IsNullOrEmpty(Collection))
+            q = q.Where(p => p.Collection == Collection);
+
+        if (MaxPrice is { } max)
+            q = q.Where(p => p.Effective <= max);
+
+        Items = NotModified ? [] : [.. q];
     }
 }
