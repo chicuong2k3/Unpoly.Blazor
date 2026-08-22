@@ -25,6 +25,10 @@
     <button class="btn-quiet" type="submit" name="mode" value="evict">Làm mới kho (evict)</button>
 </form>
 <p class="meta">Phiên bản: @Catalog.ETag</p>
+
+@* [up-etag=false] removes the version from a fragment, so reloading it never gets a 304.
+   📖 https://unpoly.com/conditional-requests *@
+<p class="meta" up-etag="false">Vùng này khai <code>up-etag="false"</code> — không có phiên bản, không bao giờ được trả 304.</p>
 }
 
 @code {

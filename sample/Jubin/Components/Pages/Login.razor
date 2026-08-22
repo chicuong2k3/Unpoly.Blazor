@@ -49,6 +49,14 @@
                    button was pressed, so the server can branch on it.
                    \📖 https://unpoly.com/submitting-forms *@
                 <button class="btn-quiet" type="submit" name="intent" value="guest">Vào với tư cách khách</button>
+
+                @* [formaction] is plain HTML: this button posts somewhere else entirely.
+                   Unpoly follows it like any other submission. 📖 https://unpoly.com/submitting-forms *@
+                <button class="btn-quiet" type="submit" formaction="/lab" formmethod="get">Per-button action</button>
+
+                @* The JS API, for the one case attributes cannot express. *@
+                <button class="btn-quiet" type="button"
+                        onclick="up.submit(this.form, { target: '.form-wrap' })">up.submit()</button>
             </div>
         </EditForm>
 

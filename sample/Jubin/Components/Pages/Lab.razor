@@ -59,6 +59,37 @@ else
             </li>
         </ul>
 
+        <h3>Selector matching <span class="meta">/targeting-fragments §10–§13</span></h3>
+
+        <p class="meta">
+            Hai thẻ <code>.demo-card</code> giống hệt nhau bên dưới. Chúng tồn tại để selector
+            trở nên nhập nhằng — không có chúng thì không demo được §10–§13.
+        </p>
+
+        <div class="demo-card">
+            <p><strong>Card A</strong> <span class="demo-text">chưa đổi</span></p>
+            <a href="/lab" up-target=".demo-card .demo-text">Ancestor: <code>.demo-card .demo-text</code></a>
+            <span class="meta">§11 — selector lồng nhau bình thường; Unpoly chọn cái <em>gần</em> link nhất</span>
+        </div>
+
+        <div class="demo-card">
+            <p><strong>Card B</strong> <span class="demo-text">chưa đổi</span></p>
+            <a href="/lab" up-target=".demo-text">Nhập nhằng: <code>.demo-text</code></a>
+            <span class="meta">§10 — hai phần tử cùng khớp; region-aware matching chọn cái trong Card B</span>
+            <a href="/lab" up-target=".demo-text" up-match="first">Cùng thế nhưng <code>up-match="first"</code></a>
+            <span class="meta">§13 — tắt region-aware: luôn lấy cái đầu tiên trong DOM, tức Card A</span>
+        </div>
+
+        <ul>
+            <li>
+                <a href="/lab" up-target=".demo-text" up-content="đã đổi bằng local content">Local content</a>
+                <span class="meta">
+                    /failed-responses §4 — <code>[up-content]</code> render thẳng chuỗi này, không phát
+                    request nào. Không có response thì không có gì để thất bại — đó là ý của section
+                </span>
+            </li>
+        </ul>
+
         <h3>Links <span class="meta">/handling-everything</span></h3>
 
         <p class="meta warn">
@@ -115,6 +146,28 @@ else
                 <a href="/lab/slow?case=background" up-target=".content" up-background>Route chậm, background</a>
                 <span class="meta">/progress-bar — <code>[up-background]</code> không bao giờ hiện thanh</span>
             </li>
+            <li>
+                <a href="/lab/slow?case=nobar" up-target=".content" up-late-delay="false">Route chậm, không thanh</a>
+                <span class="meta">
+                    /progress-bar — <code>[up-late-delay=false]</code> tắt thanh cho riêng request này.
+                    Bản phạm vi hẹp của <code>up.network.config.progressBar = false</code>
+                </span>
+            </li>
+            <li>
+                <a href="/shop" up-target=".content">Cache: bấm hai lần</a>
+                <span class="meta">
+                    /caching §1 — bấm, quay lại, bấm nữa trong vòng 15s.
+                    Lần hai <strong>không có dòng nào</strong> trong request log. Cache là thứ quan sát
+                    được bằng chính sự vắng mặt của request
+                </span>
+            </li>
+            <li>
+                <a href="/shop" up-target=".content" up-revalidate="false">Không revalidate</a>
+                <span class="meta">
+                    /caching §11–§12 — render bản cache rồi <em>dừng</em>, không fetch lại.
+                    So số dòng log với link ngay trên
+                </span>
+            </li>
         </ul>
 
         <h3>Failed responses <span class="meta">/failed-responses</span></h3>
@@ -128,11 +181,37 @@ else
                 <span class="meta">§2 — <code>[up-fail=false]</code> coi mọi response là thành công</span>
             </li>
             <li>
+                <a href="/khong-ton-tai" up-target=".content" up-fail-target=".demo-text"
+                   up-on-fail-rendered="alert('onFailRendered chạy: ' + response.status)">404 → callback</a>
+                <span class="meta">
+                    §8 — <code>[up-on-fail-rendered]</code> là bản HTML của <code>onFailRendered</code>.
+                    Nhánh <code>fail</code> có callback riêng, không phải chỉ có target riêng
+                </span>
+            </li>
+            <li>
                 <a href="/lab/unauthorized" up-target=".content">200 + X-Unauthorized</a>
                 <span class="meta">§3 — <code>up.network.config.fail</code> đã được nới trong <code>ExtraScript</code> để coi header này là lỗi</span>
             </li>
         </ul>
     </section>
+
+    <h3>JavaScript API <span class="meta">up.render · up.submit</span></h3>
+    <p class="meta">
+        Hai thứ duy nhất ở đây không dùng được bằng attribute. Chúng vẫn demo được, chỉ là
+        phải viết JS.
+    </p>
+    <ul>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.render({ target: document.querySelector('.demo-text'), url: '/lab' })">
+                <code>up.render</code> với Element
+            </button>
+            <span class="meta">
+                /targeting-fragments §6 — truyền thẳng Element thay vì chuỗi selector;
+                Unpoly tự suy ra selector trước khi gửi <code>X-Up-Target</code>
+            </span>
+        </li>
+    </ul>
 
     <p class="meta lab-back"><a class="back" href="/lab">← Về lab</a></p>
 }

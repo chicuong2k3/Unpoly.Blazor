@@ -338,3 +338,13 @@ form[aria-busy="true"] { opacity: .5; }
     margin: 1rem 0 0;
 }
 .playground li .meta strong { color: var(--ink); font-weight: 500; }
+
+.demo-card {
+    border: 1px solid var(--line);
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+}
+.demo-card p { margin: 0 0 .5rem; }
+.demo-card a { display: inline-block; margin-right: 1rem; border-bottom: 1px solid var(--line); }
+.demo-card .meta { display: block; margin: .2rem 0 .6rem; }
+.demo-text { color: var(--sale); }
