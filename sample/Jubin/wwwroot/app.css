@@ -393,3 +393,44 @@ form[aria-busy="true"] { opacity: .5; }
     color: var(--muted);
 }
 .more a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+.flashes { max-width: var(--page); margin: 0 auto; padding: 0 1.5rem; }
+.flash {
+    background: var(--ink);
+    color: var(--bg);
+    font-size: .8rem;
+    letter-spacing: .06em;
+    padding: .7rem 1.1rem;
+    margin: 1rem 0 0;
+}
+.cart-badge { color: var(--ink) !important; }
+
+/* Revalidation gets its own class -- .up-loading and .up-active are NOT set then.
+   📖 https://unpoly.com/feedback-classes */
+.content.up-revalidating { opacity: .85; }
+
+/* The flashes container is rendered after @Body so it can see what a form handler did.
+   Pinning it visually is a CSS job, not a markup-order one. */
+.flashes {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    padding: 0;
+    margin: 0;
+}
+.flash { margin: 0; pointer-events: auto; }
+
+/* Outside the chrome in markup, in the header visually. */
+.cart-badge {
+    position: fixed;
+    top: 1.6rem; right: 1.75rem;
+    z-index: 40;
+    font-size: .74rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    border-bottom: 1px solid var(--line);
+}

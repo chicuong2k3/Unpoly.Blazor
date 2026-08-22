@@ -1,5 +1,25 @@
 @page "/p/{Slug}"
 
+@* Rendered by the page, not the layout: a page's form handler runs before the page's own
+   markup, so this is the first place in the render pass that can see the flash.
+   Read ONCE into a local -- TakeFlash() clears as it reads, and a property evaluated twice
+   (once in the condition, once in the body) renders an empty message.
+   📖 https://unpoly.com/flashes *@
+@{
+    var flash = Cart.TakeFlash();
+
+    // Emitted on the GET that follows the redirect, so it is not lost with the 302.
+    // 📖 https://unpoly.com/X-Up-Events
+    if (Cart.TakeEvent() is { } ev)
+    {
+        Ctx.UpEmit(ev.Type, new { count = ev.Count, slug = ev.Slug });
+    }
+}
+@if (flash is not null)
+{
+    <div class="flashes" up-flashes><p class="flash">@flash</p></div>
+}
+
 @if (Item is null)
 {
     <div class="page-head">
@@ -63,7 +83,18 @@ else
                 }
             </script>
 
-            <p><button class="btn add-to-cart" disabled>Thêm vào giỏ (Phase F)</button></p>
+            <form method="post" @formname="addToCart" @onsubmit="AddToCart">
+                <AntiforgeryToken />
+                <button class="btn add-to-cart" type="submit" disabled>Thêm vào giỏ</button>
+            </form>
+
+            @* [up-poll] reloads this on an interval. Because the fragment carries [up-etag],
+               an unchanged poll is answered 304 and nothing re-renders -- the conditional
+               request work from Phase B is what makes polling cheap.
+               📖 https://unpoly.com/polling *@
+            <p class="meta stock" up-poll up-interval="4000" up-etag="@Cart.ETag">
+                Giỏ hàng hiện có <strong>@Cart.Count</strong> món · cập nhật mỗi 4s
+            </p>
 
             @* The server decides this one opens as a drawer, even though the link says nothing.
                📖 https://unpoly.com/opening-overlays *@
@@ -87,6 +118,7 @@ else
 
 @code {
     [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+    [Inject] public NavigationManager Nav { get; set; } = default!;
 
     [Parameter] public string Slug { get; set; } = "";
 
@@ -106,5 +138,35 @@ else
             Ctx.Response.StatusCode = StatusCodes.Status204NoContent;
     }
 
-    protected override void OnParametersSet() => Item = Catalog.BySlug(Slug);
+    void AddToCart()
+    {
+        if (Item is null) return;
+
+        Cart.Add(Item.Slug, Item.Name);
+
+        // POST-redirect-GET, and not for the usual reason.
+        //
+        // In Blazor static SSR the LAYOUT's render tree is built before the page's form
+        // handler runs -- markup position does not matter, below @Body is no better than
+        // above it. So anything in the layout that reflects the mutation, such as the
+        // [up-hungry] cart badge, renders the value from BEFORE the click. It swaps
+        // correctly and shows a stale number, which looks exactly like [up-hungry] being
+        // broken.
+        //
+        // Redirecting means the whole document is rendered fresh, after the change. Unpoly
+        // follows the redirect and reads headers from the final response, so the flash and
+        // the event survive -- they are held on Cart until the GET consumes them.
+        Nav.NavigateTo($"/p/{Item.Slug}");
+    }
+
+    protected override void OnParametersSet()
+    {
+        Item = Catalog.BySlug(Slug);
+
+        // [up-poll] echoes the fragment's [up-etag] as If-None-Match. Answering 304 is what
+        // makes polling cheap -- without this the poll costs a full render every 4 seconds.
+        // The conditional-request work from Phase B is what pays off here.
+        // 📖 https://unpoly.com/polling
+        Ctx.UpNotModified(Cart.ETag, Cart.LastChanged);
+    }
 }

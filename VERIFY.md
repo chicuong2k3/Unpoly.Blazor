@@ -252,19 +252,34 @@ curl -s -o /dev/null -w "%{http_code}
 
 ---
 
-## Phase F · Status and passive updates
+## Phase F · Status and passive updates ✅
 
-**Automated**
+**Automated — 7 checks**
 
-- [ ] Two `UpEmit` calls accumulate into one JSON array:
-      `[{"id":1,"type":"a"},{"type":"b"}]`
+- [x] `UpEmit` writes a JSON array with a `type`, and a second call **accumulates** rather
+      than replacing — two things can happen in one response
+- [x] An event needs nothing but a `type`
+- [x] Non-ASCII is escaped: Unpoly states that headers may only carry US-ASCII, so a
+      Vietnamese message would otherwise be an invalid header
+- [x] `layer: "current"` passes through so the event lands on the overlay
 
-**Browser-observable**
+**Browser-observable — 5 checks**
 
-- [ ] The cart badge updates after adding an item **from any page**, without being targeted
-- [ ] A flash message appears once and does not duplicate across subsequent swaps
-- [ ] Skeletons show during a slow load and are replaced, not appended
-- [ ] `.up-active` and `.up-loading` are visibly styled while a request is in flight
+- [x] A flash appears in the response that caused it
+- [x] `X-Up-Events` reaches a client listener with the new count
+- [x] `[up-hungry]` updates the cart badge without ever being targeted
+- [x] `[up-poll]` keeps polling on its interval
+- [x] **An unchanged poll is answered 304** — statuses seen are `[200, 304]`. This is the
+      Phase B conditional-request work paying off
+
+**Three rules for `[up-hungry]`, each found by a failing check**
+
+1. Never inside skippable chrome — Unpoly does not add hungry selectors to `X-Up-Target`,
+   so `UpChrome`'s `Provides` never fires for one
+2. It needs a derivable selector: `[id]`, not a bare class
+3. It must not depend on a page handler's effect — in Blazor SSR the layout renders before
+   the page's handler runs, so the badge swaps correctly and shows a **stale** number, which
+   looks exactly like `[up-hungry]` being broken. POST-redirect-GET is the fix
 
 ---
 

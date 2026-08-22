@@ -9,10 +9,10 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 
 | | |
 |---|---|
-| Phase | **A—E complete** |
-| Protocol coverage | **23 / 24** headers |
+| Phase | **A—F complete** |
+| Protocol coverage | **24 / 24** — complete |
 | Build | 4 projects, 0 errors |
-| Checks | 90 unit + 45 browser |
+| Checks | 97 unit + 50 browser |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -37,9 +37,10 @@ If the build fails with a file lock, a previous `dotnet run` is still alive: `ta
 
 ## Next action
 
-**Phase F · Status and passive updates.** Read `/flashes` and `/polling` first.
+**Phase G · JavaScript layer.** Read `/enhancing-elements` first.
 
-One header left: `X-Up-Events` (Phase F). Everything else in the protocol is covered.
+**All 24 protocol headers are implemented.** Phase G adds no C# at all — it is about
+`up.compiler` and re-initialising third-party widgets after a swap.
 
 Two exercises are still carried forward, both blocked on the same missing feature — the
 sample opens only **one** overlay at a time:
@@ -152,9 +153,11 @@ full-page request. Missing that made chrome vanish silently — check kept at
 
 - [ ] Read `/navigation-bars`, `/loading-state`, `/feedback-classes`, `/placeholders`, `/previews`, `/optimistic-rendering`
 - [ ] Read `/polling`, `/flashes`
-- [ ] `UpEmit` — repeated calls accumulate into one `X-Up-Events` JSON array
-- [ ] Jubin: cart badge via `[up-hungry]`; flash message; skeleton via `[up-placeholder]`
-- [ ] Checks: two `UpEmit` calls produce `[{...,"type":"a"},{"type":"b"}]`
+- [x] `UpEmit` — the last header. Accumulates, and escapes non-ASCII because Unpoly states
+      plainly that headers may only carry US-ASCII
+- [x] Jubin: cart badge via `[up-hungry]`, flash message, `[up-placeholder]`, `[up-poll]`
+- [x] `[up-poll]` + `[up-etag]` — an unchanged poll costs a 304, which is Phase B paying off
+- [x] 7 unit + 5 browser checks
 
 ## Phase G · JavaScript layer
 

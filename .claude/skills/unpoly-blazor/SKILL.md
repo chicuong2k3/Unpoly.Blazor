@@ -93,6 +93,10 @@ The library is built phase by phase. **Only these exist**; everything else throw
 | `Ctx.UpDismissLayer(reason)` | close it because the user **backed out**; not interchangeable with accept |
 | `Ctx.UpOpenLayer(new { mode = "drawer" })` | make this response open in a new overlay, whatever the link asked for |
 | `Ctx.UpSetContext(obj)` | hand the layer a changed context |
+| `Ctx.UpTitle(t)` | set the document title (JSON-encoded, ASCII-safe, for you) |
+| `Ctx.UpLocation(url)` / `UpMethod(m)` | what Unpoly should record for this location |
+| `Ctx.UpMethodCookie()` | mark a full page load as produced by a non-GET |
+| `Ctx.UpEmit("cart:changed", new { count })` | emit a client event; repeated calls accumulate |
 
 | Components | |
 |---|---|
@@ -277,7 +281,14 @@ inventing one.
     the overlay closes, the value arrives, no DOM changes, no console error. Put the body in
     a named function and keep the attribute to one call.
 
-11. **A swap that targets the nav, a cart badge, or anything else inside the chrome does
+11. **An `[up-hungry]` region never updates, or updates with a stale value.** Three separate
+    causes, all silent: it is inside `<UpChrome>` (Unpoly does not add hungry selectors to
+    `X-Up-Target`, so `Provides` never fires); it has only a class and no `[id]`, so Unpoly
+    cannot derive a selector for it; or it lives in the layout and reflects something a page
+    handler just did — in Blazor SSR the layout renders **before** the page's handler, so
+    it swaps correctly and shows the previous value. The last one needs POST-redirect-GET.
+
+12. **A swap that targets the nav, a cart badge, or anything else inside the chrome does
     nothing.** `UpChrome` stripped it from the response, so the selector is absent and the
     swap finds nothing — no error, no console message. Declare it:
     `<UpChrome Provides=".site-nav, .cart-badge">`.

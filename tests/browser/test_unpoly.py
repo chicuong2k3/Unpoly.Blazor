@@ -274,7 +274,9 @@ async def main():
 
     await p.goto("/p/dam-4")
     m = p.mark()
-    await p.click("form[method=post] button[type=submit]")
+    # Target the ping form by its attribute: the page grew a second form in Phase F, and
+    # form[method=post] silently started matching the wrong one.
+    await p.click("form[up-target=':none'] button[type=submit]")
     st = p.status_of("/p/dam-4")
     record("[up-target=:none] answers 204", st == 204, f"status: {st}")
     still = await p.js("!!document.querySelector('.detail')")
@@ -511,6 +513,49 @@ async def main():
     record("the .more region was REPLACED, not appended", done and bool(exhausted),
            "the load-more link is gone and the exhausted message took its place")
     await asyncio.sleep(PACE)
+
+    # ---------------------------------------------------------------- passive updates
+    print("\n== Flashes, badge and polling ==", flush=True)
+
+    # The cart is a static that survives between runs, so every assertion here is relative.
+    def count_of(text):
+        digits = "".join(ch for ch in (text or "") if ch.isdigit())
+        return int(digits) if digits else -1
+
+    await p.goto("/p/dam-4")
+    badge_before = await p.js("document.querySelector('.cart-badge')?.textContent?.trim()")
+
+    # the size picker unlocks the button
+    await p.click("a[up-layer]", settle=1.8)
+    await p.click("up-modal form.sizes button[value=M]", settle=1.8)
+
+    heard = await p.js("window.__cart = null;"
+                       " up.on('cart:changed', (e) => window.__cart = e.count); true")
+    await p.click("form[method=post] button.add-to-cart", settle=2.0)
+
+    flash = await p.js("document.querySelector('[up-flashes] .flash')?.textContent?.trim()")
+    record("a flash appears in the response that caused it", bool(flash), f"flash: {flash}")
+
+    got = await p.js("window.__cart")
+    record("X-Up-Events reaches a client listener", got == count_of(badge_before) + 1,
+           f"cart:changed fired with count={got}, was {count_of(badge_before)}")
+
+    badge_after = await p.js("document.querySelector('.cart-badge')?.textContent?.trim()")
+    record("[up-hungry] updated the badge without being targeted",
+           count_of(badge_after) == count_of(badge_before) + 1,
+           f"{badge_before} -> {badge_after}")
+    await asyncio.sleep(PACE)
+
+    # polling: unchanged data must not cost a render
+    m = p.mark()
+    await asyncio.sleep(5.0)
+    polls = [r for r in p.since(m) if "/p/dam-4" in r[1]]
+    record("[up-poll] keeps polling on its interval", len(polls) >= 1,
+           f"{len(polls)} poll(s) in 5s at a 4s interval")
+
+    statuses = [st for u, st in p.responses if "/p/dam-4" in u]
+    record("and an unchanged poll is answered 304", 304 in statuses,
+           f"statuses seen: {sorted(set(statuses))}")
 
     # ---------------------------------------------------------------- summary
     ok = sum(1 for _, o, _ in results if o)

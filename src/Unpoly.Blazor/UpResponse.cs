@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 
 namespace Unpoly.Blazor;
@@ -235,10 +236,36 @@ public static class UpResponse
     // ─────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// X-Up-Events — emit client-side events from the server. Calling this more than once
-    /// accumulates into the same header, whose value is a JSON array of objects keyed by "type".
-    /// TODO Phase F
+    /// X-Up-Events — emit client-side events from the server, alongside the fragment update.
+    ///
+    /// The header is a JSON array; calling this more than once accumulates into it. Every
+    /// entry needs a <c>type</c>, which is why it is a separate parameter rather than
+    /// something the caller might forget inside <paramref name="props"/>.
+    ///
+    /// Events land on <c>document</c> by default. Pass <c>layer: "current"</c> in
+    /// <paramref name="props"/> to emit on the updated layer instead.
+    ///
+    /// Non-ASCII is escaped, because Unpoly states plainly that HTTP headers may only carry
+    /// US-ASCII. A message with Vietnamese text in it would otherwise be an invalid header.
+    /// 📖 https://unpoly.com/X-Up-Events
     /// </summary>
     public static void UpEmit(this HttpContext c, string type, object? props = null)
-        => throw new NotImplementedException("Phase F · 📖 https://unpoly.com/up.event");
+    {
+        var existing = c.Response.Headers["X-Up-Events"].ToString();
+
+        var events = string.IsNullOrEmpty(existing)
+            ? new JsonArray()
+            : JsonNode.Parse(existing)!.AsJsonArray();
+
+        var e = props is null
+            ? new JsonObject()
+            : JsonSerializer.SerializeToNode(props)!.AsObject().DeepClone().AsObject();
+
+        e["type"] = type;
+        events.Add(e);
+
+        c.Response.Headers["X-Up-Events"] = events.ToJsonString();
+    }
+
+    private static JsonArray AsJsonArray(this JsonNode node) => (JsonArray)node;
 }

@@ -520,6 +520,121 @@ Not read. Expected to be entirely client-side; confirm before ticking.
 
 ---
 
+## `up.radio`
+
+### [/flashes](https://unpoly.com/flashes) — 10/10 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Placing flashes into the layout | ✅ but see below | `MainLayout.razor` · empty `[up-flashes]` |
+| 2 | Flashes inside the main element | ➖ | `ProductDetail.razor` |
+| 3 | Rendering flash messages | ✅ | `ProductDetail.razor` · `TakeFlash()` |
+| 4 | Flashes are targeted automatically | ➖ Unpoly finds them | verified in the browser |
+| 5 | Flashes from closing overlays show on a parent layer | ➖ | todo — needs an overlay that flashes |
+| 6 | Clearing flashes | ✅ read-once | `Cart.cs` · `TakeFlash` |
+| 7 | Removing messages after a delay | ➖ CSS/JS | todo |
+| 8 | Caching considerations | ➖ | todo |
+| 9 | Suppressing cached flashes | ➖ | todo |
+| 10 | Building a custom flashes container | ➖ | `MainLayout.razor` |
+
+**The Blazor constraint this exposed.** The guide says put `[up-flashes]` in the layout. In
+Blazor static SSR the layout's render tree is built **before** the child page's form handler
+runs, and markup position does not change that — below `@Body` is no better than above it.
+A layout that renders the message shows the state from *before* the submission.
+
+So the layout holds an **empty** container (harmless: an empty `[up-flashes]` does not clear
+existing messages) and the **page** renders the message. Read it into a local, too: a
+property that clears as it reads, evaluated once in the `@if` and once in the body, renders
+an empty message.
+
+### [/polling](https://unpoly.com/polling) — 9/9 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Basic example | ✅ | `ProductDetail.razor` · `up-poll` |
+| 2 | Controlling the reload interval | ➖ `[up-interval]` | `ProductDetail.razor` · `4000` |
+| 3 | Controlling the source URL | ➖ `[up-source]` | todo |
+| 4 | The target selector is derived | ➖ needs a derivable selector | `ProductDetail.razor` |
+| 5 | Handling failed responses | ➖ | todo |
+| 6 | Polling is paused in the background | ➖ | n/a — a headless tab is never backgrounded |
+| 7 | Skipping updates on the client | ➖ `up:fragment:loaded` | todo |
+| 8 | **Saving bandwidth when nothing changed** | ✅ `UpNotModified` — 304 | `ProductDetail.razor` |
+| 9 | Stopping polling | ➖ `[up-poll=false]` | todo |
+
+§8 is where Phase B pays off: `[up-poll]` echoes the fragment's `[up-etag]` as
+`If-None-Match`, and an unchanged poll costs a 304 with no body. Verified in the browser —
+statuses seen for the polled URL are `[200, 304]`.
+
+### [up-hungry](https://unpoly.com/up-hungry)
+
+| Concept | Status | Sample |
+|---|---|---|
+| Update a region from **any** response, untargeted | ✅ | `MainLayout.razor` · `#cart-badge` |
+
+Three rules, each found by a failing check rather than by reading:
+
+1. **Never inside skippable chrome.** Unpoly does *not* add hungry selectors to
+   `X-Up-Target`, so `UpChrome`'s `Provides` never fires for one. Inside the chrome it is
+   stripped from exactly the responses that would have updated it.
+2. **It needs a derivable selector** — `[id]` or `[up-id]`, not a bare class. Without one
+   Unpoly cannot name the element, so it cannot swap it.
+3. **It must not depend on a page handler's effect** — see the flashes note. The badge swapped
+   correctly and showed a stale number, which looks exactly like `[up-hungry]` being broken.
+
+---
+
+## `up.status`
+
+### [/feedback-classes](https://unpoly.com/feedback-classes) — 9/9 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Feedback when following links | ➖ `.up-active` on the link | `app.css` |
+| 2 | Classes are removed when the request ends | ➖ | verified in the browser |
+| 3 | Conveying feedback with CSS styles | ➖ | `app.css` |
+| 4 | Feedback when submitting forms | ➖ | `Login.razor` |
+| 5 | Fields can be active origins | ➖ | `Login.razor` · `up-validate` |
+| 6 | **Feedback during cache revalidation** | ➖ `.up-revalidating`; `.up-loading` and `.up-active` are **not** set then | `app.css` |
+| 7 | Feedback classes from JavaScript | ➖ | todo |
+| 8 | Custom feedback classes | ➖ | todo |
+| 9 | Disabling feedback classes | ➖ | todo |
+
+### [/loading-state](https://unpoly.com/loading-state) — 8/8 sections
+
+Index page for the rest of `up.status`: styling loading elements, placeholders, arbitrary
+status effects, optimistic rendering, disabling forms, the global progress bar, severe
+network problems. **Entirely client-side.** Each is covered under its own guide below or in
+Phase B.
+
+### [/placeholders](https://unpoly.com/placeholders) — 7/7 sections
+
+| Concept | Status | Sample |
+|---|---|---|
+| `[up-placeholder]` shows instantly, without waiting for the server | ➖ | `Lab.razor` · `up-placeholder` |
+| From JavaScript, templates, dynamic templates, arbitrary logic, overlays | ➖ | todo |
+
+### [/previews](https://unpoly.com/previews) — 11/11 sections
+
+A preview is a temporary DOM change made *before* the server answers, reverted when the
+response arrives. **The server plays no part at all** — all eleven sections are client-side.
+
+| Concept | Status | Sample |
+|---|---|---|
+| `[up-preview]` naming a preview function | ➖ | todo — Phase G, with `up.compiler` |
+| Mutating the DOM, context, parameters, delaying, multiple previews | ➖ | todo |
+
+### [/optimistic-rendering](https://unpoly.com/optimistic-rendering) — 5/5 sections
+
+Client renders the expected result immediately; the server then confirms or replaces it.
+The server's part is the ordinary one: it validates and returns the authoritative
+state. Nothing new on the wire.
+
+| Concept | Status | Sample |
+|---|---|---|
+| Suitable use cases, previewing submissions, templates, validation errors | ➖ | todo — Phase G |
+
+---
+
 ## `up.script`
 
 ### [/handling-asset-changes](https://unpoly.com/handling-asset-changes) — partial
@@ -554,7 +669,7 @@ The playground paid for itself immediately: its `.content, .site-nav` link expos
 
 ## Not yet opened
 
-`up.fragment` · `up.radio` · `up.event`
+`up.fragment` · `up.event`
 
 Skipped for the whole project: `up.motion` · `up.element` · `up.util` · `up.log` ·
 `up.framework`, plus the *Features* tier everywhere — that tier is a dictionary. Look

@@ -306,4 +306,38 @@ cook2.UpMethodCookie("PUT");
 Check(cook2.Response.Headers.SetCookie.ToString().Contains("_up_method=PUT"),
       "an explicit method wins over the request method");
 
-Console.WriteLine($"OK — {passed} checks passed (Phase A + B + C + D + E)");
+// ── PHASE F: server-emitted events ──────────────────────────────────────
+
+var ev = new DefaultHttpContext();
+ev.UpEmit("cart:changed", new { count = 1 });
+Check(ev.Response.Headers["X-Up-Events"] == "[{\"count\":1,\"type\":\"cart:changed\"}]",
+      "UpEmit writes a JSON array with a type");
+
+// Calling it again must extend the array, not replace it: two things can happen in one
+// response, and the second must not silently erase the first.
+ev.UpEmit("flash:shown");
+var arr = System.Text.Json.Nodes.JsonNode.Parse(ev.Response.Headers["X-Up-Events"].ToString())!.AsArray();
+Check(arr.Count == 2, $"a second UpEmit accumulates: {arr.Count} events");
+Check(arr[1]!["type"]!.GetValue<string>() == "flash:shown", "and keeps them in order");
+
+var noProps = new DefaultHttpContext();
+noProps.UpEmit("signup:completed");
+Check(noProps.Response.Headers["X-Up-Events"] == "[{\"type\":\"signup:completed\"}]",
+      "an event needs nothing but a type");
+
+// Unpoly states plainly that HTTP headers may only carry US-ASCII. A Vietnamese message in
+// an event payload would otherwise produce an invalid header.
+var viet2 = new DefaultHttpContext();
+viet2.UpEmit("flash:shown", new { text = "Đã thêm vào giỏ" });
+var rawEv = viet2.Response.Headers["X-Up-Events"].ToString();
+Check(rawEv.All(ch => ch < 128), $"UpEmit stays ASCII-safe: {rawEv}");
+Check(System.Text.Json.Nodes.JsonNode.Parse(rawEv)![0]!["text"]!.GetValue<string>() == "Đã thêm vào giỏ",
+      "and still decodes to the original text");
+
+// Events land on the document unless told otherwise.
+var onLayer = new DefaultHttpContext();
+onLayer.UpEmit("cart:changed", new { layer = "current" });
+Check(onLayer.Response.Headers["X-Up-Events"].ToString().Contains("\"layer\":\"current\""),
+      "layer: current is passed through so the event lands on the overlay");
+
+Console.WriteLine($"OK — {passed} checks passed (Phase A + B + C + D + E + F)");

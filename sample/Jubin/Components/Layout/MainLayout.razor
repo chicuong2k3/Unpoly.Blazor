@@ -25,6 +25,7 @@
             }
             <a href="/login">Đăng nhập</a>
             <a href="/lab">Lab</a>
+
         </nav>
     </header>
 </UpChrome>
@@ -33,6 +34,38 @@
 <main class="content">
     @Body
 </main>
+
+@* An EMPTY [up-flashes] container, and empty on purpose.
+
+   The layout cannot render the message itself: Blazor builds the layout's render tree --
+   including everything after @Body -- before the child page's form handler runs, so a flash
+   set by that handler is always one render too late here. Moving the markup below @Body does
+   not help; the ordering is in the render pass, not the document.
+
+   Pages render their own [up-flashes] with content. An empty one does not clear existing
+   messages, so this is safe on every page. 📖 https://unpoly.com/flashes *@
+<div class="flashes" up-flashes></div>
+
+@* OUTSIDE UpChrome, and that is the whole point.
+
+   [up-hungry] updates this from any response that CONTAINS it, and Unpoly does not add
+   hungry selectors to X-Up-Target -- so UpChrome's Provides never fires for it. Inside the
+   chrome the badge is stripped from exactly the fragment responses that would have updated
+   it, and the update silently finds nothing.
+
+   It also needs an [id]. Unpoly derives a target selector from [up-id] or [id], not from an
+   arbitrary class -- with only a class it cannot name the element, so it cannot swap it.
+
+   And it is rendered AFTER @Body. The layout's markup above @Body is built before the page's
+   form handler runs, so the badge would show the count from before the click -- it swaps
+   correctly and shows a stale number, which looks exactly like [up-hungry] not working.
+
+   Three rules, all learned the hard way: a hungry element may never live inside skippable
+   chrome, it must carry a derivable selector, and in Blazor it must render after @Body if it
+   reflects anything a page handler did.
+   📖 https://unpoly.com/target-derivation
+   📖 https://unpoly.com/up-hungry *@
+<a href="/cart" id="cart-badge" class="cart-badge" up-hungry>Giỏ (@Cart.Count)</a>
 
 <UpChrome>
     <footer class="site-footer">

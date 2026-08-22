@@ -208,6 +208,32 @@ else
         </ul>
     </section>
 
+    <h3>Status &amp; passive updates <span class="meta">/feedback-classes · /flashes · /polling</span></h3>
+    <ul>
+        <li>
+            <a href="/lab/slow?case=placeholder" up-target=".content"
+               up-placeholder="&lt;p class='meta'&gt;Đang tải…&lt;/p&gt;">Placeholder</a>
+            <span class="meta">
+                /placeholders — nội dung tạm hiện <strong>ngay lập tức</strong>, không đợi server
+            </span>
+        </li>
+        <li>
+            <a href="/lab/slow?case=revalidate" up-target=".content">Feedback classes</a>
+            <span class="meta">
+                /feedback-classes — <code>.up-active</code> trên link, <code>.up-loading</code>
+                trên fragment. Lúc revalidate thì là <code>.up-revalidating</code>, và hai class
+                kia <strong>không</strong> được set
+            </span>
+        </li>
+        <li>
+            <a href="/p/dam-4" up-target=".content">Đến trang sản phẩm (có [up-poll])</a>
+            <span class="meta">
+                /polling — vùng giỏ hàng ở đó poll mỗi 4s; không đổi thì server trả 304 và
+                không render lại
+            </span>
+        </li>
+    </ul>
+
     <h3>History <span class="meta">/updating-history</span></h3>
     <ul>
         <li>
