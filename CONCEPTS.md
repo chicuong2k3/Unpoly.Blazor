@@ -11,7 +11,7 @@ covered*, guide by guide, so a page can be marked finished with confidence.
 |---|---|
 | ✅ | covered — the code exists and a check or a browser observation proves it |
 | ⬜ | not covered yet — the phase that will cover it is named |
-| ➖ | nothing to cover — pure client-side, the C# side has no part to play |
+| ➖ | nothing for **us** to write — pure client-side. Still goes into the skill's "reach for HTML first" table, because it is exactly where an agent invents a C# helper for a one-attribute job |
 | 🚫 | deliberately declined — the reason is stated |
 
 Rows are added as guides are read. An empty guide section means it has not been read yet;

@@ -57,8 +57,9 @@ Summarised, a phase is done when:
 2. Its methods no longer `throw new NotImplementedException`.
 3. `VERIFY.md` for that phase is fully ticked, including the browser-observable items.
 4. `tests/Unpoly.Blazor.Tests/Program.cs` has a new `── PHASE X ──` block and still prints OK.
-5. `CONCEPTS.md` marks its guides, and `.claude/skills/unpoly-blazor/SKILL.md` moves the
-   phase's methods out of the "not available yet" list.
+5. `CONCEPTS.md` marks its guides, and `.claude/skills/unpoly-blazor/SKILL.md` is updated
+   **both ways**: the phase's methods move out of "typed helpers that do not exist yet",
+   and anything newly marked ➖ is added to "reach for HTML first".
 
 An item you could not verify stays **unticked**, with a note. An untested tick is worse than
 an open box — it is the only way this checklist can lie to you.

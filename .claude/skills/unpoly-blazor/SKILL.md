@@ -89,15 +89,52 @@ The library is built phase by phase. **Only these exist**; everything else throw
 | `<UnpolyHead />` | assets, config, CSRF wiring. Once, in `<head>` |
 | `<UpChrome>…</UpChrome>` | content rendered only on full-page requests |
 
-**Not available yet** — calling any of these throws, do not suggest them as solutions:
-form validation (`IsUpValidating`, `UpValidatingField`), layers (`UpAcceptLayer`,
-`UpDismissLayer`, `UpOpenLayer`, `UpContext<T>`, `UpMode`), history (`UpTitle`,
-`UpLocation`, `UpMethod`), events (`UpEmit`).
-
 **Never existed, do not reach for them:** `UpClearCache` (in no current guide) and
 `UpReloadFromTime` (deprecated by Unpoly — use `Last-Modified` through `UpNotModified`).
 
-For those, use Unpoly's HTML attributes directly — most features need no server code at all.
+## Reach for HTML first
+
+**Most of Unpoly needs no server code.** Before writing C#, ask whether the server has to
+*decide* anything. If not, the answer is an attribute or a config line, and adding a C#
+helper for it is pure overhead.
+
+These have no server side at all — do not go looking for one:
+
+| Want | Use | Not |
+|---|---|---|
+| A fallback when the target is missing | `[up-fallback=".content"]` | any C# |
+| An optional target that must not fail the swap | `.unread-count:maybe` | a null check |
+| Append or prepend instead of replace | `.tasks:after` / `.tasks:before` | two endpoints |
+| Target the element that was clicked | `:origin` | passing an id to the server |
+| Highlight the current nav item | `[up-nav]` → `.up-current` | comparing URLs in C# |
+| Loading state | `.up-active`, `.up-loading` in CSS | a busy flag |
+| A progress bar | on by default; `up.network.config.lateDelay` | any C# |
+| Never show a spinner for this request | `[up-background]` | any C# |
+| Poll a fragment | `[up-poll]` `[up-interval]` | a timer |
+| Update a region from *any* response | `[up-hungry]` | targeting it everywhere |
+| Keep an element across swaps | `[up-keep]` | re-rendering it |
+| Confirm before following | `[up-confirm="Sure?"]` | a server round-trip |
+| Change navigation defaults | `o.ExtraScript = "up.fragment.config.navigateOptions.transition = 'cross-fade'"` | a C# options class |
+| Antiforgery on forms | Blazor's `EditForm` hidden input | anything extra |
+
+## Typed helpers that do not exist yet
+
+These are **not capability gaps** — the feature works today, the library just has no typed
+wrapper. Calling the method throws; the HTML does the job now, and raw header access always
+works via `Ctx.Request.Headers["X-Up-…"]`.
+
+| Feature | Throws | Do this instead, today |
+|---|---|---|
+| Overlays / modals / drawers | `UpOpenLayer` `UpAcceptLayer` `UpDismissLayer` `UpMode` `UpContext<T>` | `[up-layer=new modal]`, `[up-size]`, `[up-accept-location="/things"]`, `[up-on-accepted]`, and `<button up-dismiss>` inside. A modal that opens a CRUD route, saves, closes and refreshes the list behind it needs **zero** C# |
+| Form validation round-trip | `IsUpValidating` `UpValidatingField` | `[up-validate]` on the field. Server-side, read `X-Up-Validate` yourself and **do not persist** when it is present |
+| Autosubmitting filters | — | `[up-autosubmit]` + `[up-watch-delay=300]` |
+| Disable a form while in flight | — | `[up-disable]` |
+| Document title on a fragment-only response | `UpTitle` | keep `<HeadOutlet />` outside `<UpChrome>` and `<PageTitle>` keeps working |
+| Server-emitted events | `UpEmit` | write `X-Up-Events` directly if needed; the value is a JSON array of objects keyed by `"type"` |
+
+If a task genuinely needs the server to decide — close this overlay, retarget that
+response, emit this event — say the typed helper is not implemented yet rather than
+inventing one.
 
 ## Mistakes to check first when something is broken
 
