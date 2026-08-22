@@ -42,8 +42,8 @@ concepts: one link per concept, each labelled with the guide section it comes fr
 | § | Concept | Status | Sample |
 |---|---|---|---|
 | 1 | Following all links | ✅ `HandleAllLinksAndForms`, default **on** | `Program.cs:8` · `AddUnpoly` |
-| 2 | Following all links on mousedown | ✅ `InstantAllLinks`, default **off** | `Home.razor` · `up-instant` |
-| 3 | Preloading all links | ✅ `PreloadAllLinks`, default **off** | `Home.razor` · `up-preload` |
+| 2 | Following all links on mousedown | ✅ `InstantAllLinks`, default **off** | `Lab.razor` · `up-instant` — aimed at a 1.2s route |
+| 3 | Preloading all links | ✅ `PreloadAllLinks`, default **off**; `preloadDelay` is **90ms** | `Lab.razor` · `up-preload`, `up-preload="insert"` |
 | 4 | Handling all forms | ✅ same option | `Login.razor:22` · `EditForm` |
 | 5 | Fixing legacy JavaScript code | ➖ Phase G territory | todo — Phase G, needs a legacy script worth fixing |
 | 6 | Customizing navigation defaults | ➖ `ExtraScript` carries `navigateOptions` | `Program.cs` · `ExtraScript` · `navigateOptions.transition` |

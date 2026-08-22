@@ -19,7 +19,10 @@
 
 @if (Case == "slow")
 {
-    <p class="notice">Route chậm (@DelayMs ms). Dùng để thấy progress bar.</p>
+    <p class="notice">
+        Route chậm (@DelayMs ms)@(Which is null ? "" : $" — từ: {Which}").
+        Mỗi link mang query riêng nên không dính cache của nhau.
+    </p>
 }
 else if (Case == "unauthorized")
 {
@@ -57,14 +60,36 @@ else
         </ul>
 
         <h3>Links <span class="meta">/handling-everything</span></h3>
+
+        <p class="meta warn">
+            Cả hai link dưới đây trỏ vào route chậm 1.2s và mang query riêng, vì:
+            cache sống 15s nên nếu trùng URL thì lần hover thứ hai không phát request nào,
+            và route nhanh thì không thấy khác biệt. Đây là lý do demo cũ trông như không chạy.
+        </p>
+
         <ul>
             <li>
-                <a href="/shop" up-target=".content" up-instant>Instant</a>
-                <span class="meta">§2 — chạy ở mousedown, không đợi click</span>
+                <a href="/lab/slow?case=instant" up-target=".content" up-instant>Instant</a>
+                <span class="meta">
+                    §2 — phát request ngay ở <strong>mousedown</strong>, không đợi thả chuột.
+                    Cách xem: giữ chuột xuống 1 giây rồi mới thả — request đã chạy từ lúc nhấn.
+                    So với link Preload bên dưới khi chưa hover.
+                </span>
             </li>
             <li>
-                <a href="/shop" up-target=".content" up-preload>Preload</a>
-                <span class="meta">§3 — prefetch khi hover; xem request xuất hiện trước khi bấm</span>
+                <a href="/lab/slow?case=preload" up-target=".content" up-preload>Preload</a>
+                <span class="meta">
+                    §3 — prefetch khi hover. Cách xem: <strong>rê chuột lên và giữ yên hơn 90ms</strong>
+                    (<code>up.link.config.preloadDelay</code>), request hiện trong Network trước khi bấm.
+                    Lướt chuột qua nhanh thì không kịp kích hoạt.
+                </span>
+            </li>
+            <li>
+                <a href="/lab/slow?case=preload-insert" up-target=".content" up-preload="insert">Preload khi chèn</a>
+                <span class="meta">
+                    §3 — <code>[up-preload=insert]</code> tải ngay khi link vào DOM, không đợi hover.
+                    Request này đã chạy lúc trang lab vừa render.
+                </span>
             </li>
             <li>
                 <a href="/shop" up-follow="false">Bỏ qua Unpoly</a>
@@ -83,11 +108,11 @@ else
                 <span class="meta">/caching §2–6 — luôn đi mạng, không dùng bản cache 15 s</span>
             </li>
             <li>
-                <a href="/lab/slow" up-target=".content">Route chậm (progress bar)</a>
+                <a href="/lab/slow?case=progress" up-target=".content">Route chậm (progress bar)</a>
                 <span class="meta">/progress-bar — vượt <code>lateDelay</code> nên thanh tiến trình hiện ra</span>
             </li>
             <li>
-                <a href="/lab/slow" up-target=".content" up-background>Route chậm, background</a>
+                <a href="/lab/slow?case=background" up-target=".content" up-background>Route chậm, background</a>
                 <span class="meta">/progress-bar — <code>[up-background]</code> không bao giờ hiện thanh</span>
             </li>
         </ul>
@@ -118,6 +143,10 @@ else
     [Parameter] public string? Case { get; set; }
 
     const int DelayMs = 1200;
+
+    // Distinct query per link, so each is its own cache entry. Without this the 15s cache
+    // makes the second hover fire nothing, which reads as "preload is broken".
+    string? Which => Ctx.Request.Query["case"].ToString() is { Length: > 0 } c ? c : null;
 
     protected override async Task OnParametersSetAsync()
     {

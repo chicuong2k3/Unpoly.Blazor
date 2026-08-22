@@ -331,3 +331,10 @@ form[aria-busy="true"] { opacity: .5; }
 .playground h3 { margin-top: 2.5rem; }
 .actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
 .lab-back { margin-top: 2.5rem; }
+
+.warn {
+    border-left: 2px solid var(--sale);
+    padding-left: 1rem;
+    margin: 1rem 0 0;
+}
+.playground li .meta strong { color: var(--ink); font-weight: 500; }

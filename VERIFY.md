@@ -112,6 +112,15 @@ curl -s -o /dev/null -w "%{http_code} %{size_download}
 - [ ] After a cart mutation, the listing is not stale — note Unpoly already expires the
       whole cache after any non-GET, so this should pass **without** calling `UpExpireCache`
 - [ ] The progress bar appears on a slow response and not on a fast one
+- [ ] **Instant** — hold the mouse down on /lab → Instant for a second before releasing.
+      The request is already running from the press, not the release
+- [ ] **Preload** — hover /lab → Preload and hold still for **more than 90ms**
+      (`up.link.config.preloadDelay`). Flicking past does not trigger it
+- [ ] **Preload on insert** — its request has already fired by the time /lab finishes rendering
+
+Each of those links points at a 1.2s route with its own query string. That matters: the
+cache lives 15s, so pointing them all at one fast URL makes the second hover fire nothing
+and reads as "preload is broken"
 
 ---
 
