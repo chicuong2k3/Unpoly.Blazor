@@ -10,7 +10,7 @@
 <div class="form-wrap">
     @if (Succeeded)
     {
-        <p class="notice">Đăng nhập thành công với <strong>@Model.Email</strong>.</p>
+        <p class="notice">Đăng nhập thành công với <strong>@Model!.Email</strong>.</p>
         <p><a class="back" href="/shop">← Tiếp tục mua sắm</a></p>
     }
     else
@@ -19,20 +19,20 @@
            group around the changed field with the one in the response.
            [up-fail-target] is what Unpoly swaps when the status is not 2xx/304.
            📖 https://unpoly.com/validation *@
-        <EditForm Model="Model" FormName="login" OnValidSubmit="Submit" OnInvalidSubmit="Invalid"
+        <EditForm Model="Model!" FormName="login" OnValidSubmit="Submit" OnInvalidSubmit="Invalid"
                   up-fail-target=".form-wrap" up-disable>
             <DataAnnotationsValidator />
 
             <div up-form-group>
                 <label for="email">Email</label>
-                <InputText id="email" @bind-Value="Model.Email" up-validate />
-                <ValidationMessage For="() => Model.Email" />
+                <InputText id="email" @bind-Value="Model!.Email" up-validate />
+                <ValidationMessage For="() => Model!.Email" />
             </div>
 
             <div up-form-group>
                 <label for="password">Mật khẩu</label>
-                <InputText id="password" type="password" @bind-Value="Model.Password" up-validate />
-                <ValidationMessage For="() => Model.Password" />
+                <InputText id="password" type="password" @bind-Value="Model!.Password" up-validate />
+                <ValidationMessage For="() => Model!.Password" />
             </div>
 
             <button class="btn" type="submit">Đăng nhập</button>
@@ -48,8 +48,12 @@
 @code {
     [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
 
+    // No initializer: Blazor can overwrite a [SupplyParameterFromForm] property with null
+    // during a post, so the default is set in OnInitialized instead (BL0008).
     [SupplyParameterFromForm(FormName = "login")]
-    public LoginModel Model { get; set; } = new();
+    public LoginModel? Model { get; set; }
+
+    protected override void OnInitialized() => Model ??= new();
 
     bool Succeeded;
     string? Debug;

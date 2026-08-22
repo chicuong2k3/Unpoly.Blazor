@@ -121,6 +121,28 @@ These have no server side at all — do not go looking for one:
 | Change navigation defaults | `o.ExtraScript = "up.fragment.config.navigateOptions.transition = 'cross-fade'"` | a C# options class |
 | Antiforgery on forms | Blazor's `EditForm` hidden input | anything extra |
 
+## The `fail` prefix
+
+Unpoly picks a different render option when a response fails, by prefixing it: `target` /
+`failTarget`, `scroll` / `failScroll`, `onRendered` / `onFailRendered`. In HTML that is
+`[up-fail-target]`, `[up-fail-scroll]`, `[up-on-fail-rendered]`.
+
+Options consumed **before** the request (`url`, `method`, `confirm`) have no twin — nothing
+knows yet that it will fail. Options used for both (`history`, `fallback`) take an optional
+override such as `{ history: true, failHistory: false }`.
+
+**Only three of them reach the server**, so do not go hunting for a C# helper for the rest:
+
+| Client option | Header | Available here |
+|---|---|---|
+| `failTarget` | `X-Up-Fail-Target` | `Ctx.UpFailTarget()` / `UpFailTargets()` |
+| `failLayer` / `failMode` | `X-Up-Fail-Mode` | not yet |
+| `failContext` | `X-Up-Fail-Context` | not yet |
+| everything else | — | client-only, by design |
+
+Failure is any status **outside 2xx and 304**. Answer **422** for an invalid form so the
+fail target is used.
+
 ## Typed helpers that do not exist yet
 
 These are **not capability gaps** — the feature works today, the library just has no typed

@@ -84,7 +84,7 @@ wanted to append into `<body>`.
 
 | § | Concept | Status | Sample |
 |---|---|---|---|
-| 1 | Rendering failed responses differently | ✅ `UpFailTarget()`, `UpFailTargets()` | `Login.razor:23` · `up-fail-target` |
+| 1 | Rendering failed responses differently | ✅ the `fail` prefix — see below | `Login.razor:23` · `up-fail-target` |
 | 2 | Ignoring HTTP error codes | ➖ `{ fail: false }` client-side | — |
 | 3 | **Customizing failure detection** | ⬜ **server-relevant** — `up.network.config.fail` is a function the app can widen, e.g. treat a response header as failure. Reachable today through `ExtraScript`; no C# helper yet | — |
 | 4 | Local content cannot fail | ➖ no request involved | — |
@@ -97,8 +97,55 @@ Failure is any status **outside 2xx and 304** — so Phase B's conditional 304 n
 fail target. `IsUpFragment()` keeps chrome when *either* branch names a whole-page target,
 because the layout renders chrome before the page has picked a status.
 
-§3 is the one with a server story: the server can emit a header and the client be
-configured to treat it as failure:
+#### §1 in full — the `fail` prefix
+
+Every render option that is consumed **after** the response arrives has a `fail`-prefixed
+twin, chosen when the response failed:
+
+```js
+up.render({
+  url: '/action',
+  method: 'post',
+  target: '.content',            // success
+  failTarget: 'form',            // failure
+  scroll: 'auto',
+  failScroll: '.errors',
+  onRendered: () => { ... },
+  onFailRendered: () => { ... },
+})
+```
+
+The convention is **not universal**, and the rule for which options have a twin is the
+useful part:
+
+| Kind of option | `fail` twin? | Why |
+|---|---|---|
+| Used **before** the request — `url`, `method`, `confirm` | no | at that point nobody knows it will fail |
+| Used **after** the response — `target`, `scroll`, `layer`, `mode`, `context`, `onRendered` | yes | the two outcomes want different handling |
+| Used for **both** — `history`, `fallback` | optional override | e.g. `{ history: true, failHistory: false }` |
+
+HTML equivalents follow mechanically: `[up-fail-target]`, `[up-fail-scroll]`,
+`[up-on-fail-rendered]`.
+
+**Why this matters on the server.** Most `fail` options never leave the browser —
+`failScroll`, `onFailRendered` and `failHistory` are pure client behaviour. Only the ones
+the server must *render differently for* are sent, which is exactly why the protocol has
+three `X-Up-Fail-*` headers and no more:
+
+| Client option | Wire header | Status here |
+|---|---|---|
+| `failTarget` | `X-Up-Fail-Target` | ✅ `UpFailTarget()`, `UpFailTargets()` |
+| `failLayer` / `failMode` | `X-Up-Fail-Mode` | ⬜ **Phase D** |
+| `failContext` | `X-Up-Fail-Context` | ⬜ **Phase D** |
+| `failScroll`, `onFailRendered`, `failHistory`, … | none | ➖ never crosses the wire |
+
+That list is the whole reason `IsUpFragment()` has to consult both branches: the client may
+have picked an entirely different target for the failure case, and the server is told about
+it up front rather than after choosing a status.
+
+#### §3 — customizing failure detection
+
+The server can emit a header and the client be configured to treat it as failure:
 
 ```js
 let badStatus = up.network.config.fail

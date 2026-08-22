@@ -39,6 +39,11 @@ This changes the usual trade-offs:
    `CONCEPTS.md`** — including sections with nothing to do. Summarising a guide instead of
    enumerating it is how `/failed-responses` §3 "Customizing failure detection" went missing
    for three phases. Fetch the page's headings; do not work from memory of it.
+
+   A row must also carry **what the section teaches**, not just its title. `/failed-responses`
+   §1 was present as one cell naming `UpFailTarget()`, which hid the `fail` prefix convention
+   and the reason the protocol has exactly three `X-Up-Fail-*` headers. If a section explains
+   a rule, the rule goes in the file — under the table if it does not fit a cell.
 10. **Every `CONCEPTS.md` row names where the sample exercises it** (`file:line · token`), or
    a dash if it does not. The dash is the useful half: it is how the "Implemented but never
    exercised" list stays honest, and that list is where the next sample feature comes from.
