@@ -49,8 +49,9 @@ public static class UpRequest
         if (targets.Length == 0) return false;
 
         // A whole-page target anywhere in the list means we must still render everything.
+        // "body:after" appends into <body>, so it is a whole-page target too.
         foreach (var t in targets)
-            if (t is "body" or "html" or ":main" or ":layer")
+            if (BaseTarget(t) is "body" or "html" or ":main" or ":layer")
                 return false;
 
         return true;
@@ -58,6 +59,37 @@ public static class UpRequest
 
     /// <summary>True when the client wants no content at all (:none). Safe to answer 204.</summary>
     public static bool WantsNothing(this HttpContext c) => c.UpTargets() is [":none"];
+
+    /// <summary>
+    /// Modifiers Unpoly appends to a target. They change how the match is applied, never
+    /// what is matched, so they must be stripped before a selector is classified.
+    /// 📖 https://unpoly.com/targeting-fragments
+    /// </summary>
+    private static readonly string[] TargetModifiers = [":before", ":after", ":maybe", ":content"];
+
+    /// <summary>
+    /// Strips trailing modifiers so ".tasks:after" compares as ".tasks" and "body:after"
+    /// still compares as "body". Loops because more than one may be appended.
+    /// </summary>
+    private static string BaseTarget(string target)
+    {
+        bool stripped;
+        do
+        {
+            stripped = false;
+            foreach (var modifier in TargetModifiers)
+            {
+                if (!target.EndsWith(modifier, StringComparison.Ordinal)) continue;
+
+                target = target[..^modifier.Length];
+                stripped = true;
+                break;
+            }
+        }
+        while (stripped);
+
+        return target;
+    }
 
     // ─────────────────────────────────────────────────────────────
     // PHASE C · Forms                          📖 /validation

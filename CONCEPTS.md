@@ -31,7 +31,15 @@ do not pre-fill it.
 | Handling all forms | `up.form.config.submitSelectors.push(['form'])` | ✅ same option as "following all links" |
 | Opt-outs `[up-follow=false]` `[up-instant=false]` `[up-preload=false]` `[up-submit=false]` | — | ➖ attributes only, no server side |
 | Fixing legacy JavaScript code | — | ➖ Phase G territory |
-| Customizing navigation defaults | — | ⬜ Phase A revisit — `up.fragment.config` beyond `mainTargets` |
+| Customizing navigation defaults | `up.fragment.config.navigateOptions` | ➖ `UnpolyOptions.ExtraScript` already carries it — no C# API earns its place for a config string |
+
+Navigation applies defaults that `up.render()` does not — `history: 'auto'`,
+`scroll: 'auto'`, `fallback: ':main'`, `cache: 'auto'`, `revalidate: 'auto'`,
+`focus: 'auto'`, `peel: 'dismiss'`. Override them through `ExtraScript`:
+
+```csharp
+o.ExtraScript = "up.fragment.config.navigateOptions.transition = 'cross-fade'";
+```
 
 Both new flags default **off** on purpose:
 
@@ -48,11 +56,19 @@ Both new flags default **off** on purpose:
 | `[up-target]` with a CSS selector | ✅ used throughout the sample |
 | `mainTargets` fallback when no target is declared | ✅ `UnpolyOptions.MainTargets` |
 | Target **lists** (`.a, .b`) | ✅ `UpTargets()` splits and trims; checked |
-| Pseudo-targets `:main` `:layer` | ✅ treated as whole-page in `IsUpFragment()`; checked |
+| Pseudo-target `:main` | ✅ whole-page in `IsUpFragment()`; checked |
+| Pseudo-target `:layer` | ✅ whole-page in `IsUpFragment()`; checked |
 | Pseudo-target `:none` | ✅ `WantsNothing()`; checked. Answering 204 is not wired up yet |
+| Pseudo-target `:origin` | ➖ resolved to a derived selector before the header is sent |
+| Modifier `:before` / `:after` (prepend/append) | ✅ stripped by `BaseTarget()` before classification; checked |
+| Modifier `:maybe` (optional target) | ✅ stripped by `BaseTarget()`; checked |
+| Modifier `:content` (replace children) | ✅ stripped by `BaseTarget()`; checked |
 | Server retargeting | ✅ `UpRetarget()` |
-| `[up-fallback]` | ⬜ Phase A revisit |
-| `:before` / `:after` insertion | ⬜ Phase A revisit |
+| `[up-fallback]` | ➖ resolved entirely on the client; the server plays no part |
+
+`BaseTarget()` exists because modifiers change **how** a match is applied, never **what** is
+matched. Comparing raw strings made `body:after` look like a fragment, which dropped the
+chrome from a request that wanted to append into `<body>`.
 
 ### [/failed-responses](https://unpoly.com/failed-responses)
 

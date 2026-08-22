@@ -12,7 +12,7 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 | Phase | **A complete**, B in progress |
 | Protocol coverage | **7 / 26** headers |
 | Build | 4 projects, 0 errors |
-| Checks | 17 passing |
+| Checks | 22 passing |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -46,14 +46,20 @@ click. Understand why before writing any code.
 
 ## Definition of done, per phase
 
-A phase is done when all four are true:
+**Every box in that phase's section of [`VERIFY.md`](VERIFY.md) passes.** That file is the
+authority — it lists the exact command or browser observation behind each claim.
+
+Summarised, a phase is done when:
 
 1. Its guides are read.
 2. Its methods no longer `throw new NotImplementedException`.
-3. Its Jubin feature works in the browser.
+3. `VERIFY.md` for that phase is fully ticked, including the browser-observable items.
 4. `tests/Unpoly.Blazor.Tests/Program.cs` has a new `── PHASE X ──` block and still prints OK.
 5. `CONCEPTS.md` marks its guides, and `.claude/skills/unpoly-blazor/SKILL.md` moves the
    phase's methods out of the "not available yet" list.
+
+An item you could not verify stays **unticked**, with a note. An untested tick is worse than
+an open box — it is the only way this checklist can lie to you.
 
 ---
 

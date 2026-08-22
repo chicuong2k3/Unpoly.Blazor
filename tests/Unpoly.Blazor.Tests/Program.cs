@@ -37,6 +37,15 @@ Check(Ctx(".content, .flash").IsUpFragment(), "a list of plain fragments is a fr
 Check(Ctx(".content , .flash").UpTargets().Length == 2, "a whitespace-padded list splits correctly");
 Check(Ctx(".content , .flash").UpTargets()[1] == ".flash", "split entries are trimmed");
 
+// Targets carry modifiers: :before :after :maybe :content. They change how the match is
+// applied, not what is matched, so classification must look past them.
+// 📖 https://unpoly.com/targeting-fragments
+Check(Ctx(".tasks:after").IsUpFragment(), ":after on a plain selector is still a fragment");
+Check(!Ctx("body:after").IsUpFragment(), ":after on body appends into body, so full page");
+Check(!Ctx(":main:content").IsUpFragment(), ":content on :main is still the main region");
+Check(Ctx(".flash:maybe").IsUpFragment(), ":maybe marks a target optional, not whole-page");
+Check(!Ctx(".list:after, body").IsUpFragment(), "body anywhere in a modified list wins");
+
 Check(Ctx(":none").WantsNothing(), ":none means the client wants no content");
 Check(!Ctx(".content").WantsNothing(), "an ordinary target still wants content");
 

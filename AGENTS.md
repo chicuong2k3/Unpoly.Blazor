@@ -72,5 +72,8 @@ Build failing on a locked DLL means a previous `dotnet run` is still alive:
 
 ## Before claiming a phase is done
 
-Run the checks. Run the sample. Confirm the feature in a browser or with `curl`.
-Do not report completion from reading the diff.
+Work through that phase's section of [`VERIFY.md`](VERIFY.md). Every box is a command to
+run or a thing to watch happen. Do not report completion from reading the diff.
+
+If an item cannot be verified — no browser available, no way to reproduce — leave it
+unticked and write why. Never tick something you did not observe.

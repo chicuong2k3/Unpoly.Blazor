@@ -72,6 +72,7 @@ an agent will confidently suggest `UpAcceptLayer` and hand you a `NotImplemented
 `NotImplementedException` carrying their phase and the guide URL that explains them.
 
 - [`TASKS.md`](TASKS.md) — the phase-by-phase plan and what to do next
+- [`VERIFY.md`](VERIFY.md) — the acceptance tests each phase must pass to count as done
 - [`CONCEPTS.md`](CONCEPTS.md) — per-guide coverage: what is covered, what has nothing to cover
 - [`AGENTS.md`](AGENTS.md) — working rules, locked decisions
 

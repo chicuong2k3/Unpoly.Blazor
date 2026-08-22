@@ -26,10 +26,10 @@
         // Its default is to read <meta name="csrf-token">, but ASP.NET can hand us the token
         // directly, so no meta tag and no up:request:load listener are needed.
         // 📖 https://unpoly.com/up.protocol.config
-        if (Ctx is not null)
-            sb.Append("up.protocol.config.csrfToken = ")
-              .Append(Json(Antiforgery.GetAndStoreTokens(Ctx).RequestToken))
-              .AppendLine(";");
+        // RequestToken is nullable; without a token there is nothing useful to emit and
+        // Unpoly would send the literal "null" on every unsafe request.
+        if (Ctx is not null && Antiforgery.GetAndStoreTokens(Ctx).RequestToken is { } token)
+            sb.Append("up.protocol.config.csrfToken = ").Append(Json(token)).AppendLine(";");
 
         sb.Append("up.fragment.config.mainTargets = ")
           .Append(JsonSerializer.Serialize(Options.MainTargets))
