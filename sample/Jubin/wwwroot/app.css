@@ -374,3 +374,12 @@ form[aria-busy="true"] { opacity: .5; }
     text-transform: none;
     letter-spacing: normal;
 }
+
+.overlay-title {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 1.4rem;
+    margin: 0 0 .5rem;
+}
+.sizes { display: flex; gap: .6rem; flex-wrap: wrap; margin: 1.25rem 0; }
+.chosen-size { color: var(--sale); }

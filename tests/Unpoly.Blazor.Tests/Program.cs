@@ -190,4 +190,80 @@ var plain = new DefaultHttpContext();
 plain.Request.Headers["X-Up-Target"] = ".site-nav";
 Check(!plain.UpWantsAny(".site-nav"), "a non-Unpoly request wants nothing");
 
-Console.WriteLine($"OK — {passed} checks passed (Phase A + B + C)");
+// ── PHASE D: layers ─────────────────────────────────────────────────────
+
+static HttpContext Layer(string? mode = null, string? originMode = null,
+                         string? context = null, string? failMode = null,
+                         string? failContext = null)
+{
+    var c = new DefaultHttpContext();
+    c.Request.Method = "GET";
+    c.Request.Headers["X-Up-Version"] = "3.14.3";
+    if (mode is not null) c.Request.Headers["X-Up-Mode"] = mode;
+    if (originMode is not null) c.Request.Headers["X-Up-Origin-Mode"] = originMode;
+    if (failMode is not null) c.Request.Headers["X-Up-Fail-Mode"] = failMode;
+    if (context is not null) c.Request.Headers["X-Up-Context"] = context;
+    if (failContext is not null) c.Request.Headers["X-Up-Fail-Context"] = failContext;
+    return c;
+}
+
+Check(!Layer().IsUpOverlay(), "no mode means not an overlay");
+Check(!Layer("root").IsUpOverlay(), "the root layer is not an overlay");
+Check(Layer("modal").IsUpOverlay(), "modal is an overlay");
+Check(Layer("drawer").IsUpOverlay(), "so is drawer");
+Check(Layer("modal").UpMode() == "modal", "UpMode reads the target layer");
+
+// Origin differs from mode exactly while an overlay is being OPENED: the link lives on the
+// root layer, the response renders into the modal.
+Check(Layer("modal", originMode: "root").UpOriginMode() == "root",
+      "UpOriginMode reads the layer that issued the request");
+Check(Layer(failMode: "root").UpFailMode() == "root", "UpFailMode reads its own header");
+
+// Context is JSON and travels both ways.
+var ctxIn = Layer(context: "{\"from\":\"product\",\"n\":3}");
+Check(ctxIn.UpContext<Dictionary<string, object>>() is { Count: 2 }, "UpContext parses a JSON object");
+Check(Layer().UpContext<Dictionary<string, object>>() is null, "no header means no context");
+Check(Layer(context: "{}").UpContext<Dictionary<string, object>>() is null,
+      "an empty object means no context");
+
+// The context is client-controlled. Malformed JSON is a bad request, not a 500 in a page
+// that merely wanted to read it.
+Check(Layer(context: "{not json").UpContext<Dictionary<string, object>>() is null,
+      "malformed context degrades to null instead of throwing");
+Check(Layer(failContext: "{\"a\":1}").UpFailContext<Dictionary<string, object>>() is { Count: 1 },
+      "UpFailContext reads its own header");
+
+// Accept and dismiss are different headers, and must never both be written.
+var acc = new DefaultHttpContext();
+acc.UpAcceptLayer(new { size = "M" });
+Check(acc.Response.Headers["X-Up-Accept-Layer"] == "{\"size\":\"M\"}", "UpAcceptLayer serialises its value");
+Check(acc.Response.Headers["X-Up-Dismiss-Layer"].Count == 0, "and does not also dismiss");
+
+var dis = new DefaultHttpContext();
+dis.UpDismissLayer("changed mind");
+Check(dis.Response.Headers["X-Up-Dismiss-Layer"] == "\"changed mind\"", "UpDismissLayer serialises its reason");
+
+var nul = new DefaultHttpContext();
+nul.UpAcceptLayer();
+Check(nul.Response.Headers["X-Up-Accept-Layer"] == "null", "accepting with no value sends null");
+
+var open = new DefaultHttpContext();
+open.UpOpenLayer();
+Check(open.Response.Headers["X-Up-Open-Layer"] == "{}", "UpOpenLayer with no options means defaults");
+
+var openOpts = new DefaultHttpContext();
+openOpts.UpOpenLayer(new { mode = "drawer", size = "medium" });
+Check(openOpts.Response.Headers["X-Up-Open-Layer"] == "{\"mode\":\"drawer\",\"size\":\"medium\"}",
+      "UpOpenLayer passes render options through");
+
+var setCtx = new DefaultHttpContext();
+setCtx.UpSetContext(new { lastSize = "M" });
+Check(setCtx.Response.Headers["X-Up-Context"] == "{\"lastSize\":\"M\"}", "UpSetContext writes the response header");
+
+// A response that varies by mode or context must say so, or two layers share a cache entry.
+var layerVary = new DefaultHttpContext();
+layerVary.UpVary("X-Up-Target", "X-Up-Version", "X-Up-Mode", "X-Up-Context");
+Check(layerVary.Response.Headers.Vary.ToString().Contains("X-Up-Context"),
+      "Vary covers X-Up-Context, or layers with different context share a cache entry");
+
+Console.WriteLine($"OK — {passed} checks passed (Phase A + B + C + D)");

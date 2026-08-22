@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 
 namespace Unpoly.Blazor;
@@ -136,20 +137,45 @@ public static class UpResponse
     // PHASE D · Layers                         📖 /closing-overlays
     // ─────────────────────────────────────────────────────────────
 
-    /// <summary>X-Up-Open-Layer — the SERVER opens an overlay with the returned HTML. TODO Phase D · 📖 /opening-overlays</summary>
-    public static void UpOpenLayer(this HttpContext c, object options)
-        => throw new NotImplementedException("Phase D · 📖 https://unpoly.com/opening-overlays");
+    /// <summary>
+    /// X-Up-Open-Layer — the SERVER decides this response opens in a new overlay, even though
+    /// the link asked for an ordinary swap.
+    ///
+    /// Pass null for Unpoly's defaults, or an object of render options:
+    /// <c>UpOpenLayer(new { mode = "drawer", size = "large", target = "#menu" })</c>.
+    /// 📖 https://unpoly.com/opening-overlays
+    /// </summary>
+    public static void UpOpenLayer(this HttpContext c, object? options = null)
+        => c.Response.Headers["X-Up-Open-Layer"] = options is null ? "{}" : JsonSerializer.Serialize(options);
 
     /// <summary>
-    /// X-Up-Accept-Layer — close the overlay SUCCESSFULLY, handing a value back to the opener.
-    /// This is the "accept" half of the accept/dismiss pair. TODO Phase D
+    /// X-Up-Accept-Layer — close the overlay as a SUCCESS, handing a value back to whatever
+    /// opened it. The opener's [up-on-accepted] receives it as <c>value</c>.
+    ///
+    /// Accept and dismiss are not interchangeable: accept means the sub-task completed and
+    /// the parent interaction should continue with the result; dismiss means the user backed
+    /// out. 📖 https://unpoly.com/closing-overlays
     /// </summary>
     public static void UpAcceptLayer(this HttpContext c, object? value = null)
-        => throw new NotImplementedException("Phase D · 📖 https://unpoly.com/closing-overlays");
+        => c.Response.Headers["X-Up-Accept-Layer"] = JsonSerializer.Serialize(value);
 
-    /// <summary>X-Up-Dismiss-Layer — close the overlay because the user CANCELLED. Not a success. TODO Phase D</summary>
+    /// <summary>
+    /// X-Up-Dismiss-Layer — close the overlay because the user backed out. The value is a
+    /// dismissal *reason*, not a result. 📖 https://unpoly.com/closing-overlays
+    /// </summary>
     public static void UpDismissLayer(this HttpContext c, object? value = null)
-        => throw new NotImplementedException("Phase D · 📖 https://unpoly.com/closing-overlays");
+        => c.Response.Headers["X-Up-Dismiss-Layer"] = JsonSerializer.Serialize(value);
+
+    /// <summary>
+    /// X-Up-Context — hand the layer a changed context object. It persists for that layer and
+    /// comes back on its next request.
+    ///
+    /// Anything that reads the context must also Vary on it, or two layers with different
+    /// context share one cache entry. <c>UseUnpoly()</c> already lists X-Up-Context.
+    /// 📖 https://unpoly.com/context
+    /// </summary>
+    public static void UpSetContext(this HttpContext c, object context)
+        => c.Response.Headers["X-Up-Context"] = JsonSerializer.Serialize(context);
 
     // ─────────────────────────────────────────────────────────────
     // PHASE E · History                        📖 /updating-history

@@ -35,6 +35,8 @@ public static class Catalog
         ("the-angel-diary",  "The Angel Diary"),
     ];
 
+    public static readonly string[] Sizes = ["XS", "S", "M", "L"];
+
     public static readonly IReadOnlyList<Product> Products = Build();
 
     /// <summary>

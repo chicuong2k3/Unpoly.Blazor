@@ -159,32 +159,61 @@ public static class UpRequest
     // PHASE D · Layers                         📖 /layer-terminology
     // ─────────────────────────────────────────────────────────────
 
-    /// <summary>X-Up-Mode — target layer mode: "root", "modal", "drawer", "popup", "cover". TODO Phase D</summary>
-    public static string? UpMode(this HttpContext c)
-        => throw new NotImplementedException("Phase D · 📖 https://unpoly.com/layer-terminology");
+    /// <summary>
+    /// X-Up-Mode — mode of the layer this response will render into:
+    /// "root", "modal", "drawer", "popup" or "cover".
+    /// 📖 https://unpoly.com/layer-terminology
+    /// </summary>
+    public static string? UpMode(this HttpContext c) => c.Request.Headers["X-Up-Mode"];
 
-    /// <summary>X-Up-Fail-Mode — the layer mode used when the response fails. TODO Phase D</summary>
-    public static string? UpFailMode(this HttpContext c)
-        => throw new NotImplementedException("Phase D");
+    /// <summary>X-Up-Fail-Mode — the layer mode used when the response fails.</summary>
+    public static string? UpFailMode(this HttpContext c) => c.Request.Headers["X-Up-Fail-Mode"];
 
     /// <summary>
     /// X-Up-Origin-Mode — mode of the layer that ISSUED the request.
-    /// Differs from the target mode when a new overlay is being opened. TODO Phase D
+    ///
+    /// It differs from <see cref="UpMode"/> exactly when a new overlay is being opened: the
+    /// link lives on the root layer, the response renders into a modal. Use it to tell
+    /// "I am being opened as an overlay" from "I am already inside one".
     /// </summary>
-    public static string? UpOriginMode(this HttpContext c)
-        => throw new NotImplementedException("Phase D");
+    public static string? UpOriginMode(this HttpContext c) => c.Request.Headers["X-Up-Origin-Mode"];
 
-    /// <summary>True when the request targets an overlay (mode != root). TODO Phase D</summary>
-    public static bool IsUpOverlay(this HttpContext c)
-        => throw new NotImplementedException("Phase D");
+    /// <summary>
+    /// True when this response renders into an overlay rather than the root layer.
+    /// An overlay is any layer that is not the root. 📖 https://unpoly.com/layer-terminology
+    /// </summary>
+    public static bool IsUpOverlay(this HttpContext c) =>
+        c.UpMode() is { Length: > 0 } m && m != "root";
 
-    /// <summary>X-Up-Context — the layer's JSON state object. Travels BOTH ways. TODO Phase D · 📖 /context</summary>
-    public static T? UpContext<T>(this HttpContext c)
-        => throw new NotImplementedException("Phase D · 📖 https://unpoly.com/context");
+    /// <summary>
+    /// X-Up-Context — the layer's own state object, as JSON. It travels BOTH ways: the client
+    /// sends the current context and the server may return a changed one with
+    /// <see cref="UpResponse.UpSetContext"/>.
+    ///
+    /// Returns default when the header is absent or is the empty object.
+    /// 📖 https://unpoly.com/context
+    /// </summary>
+    public static T? UpContext<T>(this HttpContext c) => ReadContext<T>(c, "X-Up-Context");
 
-    /// <summary>X-Up-Fail-Context — the layer context used when the response fails. TODO Phase D</summary>
-    public static T? UpFailContext<T>(this HttpContext c)
-        => throw new NotImplementedException("Phase D");
+    /// <summary>X-Up-Fail-Context — the layer context to use when the response fails.</summary>
+    public static T? UpFailContext<T>(this HttpContext c) => ReadContext<T>(c, "X-Up-Fail-Context");
+
+    private static T? ReadContext<T>(HttpContext c, string header)
+    {
+        var raw = c.Request.Headers[header].ToString();
+        if (string.IsNullOrWhiteSpace(raw) || raw == "{}") return default;
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<T>(raw);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // The context is client-controlled data. A malformed value is a bad request,
+            // not a reason to 500 the page that merely wanted to read it.
+            return default;
+        }
+    }
 
     // X-Up-Reload-From-Time is deliberately absent. Unpoly deprecated it in favour of the
     // standard Last-Modified header, and supporting it would require the client to load

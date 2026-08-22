@@ -189,24 +189,36 @@ curl -s -o /dev/null -w "%{http_code}
 
 ---
 
-## Phase D · Layers
+## Phase D · Layers ✅
 
-**Automated**
+**Automated — 20 checks**
 
-- [ ] Accept and dismiss write different headers
-- [ ] `X-Up-Context` round-trips: read an object in, write a changed one out
-- [ ] Mode helpers distinguish root from overlay
+- [x] `IsUpOverlay()` is false for no mode and for `root`, true for `modal` and `drawer`
+- [x] `UpOriginMode` reads the layer that *issued* the request, which differs from `UpMode`
+      exactly while an overlay is being opened
+- [x] `X-Up-Context` parses as JSON; absent and `{}` both mean no context
+- [x] **Malformed context degrades to null instead of throwing** — it is client-controlled
+      data, so a bad value is a bad request, not a 500 in a page that merely read it
+- [x] Accept and dismiss write different headers, and accepting never also dismisses
+- [x] `UpOpenLayer()` sends `{}`; with options it passes render options through
+- [x] `Vary` covers `X-Up-Context`, or two layers with different context share a cache entry
 
-**Browser-observable**
+**Browser-observable — 10 checks**
 
-- [ ] A link with `[up-layer=new]` opens an overlay; the page behind keeps its scroll
-      position and its form state
-- [ ] Saving closes the overlay **and** refreshes the list behind it
-- [ ] Cancelling closes it and changes nothing
-- [ ] **Subinteraction:** start browsing a product, log in inside an overlay, land back on
-      the same product — not on the home page
-- [ ] Browser Back closes the overlay rather than leaving the site
-- [ ] Two overlays can stack, and closing the top one reveals the one below intact
+- [x] `[up-layer=new]` opens `up-modal`
+- [x] **The opener stays intact behind it** — the product page is not replaced. This is what
+      makes it a subinteraction rather than a navigation
+- [x] Accepting closes the overlay and the value reaches the opener (`chosen-size` → `M`)
+- [x] `[up-on-accepted]` runs on the opener
+- [x] Dismissing closes it and changes nothing
+- [x] `X-Up-Open-Layer` opens a drawer from a link with no `[up-layer]` at all
+- [x] The overlay request carries `X-Up-Mode` and the `[up-context]` the link set, and the
+      server echoes the context back
+
+**Open**
+
+- [ ] Two overlays stacked, and closing the top one revealing the one below intact — the
+      sample opens only one, which is also why ten `/layer-option` rows sit at `todo`
 
 ---
 

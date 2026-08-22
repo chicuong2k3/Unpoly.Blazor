@@ -398,6 +398,67 @@ async def main():
     record("and the value that was sent is the last one", landed == "900000", f"value: {landed}")
     await asyncio.sleep(PACE)
 
+    # ---------------------------------------------------------------- layers
+    print("\n== Layers ==", flush=True)
+
+    await p.goto("/p/dam-4")
+    before = await p.js("document.querySelector('.chosen-size')?.textContent?.trim()")
+    await p.click("a[up-layer]", settle=1.8)
+
+    opened = await p.js("!!document.querySelector('up-modal')")
+    record("[up-layer=new] opens a modal", opened, "up-modal is in the DOM")
+
+    behind = await p.js("!!document.querySelector('.detail')")
+    record("the opener stays intact behind it", behind,
+           "the product page was not replaced -- that is what makes it a subinteraction")
+
+    m = p.mark()
+    hdr = None
+    reqs = p.since(m)
+    await p.click("up-modal form.sizes button[value=M]", settle=1.8)
+
+    closed = await p.js("!document.querySelector('up-modal')")
+    record("accepting closes the overlay", closed)
+
+    after = await p.js("document.querySelector('.chosen-size')?.textContent?.trim()")
+    record("and the value reaches the opener", after == "M", f"chosen-size: {before} -> {after}")
+
+    enabled = await p.js("!document.querySelector('.add-to-cart')?.disabled")
+    record("[up-on-accepted] ran on the opener", bool(enabled), "add-to-cart became enabled")
+    await asyncio.sleep(PACE)
+
+    # dismissal is not acceptance
+    await p.goto("/p/dam-4")
+    await p.click("a[up-layer]", settle=1.8)
+    await p.js("document.querySelector('up-modal button[up-dismiss]').click()")
+    await asyncio.sleep(1.2)
+    gone = await p.js("!document.querySelector('up-modal')")
+    unchanged = await p.js("document.querySelector('.chosen-size')?.textContent?.trim()")
+    record("dismissing closes without a value", gone and unchanged == "chưa chọn",
+           f"chosen-size still: {unchanged}")
+    await asyncio.sleep(PACE)
+
+    # the server decides
+    await p.goto("/p/dam-4")
+    await p.click("a[href*='serverOpens=1']", settle=2.0)
+    drawer = await p.js("!!document.querySelector('up-drawer')")
+    record("X-Up-Open-Layer opens a drawer the link never asked for", drawer,
+           "up-drawer is in the DOM though the link had no [up-layer]")
+    await asyncio.sleep(PACE)
+
+    # mode and context on the wire
+    await p.goto("/lab")
+    m = p.mark()
+    await p.click("a[up-context]", settle=1.8)
+    reqs = [r for r in p.since(m) if "/size" in r[1]]
+    h = {k.lower(): v for k, v in reqs[0][2].items()} if reqs else {}
+    record("the overlay request carries X-Up-Mode", h.get("x-up-mode") == "modal",
+           f"X-Up-Mode: {h.get('x-up-mode')}")
+    record("and X-Up-Context set by the link", "flavour" in (h.get("x-up-context") or ""),
+           f"X-Up-Context: {h.get('x-up-context')}")
+    shown = await p.js("document.querySelector('up-modal')?.textContent?.includes('flavour')")
+    record("the server read that context and echoed it", bool(shown))
+
     # ---------------------------------------------------------------- summary
     ok = sum(1 for _, o, _ in results if o)
     print(f"\n{'=' * 58}\n{ok}/{len(results)} browser checks passed\n{'=' * 58}")

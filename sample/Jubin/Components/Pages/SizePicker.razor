@@ -1,0 +1,98 @@
+@page "/p/{Slug}/size"
+
+@* ── A SUBINTERACTION ────────────────────────────────────────────────────
+   This page is an ordinary, bookmarkable route. Opened with [up-layer=new] it
+   becomes an overlay, and the product page stays untouched behind it -- that is
+   the whole point: the parent interaction is not lost.
+
+   Picking a size ACCEPTS the layer with a value. Accept is not dismiss: accept
+   means the sub-task finished and the opener should carry on with the result,
+   dismiss means the user backed out.
+   📖 https://unpoly.com/subinteractions
+   ─────────────────────────────────────────────────────────────────────── *@
+
+<PageTitle>Chọn size — @Item?.Name</PageTitle>
+
+@if (Item is null)
+{
+    <p class="empty">Không tìm thấy sản phẩm.</p>
+}
+else
+{
+    @* Rendered differently depending on the layer this lands in. The chrome heading is
+       redundant inside a modal that already has its own frame.
+       📖 https://unpoly.com/optimizing-responses (Rendering different content for overlays) *@
+    @if (!Ctx.IsUpOverlay())
+    {
+        <div class="page-head">
+            <h2>Chọn size</h2>
+            <p class="count">@Item.Name</p>
+        </div>
+        <p class="meta">
+            Mở trực tiếp nên đây là trang thường (mode: <code>@(Ctx.UpMode() ?? "không phải Unpoly")</code>).
+            Vào từ trang sản phẩm thì nó là overlay.
+        </p>
+    }
+    else
+    {
+        <h3 class="overlay-title">Chọn size</h3>
+        <p class="meta">
+            mode: <code>@Ctx.UpMode()</code> ·
+            origin: <code>@Ctx.UpOriginMode()</code> ·
+            context: <code>@(RawContext ?? "{}")</code>
+        </p>
+    }
+
+    <form method="post" @formname="pick" @onsubmit="Pick" class="sizes">
+        <AntiforgeryToken />
+        @foreach (var size in Catalog.Sizes)
+        {
+            <button class="btn-quiet" type="submit" name="size" value="@size">@size</button>
+        }
+    </form>
+
+    @if (Ctx.IsUpOverlay())
+    {
+        @* [up-dismiss] is the client-side half of the pair; the server half is UpDismissLayer. *@
+        <p class="meta"><button class="btn-quiet" type="button" up-dismiss="'đổi ý'">Huỷ</button></p>
+    }
+}
+
+@code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+
+    [Parameter] public string Slug { get; set; } = "";
+
+    Product? Item;
+    string? RawContext;
+
+    [SupplyParameterFromQuery] public int? ServerOpens { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        Item = Catalog.BySlug(Slug);
+
+        // The link asked for a plain navigation. The server overrides that and opens a
+        // drawer, passing render options the link never mentioned.
+        // 📖 https://unpoly.com/opening-overlays
+        if (ServerOpens == 1 && Ctx.IsUnpoly() && !Ctx.IsUpOverlay())
+            Ctx.UpOpenLayer(new { mode = "drawer", size = "medium" });
+
+        RawContext = Ctx.Request.Headers["X-Up-Context"].ToString();
+        if (string.IsNullOrEmpty(RawContext)) RawContext = null;
+    }
+
+    void Pick()
+    {
+        var size = Ctx.Request.Form["size"].ToString();
+        if (string.IsNullOrEmpty(size)) return;
+
+        // Hand the value back to whatever opened this overlay. The opener's
+        // [up-on-accepted] receives it as `value`.
+        Ctx.UpAcceptLayer(new { size, slug = Slug });
+
+        // And record the choice in the layer's own context, which survives for that layer
+        // and returns on its next request. 📖 https://unpoly.com/context
+        Ctx.UpSetContext(new { lastSize = size });
+    }
+}

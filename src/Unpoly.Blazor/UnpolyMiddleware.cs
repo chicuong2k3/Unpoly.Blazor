@@ -21,7 +21,11 @@ public static class UnpolyMiddleware
         {
             ctx.Response.OnStarting(() =>
             {
-                ctx.UpVary("X-Up-Target", "X-Up-Version");
+                // X-Up-Mode and X-Up-Context are here because a response may legitimately
+                // differ by them -- different content for an overlay, or content that depends
+                // on layer context. Without them two layers share one cache entry.
+                // 📖 https://unpoly.com/context
+                ctx.UpVary("X-Up-Target", "X-Up-Version", "X-Up-Mode", "X-Up-Context");
                 return Task.CompletedTask;
             });
             await next();

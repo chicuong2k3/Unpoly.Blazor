@@ -38,8 +38,40 @@ else
                 }
             </p>
 
-            @* Phase D turns this button into an overlay; Phase F adds an [up-hungry] cart badge. *@
-            <p><button class="btn" disabled>Thêm vào giỏ (Phase D)</button></p>
+            @* THE SUBINTERACTION. The size picker is a real route; [up-layer=new] turns it
+               into an overlay, and this page stays exactly as it is behind it. When the
+               overlay accepts, `value` is whatever the server passed to UpAcceptLayer.
+               📖 https://unpoly.com/subinteractions *@
+            <p>
+                <a class="btn" href="/p/@Item.Slug/size"
+                   up-layer="new modal" up-size="small"
+                   up-context='{ "from": "product" }'
+                   up-on-accepted="onSizeChosen(value)">
+                    Chọn size
+                </a>
+            </p>
+
+            <p class="meta">Size đã chọn: <strong class="chosen-size">chưa chọn</strong></p>
+
+            @* An [up-on-*] attribute is evaluated as ONE expression. A multi-line body of
+               statements silently does nothing -- the callback runs, the value arrives, and
+               no DOM changes. A named function keeps the attribute to one call. *@
+            <script>
+                function onSizeChosen(value) {
+                    document.querySelector('.chosen-size').textContent = value.size;
+                    document.querySelector('.add-to-cart').disabled = false;
+                }
+            </script>
+
+            <p><button class="btn add-to-cart" disabled>Thêm vào giỏ (Phase F)</button></p>
+
+            @* The server decides this one opens as a drawer, even though the link says nothing.
+               📖 https://unpoly.com/opening-overlays *@
+            <p class="meta">
+                <a class="back" href="/p/@Item.Slug/size?serverOpens=1">
+                    Chọn size (để SERVER quyết định mở drawer)
+                </a>
+            </p>
 
             <p class="meta">Bộ sưu tập: @Item.Collection</p>
 

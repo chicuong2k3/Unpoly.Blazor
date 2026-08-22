@@ -9,10 +9,10 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 
 | | |
 |---|---|
-| Phase | **A complete**; B and C code complete — browser checks still open |
-| Protocol coverage | **12 / 24** headers |
+| Phase | **A, B, C and D complete** |
+| Protocol coverage | **20 / 24** headers |
 | Build | 4 projects, 0 errors |
-| Checks | 62 unit + 27 browser |
+| Checks | 82 unit + 37 browser |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -37,10 +37,14 @@ If the build fails with a file lock, a previous `dotnet run` is still alive: `ta
 
 ## Next action
 
-**Phase D · Layers.** Read `/layer-terminology`, then `/opening-overlays`.
+**Phase E · History, scrolling and focus.** Read `/updating-history` first.
 
-Nothing is left open in A, B or C. The browser items that had been waiting on a human since
-Phase A are automated in `tests/browser/test_unpoly.py` — run it alongside the unit checks.
+Nothing is open in A–D. Every browser-observable claim is automated in
+`tests/browser/test_unpoly.py`.
+
+One exercise is worth carrying into E: the sample only ever opens **one** overlay. Ten rows
+of `/layer-option` (root / parent / closest / ancestor / child / any …) need a *stack* to
+mean anything. That is one feature to build, not ten checks to write.
 
 ---
 
@@ -116,13 +120,17 @@ full-page request. Missing that made chrome vanish silently — check kept at
 
 ## Phase D · Layers
 
-- [ ] Read `/layer-terminology`, `/layer-option`, `/opening-overlays`, `/closing-overlays`, `/subinteractions`, `/context`, `/customizing-overlays`
-- [ ] `UpMode` `UpFailMode` `UpOriginMode` `IsUpOverlay`
-- [ ] `UpContext<T>` `UpFailContext<T>` (`X-Up-Context` travels both ways)
-- [ ] `UpOpenLayer` `UpAcceptLayer` `UpDismissLayer`
-- [ ] Jubin: login modal as a layer; **subinteraction** — log in mid-browse, return to the exact spot
-- [ ] Jubin: cart drawer, product quick-view
-- [ ] Checks: accept vs dismiss produce different headers; context round-trips
+- [x] Read all 7 guides — 62 sections enumerated in `CONCEPTS.md`
+- [x] `UpMode` `UpFailMode` `UpOriginMode` `IsUpOverlay`
+- [x] `UpContext<T>` `UpFailContext<T>` `UpSetContext` (`X-Up-Context` travels both ways)
+- [x] `UpOpenLayer` `UpAcceptLayer` `UpDismissLayer`
+- [x] `UseUnpoly()` now varies on `X-Up-Mode` and `X-Up-Context` too — the /context guide
+      names this trap directly
+- [x] Jubin: **subinteraction** — the size picker is a real route that becomes an overlay,
+      and the product page keeps its state behind it
+- [x] Jubin: the server opening a drawer the link never asked for
+- [x] 20 unit checks + 10 browser checks
+- [ ] Open a **second** overlay so `/layer-option` rows 2–10 mean something
 
 ## Phase E · History, scrolling and focus
 
@@ -153,19 +161,19 @@ full-page request. Missing that made chrome vanish silently — check kept at
 
 ---
 
-## Protocol coverage — 11 / 24
+## Protocol coverage — 20 / 24
 
 Grep `NotImplementedException` in `src/` for the live list.
 
-**Request (11)** — ✅ `X-Up-Version` `X-Up-Target` `X-Up-Fail-Target` `If-None-Match`
-`If-Modified-Since`
-⬜ `X-Up-Mode` `X-Up-Fail-Mode` `X-Up-Origin-Mode` `X-Up-Validate` `X-Up-Context`
-`X-Up-Fail-Context`
+**Request (11)** — all covered: `X-Up-Version` `X-Up-Target` `X-Up-Fail-Target`
+`If-None-Match` `If-Modified-Since` `X-Up-Validate` `X-Up-Mode` `X-Up-Fail-Mode`
+`X-Up-Origin-Mode` `X-Up-Context` `X-Up-Fail-Context`
 
 **Response (13)** — ✅ `X-Up-Target` `Vary` `X-Up-Expire-Cache` `X-Up-Evict-Cache` `ETag`
-`Last-Modified`
-⬜ `X-Up-Title` `X-Up-Location` `X-Up-Method` `X-Up-Open-Layer` `X-Up-Accept-Layer`
-`X-Up-Dismiss-Layer` `X-Up-Events` + cookie `_up_method`
+`Last-Modified` `X-Up-Open-Layer` `X-Up-Accept-Layer` `X-Up-Dismiss-Layer` `X-Up-Context`
+⬜ `X-Up-Title` `X-Up-Location` `X-Up-Method` `X-Up-Events` + cookie `_up_method`
+
+The four left are Phase E (history, `_up_method`) and Phase F (`X-Up-Events`).
 
 **Dropped from the target (was 26):** `X-Up-Clear-Cache` appears in no current guide, and
 `X-Up-Reload-From-Time` is deprecated in favour of `Last-Modified`. Implementing either

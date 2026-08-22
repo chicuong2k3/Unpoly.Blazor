@@ -195,6 +195,53 @@ else
         </ul>
     </section>
 
+    <h3>Layers <span class="meta">/layer-option · /closing-overlays</span></h3>
+    <ul>
+        <li>
+            <a href="/p/dam-4/size" up-layer="new modal" up-size="small"
+               up-on-accepted="alert('accepted: ' + JSON.stringify(value))"
+               up-on-dismissed="alert('dismissed: ' + JSON.stringify(value))">Modal</a>
+            <span class="meta">
+                /layer-terminology — mode <code>modal</code>. Chọn size thì <strong>accept</strong>,
+                bấm Huỷ hoặc Esc thì <strong>dismiss</strong>. Hai thứ khác nhau, không thay thế nhau
+            </span>
+        </li>
+        <li>
+            <a href="/p/dam-4/size" up-layer="new drawer" up-size="medium">Drawer</a>
+            <span class="meta">/layer-terminology — cùng route, mode khác</span>
+        </li>
+        <li>
+            <a href="/p/dam-4/size" up-layer="new popup" up-align="left">Popup</a>
+            <span class="meta">/layer-terminology — neo vào chính link này</span>
+        </li>
+        <li>
+            <a href="/p/dam-4/size" up-layer="new cover">Cover</a>
+            <span class="meta">/layer-terminology — phủ toàn màn hình</span>
+        </li>
+        <li>
+            <a href="/p/dam-4/size?serverOpens=1">Server tự quyết mở drawer</a>
+            <span class="meta">
+                /opening-overlays — link không khai <code>[up-layer]</code>;
+                response mang <code>X-Up-Open-Layer</code> nên vẫn thành drawer
+            </span>
+        </li>
+        <li>
+            <a href="/p/dam-4/size" up-layer="new modal"
+               up-context='{ "flavour": "lab" }'>Modal có context</a>
+            <span class="meta">
+                /context — overlay in ra <code>X-Up-Context</code> nó nhận được,
+                và trả về context đã đổi khi accept
+            </span>
+        </li>
+        <li>
+            <a href="/shop" up-layer="new modal">Mở /shop trong modal</a>
+            <span class="meta">
+                /optimizing-responses §5 — cùng một route, server thấy
+                <code>X-Up-Mode: modal</code> và có thể render khác đi
+            </span>
+        </li>
+    </ul>
+
     <h3>JavaScript API <span class="meta">up.render · up.submit</span></h3>
     <p class="meta">
         Hai thứ duy nhất ở đây không dùng được bằng attribute. Chúng vẫn demo được, chỉ là

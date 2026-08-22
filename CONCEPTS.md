@@ -333,6 +333,118 @@ browser rather than only in the docs. Full coverage is **Phase F**.
 
 ---
 
+## `up.layer`
+
+### [/layer-terminology](https://unpoly.com/layer-terminology) — 2/2 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Available modes: `modal`, `drawer`, `popup`, `cover`; root is `root` | ✅ `UpMode()`, `IsUpOverlay()` | `Lab.razor` · four mode links |
+| 2 | See also | ➖ | n/a — structural row |
+
+An overlay is any layer that is not the root. `IsUpOverlay()` is `UpMode() != "root"`, and
+`UpOriginMode()` is the layer that *issued* the request — the two differ exactly while an
+overlay is being opened, which is how a page tells "I am being opened as a modal" from
+"I am already inside one".
+
+### [/layer-option](https://unpoly.com/layer-option) — 12/12 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | The default (`current`) | ➖ client-side | `Lab.razor` |
+| 2 | Disabling layer isolation (`any`) | ➖ | todo — needs two overlays open at once |
+| 3 | Matching the root layer | ➖ | todo — with a stacked overlay |
+| 4 | Matching any overlay | ➖ | todo — same |
+| 5 | Matching the current or frontmost layer | ➖ | todo — same |
+| 6 | Matching relative to the current layer (`parent`, `closest`, `ancestor`, `child`, `descendant`, `subtree`) | ➖ | todo — same |
+| 7 | Matching the layer of a given element | ➖ JS API | todo |
+| 8 | Matching a layer by index | ➖ | todo |
+| 9 | Using a layer reference | ➖ JS API | todo |
+| 10 | Matching in multiple layers | ➖ | todo |
+| 11 | Opening new layers (`new`, `swap`, `shatter`) | ✅ `new` used; `swap`/`shatter` untried | `ProductDetail.razor` · `up-layer="new modal"` |
+| 12 | Targeting another layer for server errors | ⬜ pairs with `X-Up-Fail-Mode` | todo |
+
+Rows 2—10 all need a **stack** of overlays to mean anything, and the sample opens only one
+at a time. That is one exercise, not ten.
+
+### [/opening-overlays](https://unpoly.com/opening-overlays) — 8/8 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Opening an overlay from a link | ✅ | `ProductDetail.razor` · `up-layer` |
+| 2 | Choosing the overlay mode | ✅ | `Lab.razor` · modal/drawer/popup/cover |
+| 3 | Opening an overlay from a form | ➖ same attribute on a form | todo |
+| 4 | Opening overlays from local content | ➖ `[up-content]` | `Lab.razor` · `up-content` |
+| 5 | Opening overlays from JavaScript | ➖ `up.layer.open()` | todo |
+| 6 | **Opening overlays from the server** | ✅ `UpOpenLayer(options)` — relaxed JSON of render options | `SizePicker.razor` · `?serverOpens=1` |
+| 7 | Close conditions | ✅ see /closing-overlays | `SizePicker.razor` |
+| 8 | Replacing existing overlays (`swap`, `shatter`) | ⬜ | todo — with a stack |
+
+### [/closing-overlays](https://unpoly.com/closing-overlays) — 13/13 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Distinguishing close intents | ✅ accept ≠ dismiss | `SizePicker.razor` |
+| 2 | Running code when an overlay closes | ➖ `[up-on-accepted]` / `[up-on-dismissed]` | `ProductDetail.razor` |
+| 3 | Overlay result values (acceptance values, dismissal reasons) | ✅ | `SizePicker.razor` · `UpAcceptLayer` |
+| 4 | Close conditions (location, event, fragment, discarded flashes/response) | ➖ `[up-accept-location]` etc | todo |
+| 5 | **Closing from the server** | ✅ `UpAcceptLayer` / `UpDismissLayer` | `SizePicker.razor` · `Pick()` |
+| 6 | Closing from JavaScript | ➖ | todo |
+| 7 | Closing when a button is clicked | ➖ `[up-dismiss]` | `SizePicker.razor` · `up-dismiss` |
+| 8 | Closing when a link is followed | ➖ | todo |
+| 9 | Closing when a form is submitted | ✅ this is the sample's accept path | `SizePicker.razor` |
+| 10 | Closing by targeting a background layer (peeling) | ⬜ | todo — with a stack |
+| 11 | Customizing dismiss controls | ➖ CSS/attributes | todo |
+| 12 | Close animation | ➖ | todo |
+| 13 | Using overlays as promises | ➖ JS API | todo |
+
+Accept and dismiss are not interchangeable. Accept means the sub-task finished and the
+parent should continue **with the result**; dismiss means the user backed out and carries a
+*reason*, not a value.
+
+### [/subinteractions](https://unpoly.com/subinteractions) — 8/8 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Example | ➖ | n/a — structural row |
+| 2 | Starting a subinteraction | ✅ | `ProductDetail.razor` · size picker |
+| 3 | Common acceptance callbacks | ➖ | `ProductDetail.razor` · `onSizeChosen` |
+| 4 | Reloading on acceptance | ➖ `up.reload` in the callback | todo |
+| 5 | Adding options to an existing select | ➖ | todo |
+| 6 | Navigating away | ➖ | todo |
+| 7 | Reusing existing screens | ✅ the picker is a real route, overlay or not | `SizePicker.razor` |
+| 8 | Awaiting subinteractions from JavaScript | ➖ JS API | todo |
+
+The point of §2 is what stays *behind*: the product page keeps its scroll, its state and its
+unfinished input while the overlay runs. That is why it is a sub-interaction rather than a
+navigation.
+
+### [/context](https://unpoly.com/context) — 5/5 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Layer context | ✅ `UpContext<T>()` | `SizePicker.razor` |
+| 2 | Initializing the context object | ➖ `[up-context]` on the opener | `ProductDetail.razor` · `up-context` |
+| 3 | Working with the context object | ✅ read in, `UpSetContext` out | `SizePicker.razor` · `Pick()` |
+| 4 | Re-using an interaction with a variation | ✅ the picker renders differently by mode | `SizePicker.razor` · `IsUpOverlay()` |
+| 5 | Example | ➖ | n/a — structural row |
+
+The guide flags a cache trap: a response that depends on context **must** list
+`X-Up-Context` in `Vary`, or two layers with different context share one entry.
+`UseUnpoly()` now varies on `X-Up-Mode` and `X-Up-Context` as well as target and version.
+
+### [/customizing-overlays](https://unpoly.com/customizing-overlays) — 10/10 sections
+
+Sizes, classes, dismiss controls, animations, popup and drawer position, CSS structure.
+**Entirely client-side** — the guide states no server-side modification is involved. `up-size`
+is used in the sample; the rest is styling.
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1—10 | mode choice, HTML structure, CSS, sizes, dismiss controls, classes, elements, animations, popup and drawer position | ➖ no server side | `Lab.razor` · `up-size`, `up-align` |
+
+---
+
 ## `up.script`
 
 ### [/handling-asset-changes](https://unpoly.com/handling-asset-changes) — partial
@@ -367,7 +479,7 @@ The playground paid for itself immediately: its `.content, .site-nav` link expos
 
 ## Not yet opened
 
-`up.fragment` · `up.layer` · `up.radio` · `up.history` · `up.viewport` · `up.event`
+`up.fragment` · `up.radio` · `up.history` · `up.viewport` · `up.event`
 
 Skipped for the whole project: `up.motion` · `up.element` · `up.util` · `up.log` ·
 `up.framework`, plus the *Features* tier everywhere — that tier is a dictionary. Look

@@ -75,6 +75,9 @@ The library is built phase by phase. **Only these exist**; everything else throw
 | `Ctx.IsUpValidating()` | validation-only request — **must not persist anything** |
 | `Ctx.UpValidatingFields()` | the fields, **space** separated by Unpoly, batched into one request |
 | `Ctx.IsUpValidatingUnknown()` | `:unknown` — validate the whole form |
+| `Ctx.UpMode()` / `UpFailMode()` / `UpOriginMode()` | which layer this renders into, and which one asked |
+| `Ctx.IsUpOverlay()` | true unless this is the root layer |
+| `Ctx.UpContext<T>()` / `UpFailContext<T>()` | the layer's own JSON state; malformed input returns null rather than throwing |
 | `Ctx.IsUpFragment()` | a specific fragment was asked for, so chrome can be skipped |
 | `Ctx.WantsNothing()` | target is `:none` |
 
@@ -86,6 +89,10 @@ The library is built phase by phase. **Only these exist**; everything else throw
 | `Ctx.UpKeepCache()` | keep the cache a non-GET would otherwise clear |
 | `Ctx.UpEvictCache("/cart")` | drop outright; stale content is never shown again |
 | `Ctx.UpNotModified(etag, lastModified)` | publishes the version, returns true when the client is current (response becomes 304 — render nothing) |
+| `Ctx.UpAcceptLayer(value)` | close the overlay as a **success**, handing `value` to the opener |
+| `Ctx.UpDismissLayer(reason)` | close it because the user **backed out**; not interchangeable with accept |
+| `Ctx.UpOpenLayer(new { mode = "drawer" })` | make this response open in a new overlay, whatever the link asked for |
+| `Ctx.UpSetContext(obj)` | hand the layer a changed context |
 
 | Components | |
 |---|---|
@@ -174,6 +181,34 @@ o.ExtraScript = """
     """;
 ```
 
+## Layers
+
+An overlay is any layer that is not the root. Most of it needs no C#:
+
+```html
+<a href="/products/5/size" up-layer="new modal" up-size="small"
+   up-context='{ "from": "product" }'
+   up-on-accepted="onChosen(value)">Choose size</a>
+```
+
+Server-side, the two halves that matter:
+
+```csharp
+Ctx.UpAcceptLayer(new { size });   // success: the opener continues with this value
+Ctx.UpDismissLayer("changed mind"); // the user backed out; a reason, not a result
+```
+
+**Accept and dismiss are not interchangeable.** Accept means the sub-task finished and the
+parent interaction should carry on with the result. Dismiss means it did not.
+
+The point of an overlay is what stays *behind* it: the opener keeps its scroll, its state
+and its unfinished input. Render a real route into it rather than a fragment, and it stays
+bookmarkable when opened directly — check `IsUpOverlay()` to drop chrome the modal frame
+already provides.
+
+**Cache trap:** if a response depends on `X-Up-Context` or `X-Up-Mode`, those must be in
+`Vary` or two layers share one entry. `UseUnpoly()` already lists them.
+
 ## The `fail` prefix
 
 Unpoly picks a different render option when a response fails, by prefixing it: `target` /
@@ -204,7 +239,6 @@ works via `Ctx.Request.Headers["X-Up-…"]`.
 
 | Feature | Throws | Do this instead, today |
 |---|---|---|
-| Overlays / modals / drawers | `UpOpenLayer` `UpAcceptLayer` `UpDismissLayer` `UpMode` `UpContext<T>` | `[up-layer=new modal]`, `[up-size]`, `[up-accept-location="/things"]`, `[up-on-accepted]`, and `<button up-dismiss>` inside. A modal that opens a CRUD route, saves, closes and refreshes the list behind it needs **zero** C# |
 | Form validation round-trip | `IsUpValidating` `UpValidatingField` | `[up-validate]` on the field. Server-side, read `X-Up-Validate` yourself and **do not persist** when it is present |
 | Autosubmitting filters | — | `[up-autosubmit]` + `[up-watch-delay=300]` |
 | Disable a form while in flight | — | `[up-disable]` |
@@ -238,7 +272,12 @@ inventing one.
 6. **The `.content` element is missing from a fragment response.** The target itself was
    wrapped in `<UpChrome>`. Wrap the chrome around it, never the target.
 
-10. **A swap that targets the nav, a cart badge, or anything else inside the chrome does
+10. **An `[up-on-accepted]` callback runs but nothing changes.** These attributes are
+    evaluated as **one expression**. A multi-line body of statements silently does nothing:
+    the overlay closes, the value arrives, no DOM changes, no console error. Put the body in
+    a named function and keep the attribute to one call.
+
+11. **A swap that targets the nav, a cart badge, or anything else inside the chrome does
     nothing.** `UpChrome` stripped it from the response, so the selector is absent and the
     swap finds nothing — no error, no console message. Declare it:
     `<UpChrome Provides=".site-nav, .cart-badge">`.
