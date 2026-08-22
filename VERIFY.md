@@ -65,8 +65,8 @@ curl -s -H "X-Up-Version: 3.10.2" -H "X-Up-Target: .content" $U | grep -c 'class
 
 - [x] Clicking a category swaps the grid with no white flash and no full reload
 - [x] The clicked category gets `.up-current` styling; the nav itself never re-renders
-- [ ] **Not verified:** visual appearance against jubinstudio.com — the Chrome extension
-      would not connect, so no screenshot was taken. Open it and judge.
+- [x] Screenshots captured by `tests/browser/shots.py`. The visual judgement is the user's;
+      the tooling no longer blocks it
 
 ---
 
@@ -217,8 +217,9 @@ curl -s -o /dev/null -w "%{http_code}
 
 **Open**
 
-- [ ] Two overlays stacked, and closing the top one revealing the one below intact — the
-      sample opens only one, which is also why ten `/layer-option` rows sit at `todo`
+- [x] Two overlays stacked (`up.layer.count` is 3: root plus two), and closing the top one
+      reveals the one below intact, with the root page still behind both. This is what makes
+      `[up-layer=root|parent|current|any]` mean four different things
 
 ---
 
@@ -245,10 +246,14 @@ curl -s -o /dev/null -w "%{http_code}
 - [x] The `.more` region is **replaced** in the same response that appended — one target
       list doing two different jobs
 
-**Open**
+- [x] Back restores the previous fragment
+- [x] Keyboard focus lands **inside** the new fragment, not on `<body>`
 
-- [ ] Back and Forward restore the scroll position
-- [ ] Keyboard focus lands in the new fragment rather than the top of the document
+**Resolved as NOT true**
+
+- [x] ~~Back restores the scroll position~~ — it does not, by default. All twelve samples
+      over four seconds were 0. The guide makes it opt-in via `[up-scroll=restore]`, and
+      nothing here opts in. Recorded rather than asserted
 
 ---
 
@@ -302,17 +307,20 @@ curl -s -o /dev/null -w "%{http_code}
       tracked in `<head>`, so one `meta[up-asset]` outside `UpChrome` restores it. Cutting
       the head had silently disabled `up:assets:changed` since Phase B
 
-**Open**
+**Not reachable here**
 
-- [ ] reCAPTCHA re-initialises on a swapped login form — needs a real site key
+- [ ] reCAPTCHA re-initialises on a swapped login form — needs a real site key. The
+      mechanism it would exercise is already covered by the stand-in widget: a third-party
+      `init`/`destroy` API, re-initialised by a compiler, cleaned up by a destructor
 
 ---
 
 ## Cross-cutting, re-check at every phase
 
-- [ ] `dotnet build` — 0 errors, 0 warnings
-- [ ] `dotnet run --project tests/Unpoly.Blazor.Tests` — prints OK
-- [ ] `.claude/skills/unpoly-blazor/SKILL.md` moved this phase's methods out of
-      "not available yet"
-- [ ] No route stopped working with JavaScript disabled. This is the property that makes
-      Unpoly worth choosing over htmx here, and it is the easiest one to lose without noticing
+- [x] `dotnet build` — 0 errors, 0 warnings
+- [x] `dotnet run --project tests/Unpoly.Blazor.Tests` — prints OK (97 checks)
+- [x] `SKILL.md` carries no "not available yet" list any more — nothing throws
+- [x] **No route stopped working with JavaScript disabled** — 6/6 routes render over plain
+      HTTP. Measured with `urllib`, not the browser: `setScriptExecutionDisabled` also stops
+      `Runtime.evaluate`, so the page cannot report on itself. A raw HTTP client *is* a
+      browser with JavaScript off

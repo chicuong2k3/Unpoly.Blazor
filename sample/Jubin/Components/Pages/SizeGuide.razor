@@ -1,0 +1,78 @@
+@page "/size-guide"
+
+@* ── THE SECOND OVERLAY ───────────────────────────────────────────────────
+   Opened from inside the size picker, which is itself an overlay. With a stack
+   of two, [up-layer] finally has something to point at: root, parent, current,
+   any. With only one overlay every one of those means the same thing, which is
+   why ten sections of /layer-option sat unexercised.
+   📖 https://unpoly.com/layer-option
+   ─────────────────────────────────────────────────────────────────────── *@
+
+<PageTitle>Bảng size — JUBIN</PageTitle>
+
+@if (Ctx.IsUpOverlay())
+{
+    <h3 class="overlay-title">Bảng size</h3>
+    <p class="meta">
+        Đây là overlay thứ hai. mode: <code>@Ctx.UpMode()</code> ·
+        layer phát request: <code>@Ctx.UpOriginMode()</code>
+    </p>
+}
+else
+{
+    <div class="page-head">
+        <h2>Bảng size</h2>
+        <p class="count">Mở trực tiếp nên là trang thường</p>
+    </div>
+}
+
+<table class="size-table">
+    <thead>
+        <tr><th>Size</th><th>Ngực</th><th>Eo</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var (size, bust, waist) in Rows)
+        {
+            <tr><td>@size</td><td>@bust</td><td>@waist</td></tr>
+        }
+    </tbody>
+</table>
+
+@if (Ctx.IsUpOverlay())
+{
+    <p class="meta">Với hai layer đang mở, <code>[up-layer]</code> mới phân biệt được:</p>
+    <ul class="layer-targets">
+        <li>
+            <a href="/shop" up-layer="root" up-target=".content">root</a>
+            <span class="meta">/layer-option §3 — thay nội dung trang nền, sau cả hai overlay</span>
+        </li>
+        <li>
+            <a href="/p/dam-4/size" up-layer="parent" up-target=".content">parent</a>
+            <span class="meta">/layer-option §6 — layer đã mở layer này, tức size picker</span>
+        </li>
+        <li>
+            <a href="/size-guide" up-layer="current" up-target=".content">current</a>
+            <span class="meta">/layer-option §5 — chính overlay này; mặc định</span>
+        </li>
+        <li>
+            <a href="/shop" up-layer="any" up-target=".content">any</a>
+            <span class="meta">/layer-option §2 — tắt cô lập layer, khớp ở bất kỳ đâu</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button" up-dismiss>Đóng lớp trên</button>
+            <span class="meta">/closing-overlays — đóng cái này, size picker phải còn nguyên</span>
+        </li>
+    </ul>
+}
+
+@code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+
+    static readonly (string Size, string Bust, string Waist)[] Rows =
+    [
+        ("XS", "78–82", "58–62"),
+        ("S",  "82–86", "62–66"),
+        ("M",  "86–90", "66–70"),
+        ("L",  "90–94", "70–74"),
+    ];
+}

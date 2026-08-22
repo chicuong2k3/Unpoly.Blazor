@@ -443,3 +443,11 @@ form[aria-busy="true"] { opacity: .5; }
     color: var(--muted);
     letter-spacing: .1em;
 }
+
+.size-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin: 1rem 0; }
+.size-table th, .size-table td { border-bottom: 1px solid var(--line); padding: .5rem .4rem; text-align: left; }
+.size-table th { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.layer-targets { list-style: none; padding: 0; }
+.layer-targets li { padding: .45rem 0; border-bottom: 1px dotted var(--line); }
+.layer-targets a, .layer-targets button { display: inline-block; min-width: 6rem; }
+.strength { margin-top: -.75rem; }

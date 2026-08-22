@@ -53,6 +53,13 @@ else
 
     @if (Ctx.IsUpOverlay())
     {
+        @* Opening an overlay FROM an overlay. Two layers on the stack is what makes
+           [up-layer=root|parent|current|any] mean four different things.
+           📖 https://unpoly.com/layer-option *@
+        <p class="meta">
+            <a class="btn-quiet" href="/size-guide" up-layer="new modal" up-size="medium">Bảng size</a>
+        </p>
+
         @* [up-dismiss] is the client-side half of the pair; the server half is UpDismissLayer. *@
         <p class="meta"><button class="btn-quiet" type="button" up-dismiss="'đổi ý'">Huỷ</button></p>
     }

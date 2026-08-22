@@ -36,11 +36,18 @@
                 <ValidationMessage For="() => Model!.Email" />
             </div>
 
+            @* A REACTIVE form: this field validates against a DEPENDENT fragment, not against
+               its own error message. The server re-renders .strength from the current values.
+               That is what /reactive-server-forms adds over ordinary validation.
+               📖 https://unpoly.com/reactive-server-forms *@
             <div up-form-group>
                 <label for="password">Mật khẩu</label>
-                <InputText id="password" type="password" @bind-Value="Model!.Password" up-validate />
+                <InputText id="password" type="password" @bind-Value="Model!.Password"
+                           up-validate=".strength, :origin" />
                 <ValidationMessage For="() => Model!.Password" />
             </div>
+
+            <p class="meta strength">Độ mạnh: <strong>@Strength</strong></p>
 
             <div class="actions">
                 <button class="btn" type="submit">Đăng nhập</button>
@@ -79,6 +86,16 @@
 
     bool Succeeded;
     string? Debug;
+
+    // Derived on the server from the current field value. [up-validate] targets .strength as
+    // well as the field's own group, so this updates as the user types.
+    string Strength => (Model?.Password ?? "") switch
+    {
+        { Length: 0 } => "chưa nhập",
+        { Length: < 6 } => "quá ngắn",
+        { Length: < 10 } => "trung bình",
+        _ => "tốt"
+    };
 
     protected override void OnParametersSet()
     {

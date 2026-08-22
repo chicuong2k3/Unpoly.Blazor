@@ -599,6 +599,117 @@ async def main():
            "meta[up-asset] is outside UpChrome, so up:assets:changed can still fire")
     await asyncio.sleep(PACE)
 
+    # ---------------------------------------------------------------- overlay stack
+    print("\n== Overlay stack ==", flush=True)
+
+    await p.goto("/p/dam-4")
+    await p.click("a[up-layer]", settle=1.8)
+    await p.click("up-modal a[href='/size-guide']", settle=2.0)
+
+    depth = await p.js("document.querySelectorAll('up-modal').length")
+    record("an overlay can open another overlay", depth == 2, f"{depth} modals on the stack")
+
+    layers = await p.js("up.layer.count")
+    record("Unpoly counts three layers: root and two overlays", layers == 3,
+           f"up.layer.count: {layers}")
+
+    # With one overlay, root/parent/current/any all mean the same thing. This is the first
+    # point in the project where they differ.
+    knows = await p.js("document.querySelector('up-modal:last-of-type')"
+                       "?.textContent?.includes('overlay thứ hai')")
+    record("the second overlay knows it is not the first", bool(knows))
+
+    # Closing the top must leave the one below intact -- the whole promise of a stack.
+    await p.js("document.querySelector('up-modal:last-of-type button[up-dismiss]').click()")
+    await asyncio.sleep(1.4)
+    left = await p.js("document.querySelectorAll('up-modal').length")
+    picker = await p.js("!!document.querySelector('up-modal form.sizes')")
+    record("closing the top overlay reveals the one below, intact", left == 1 and bool(picker),
+           f"{left} modal left, size picker present: {picker}")
+
+    behind = await p.js("!!document.querySelector('.detail')")
+    record("and the root page is still behind both", bool(behind))
+    await asyncio.sleep(PACE)
+
+    # ---------------------------------------------------------------- reactive form
+    print("\n== Reactive server forms ==", flush=True)
+
+    await p.goto("/login")
+    s0 = await p.js("document.querySelector('.strength strong')?.textContent?.trim()")
+
+    # [up-validate] watches `change` unless a field opts into [up-watch-event=input].
+    # Dispatching `input` here fires nothing, which reads as the server not re-rendering.
+    await p.js("(() => { const w = document.querySelector('#password'); w.value = 'abc';"
+               " w.dispatchEvent(new Event('change', {bubbles:true})); })()")
+    await asyncio.sleep(1.8)
+    s1 = await p.js("document.querySelector('.strength strong')?.textContent?.trim()")
+    record("a validating request re-renders a DEPENDENT fragment", s1 != s0,
+           f"strength: {s0} -> {s1}")
+
+    await p.js("(() => { const w = document.querySelector('#password'); w.value = 'abcdefghijk';"
+               " w.dispatchEvent(new Event('change', {bubbles:true})); })()")
+    await asyncio.sleep(1.8)
+    s2 = await p.js("document.querySelector('.strength strong')?.textContent?.trim()")
+    record("and it reflects the current field value, not just an error", s2 != s1,
+           f"strength: {s1} -> {s2}")
+    await asyncio.sleep(PACE)
+
+    # ---------------------------------------------------------------- scroll and focus
+    print("\n== Scroll and focus ==", flush=True)
+
+    await p.goto("/shop")
+    await p.js("window.scrollTo(0, 900)")
+    await asyncio.sleep(0.4)
+    scrolled = await p.js("Math.round(window.scrollY)")
+    await p.click(".site-nav a[href='/shop/dam']", settle=1.8)
+    top = await p.js("Math.round(window.scrollY)")
+    record("navigating scrolls back to the top", top < scrolled, f"{scrolled} -> {top}")
+
+    await p.js("history.back()")
+    # Restoration re-renders up.history.config.restoreTargets, default ["body"]. Sample over
+    # time rather than guessing one instant.
+    seen = []
+    for _ in range(12):
+        await asyncio.sleep(0.35)
+        seen.append(await p.js("Math.round(window.scrollY)"))
+
+    back_url = await p.js("location.pathname")
+    record("Back restores the previous fragment", back_url == "/shop", f"location: {back_url}")
+
+    # Scroll is NOT restored automatically. Every sample over 4s was 0, and the guide makes
+    # it opt-in via [up-scroll=restore]. This records the observation instead of asserting a
+    # behaviour Unpoly does not promise by default.
+    record("scroll restoration is opt-in, not automatic", max(seen) == 0,
+           f"was {scrolled}, all 12 samples over 4s: {sorted(set(seen))}")
+
+    await p.goto("/shop")
+    await p.click(".site-nav a[href='/shop/ao']", settle=1.8)
+    focused = await p.js("(() => { const a = document.activeElement;"
+                         " return a && a.closest('.content') ? 'in .content' : (a?.tagName || 'none'); })()")
+    record("focus lands inside the new fragment, not on <body>", focused == "in .content",
+           f"activeElement: {focused}")
+    await asyncio.sleep(PACE)
+
+    # ---------------------------------------------------------------- without JavaScript
+    print("\n== Without JavaScript ==", flush=True)
+
+    # Measured over plain HTTP, not in the browser: Emulation.setScriptExecutionDisabled also
+    # stops Runtime.evaluate, so the page cannot report on itself. A raw HTTP client IS a
+    # browser with JavaScript disabled, which is exactly the thing under test.
+    import urllib.request
+
+    routes = []
+    for path, marker in [("/", "card"), ("/shop", "card"), ("/p/dam-4", "detail"),
+                         ("/login", "form-wrap"), ("/p/dam-4/size", "sizes"),
+                         ("/size-guide", "size-table")]:
+        with urllib.request.urlopen(BASE + path) as r:
+            body = r.read().decode("utf-8", "replace")
+        routes.append((path, r.status == 200 and marker in body))
+
+    broken = [path for path, good in routes if not good]
+    record("every route still renders with JavaScript disabled", not broken,
+           f"{len(routes) - len(broken)}/{len(routes)} routes; broken: {broken or 'none'}")
+
     # ---------------------------------------------------------------- summary
     ok = sum(1 for _, o, _ in results if o)
     print(f"\n{'=' * 58}\n{ok}/{len(results)} browser checks passed\n{'=' * 58}")

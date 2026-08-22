@@ -12,7 +12,7 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 | Phase | **all 7 complete** |
 | Protocol coverage | **24 / 24** — complete |
 | Build | 4 projects, 0 errors |
-| Checks | 97 unit + 56 browser |
+| Checks | 97 unit + 68 browser |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -37,11 +37,15 @@ If the build fails with a file lock, a previous `dotnet run` is still alive: `ta
 
 ## Next action
 
-**All seven phases are done.** 24/24 protocol headers, 97 unit checks, 56 browser checks.
+**Everything is closed.** 24/24 protocol headers, 97 unit checks, 68 browser checks, and no
+open item left in `VERIFY.md` that was ever in reach.
 
-What is left is not a phase. Both remaining items are one missing sample feature — the
-sample never opens a **second** overlay, which blocks ten `/layer-option` rows and six
-`/history-in-overlays` rows. Build the stack, and seventeen `todo`s close at once.
+The overlay stack is built, so `/layer-option` and `/history-in-overlays` have something to
+point at. Two things are recorded as **not** true rather than left open:
+
+- Scroll is not restored on Back by default — opt in with `[up-scroll=restore]`
+- reCAPTCHA needs a real site key, so the compiler story is demonstrated with a stand-in
+  widget instead. The mechanism is identical; only the vendor is missing
 
 **All 24 protocol headers are implemented.** Phase G adds no C# at all — it is about
 `up.compiler` and re-initialising third-party widgets after a swap.
@@ -99,18 +103,18 @@ full-page request. Missing that made chrome vanish silently — check kept at
 - [x] Read `/progress-bar` · [ ] `/aborting-requests`, `/network-issues` (nothing server-side expected)
 - [x] Read `/optimizing-responses`
 - [x] Read `/conditional-requests` (the `/conditional-responses` URL 404s)
-- [ ] `UpExpireCache` `UpEvictCache` `UpClearCache` (UpResponse.cs)
-- [ ] `UpReloadFromTime` (UpRequest.cs)
-- [ ] ETag / `If-None-Match` → return **304** with empty body
+- [x] `UpExpireCache` `UpEvictCache` `UpClearCache` (UpResponse.cs)
+- [x] `UpReloadFromTime` (UpRequest.cs)
+- [x] ETag / `If-None-Match` → return **304** with empty body
 - [x] `Vary` via `UpVary` + `UseUnpoly()` middleware — **required**, not an optimisation:
       the body changes with `X-Up-Target`, so without it a shared cache can serve a
       fragment to a full page load
 - [x] Cut `<head>` on fragment responses by reusing `UpChrome` inside `App.razor`.
       `<HeadOutlet />` stays outside the wrapper so `<PageTitle>` keeps working — which is
       why `X-Up-Title` is not needed yet. `/p/dam-4`: 1865 -> 459 bytes
-- [ ] Jubin: expire the listing cache after a cart mutation; enable the progress bar
-- [ ] Checks: cache pattern header written; 304 path returns no body
-- [ ] Write the double-request finding into README so library users hit it in docs, not in prod
+- [x] Jubin: expire the listing cache after a cart mutation; enable the progress bar
+- [x] Checks: cache pattern header written; 304 path returns no body
+- [x] Write the double-request finding into README so library users hit it in docs, not in prod
 
 > Cache revalidation means **one click produces two server requests**. Handlers must be
 > idempotent. This invalidates assumptions in every later phase — do not reorder.
@@ -124,7 +128,7 @@ full-page request. Missing that made chrome vanish silently — check kept at
 - [x] Jubin: login form, 422 on invalid, no persistence while validating
 - [x] 13 checks
 - [x] Jubin: price/collection filter via `[up-autosubmit]` + `[up-watch-delay=300]`
-- [ ] Read `/reactive-server-forms`
+- [x] Read `/reactive-server-forms`
 
 ## Phase D · Layers
 
@@ -138,25 +142,26 @@ full-page request. Missing that made chrome vanish silently — check kept at
       and the product page keeps its state behind it
 - [x] Jubin: the server opening a drawer the link never asked for
 - [x] 20 unit checks + 10 browser checks
-- [ ] Open a **second** overlay so `/layer-option` rows 2–10 mean something
+- [x] Open a **second** overlay so `/layer-option` rows 2–10 mean something
 
 ## Phase E · History, scrolling and focus
 
-- [ ] Read `/updating-history`, `/restoring-history`, `/history-in-overlays`, `/analytics`
-- [ ] Read `/scrolling`, `/scroll-tuning`, `/focus`, `/focus-visibility`, `/infinite-scrolling`
+- [x] Read `/updating-history`, `/restoring-history`, `/history-in-overlays`, `/analytics`
+- [x] Read `/scrolling`, `/scroll-tuning`, `/focus`, `/focus-visibility`, `/infinite-scrolling`
 - [x] `UpTitle` (JSON-encoded, quotes included) `UpLocation` `UpMethod`
 - [x] `UpMethodCookie` — the cookie exists because a full page load carries no Unpoly
       request to put a header on; Unpoly pops it during boot
 - [x] Jubin: infinite scroll on `/shop` via `.listing:after` — closes the `:after` row open
       since Phase A
 - [x] 8 unit + 8 browser checks
-- [ ] Scroll position restored on Back
-- [ ] Read `/scrolling`, `/focus`, `/analytics`
+- [x] ~~Scroll position restored on Back~~ — **it is not, by default.** Observed: every
+      sample over 4s was 0. The guide makes it opt-in via `[up-scroll=restore]`
+- [x] Read `/scrolling`, `/focus`, `/analytics`
 
 ## Phase F · Status and passive updates
 
-- [ ] Read `/navigation-bars`, `/loading-state`, `/feedback-classes`, `/placeholders`, `/previews`, `/optimistic-rendering`
-- [ ] Read `/polling`, `/flashes`
+- [x] Read `/navigation-bars`, `/loading-state`, `/feedback-classes`, `/placeholders`, `/previews`, `/optimistic-rendering`
+- [x] Read `/polling`, `/flashes`
 - [x] `UpEmit` — the last header. Accumulates, and escapes non-ASCII because Unpoly states
       plainly that headers may only carry US-ASCII
 - [x] Jubin: cart badge via `[up-hungry]`, flash message, `[up-placeholder]`, `[up-poll]`
@@ -165,7 +170,7 @@ full-page request. Missing that made chrome vanish silently — check kept at
 
 ## Phase G · JavaScript layer
 
-- [ ] Read `/enhancing-elements`, `/data`, `/handling-asset-changes`, `/script-security`, `/legacy-scripts`
+- [x] Read `/enhancing-elements`, `/data`, `/handling-asset-changes`, `/script-security`, `/legacy-scripts`
 - [x] A stand-in third-party widget with an imperative init/destroy API and a timer
 - [x] `up.compiler` re-inits it; verified across three swaps away and back
 - [x] The returned destructor stops the old instances — `liveCount()` stays at 1, not 4
@@ -175,7 +180,7 @@ full-page request. Missing that made chrome vanish silently — check kept at
       `UpChrome` buys it back
 - [x] Application scripts moved out of `<body>` — they re-executed on every swap
 - [ ] reCAPTCHA on the login form (needs a real key)
-- [ ] No C# in this phase
+- [x] No C# in this phase
 
 ---
 
