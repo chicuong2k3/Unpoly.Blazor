@@ -63,7 +63,11 @@ A phase is done when all four are true:
 - [x] Jubin: category nav, product grid, product detail
 - [x] 14 checks
 
-Lesson banked: `X-Up-Target` is a **list**, not one selector. `"body, .flash"` is still a
+Lesson banked #2: Unpoly already had CSRF support. Nine lines of hand-rolled
+`up:request:load` listener were reinventing `up.protocol.config`. Check the *Features*
+tier of a module before writing glue — that tier is a dictionary, and this is what it is for.
+
+Lesson banked #1: `X-Up-Target` is a **list**, not one selector. `"body, .flash"` is still a
 full-page request. Missing that made chrome vanish silently — check kept at
 `tests/.../Program.cs`.
 
@@ -149,9 +153,12 @@ Spec: <https://unpoly.com/up.protocol>
 
 ## Open questions
 
-- **`<AntiforgeryToken />` outside a `<form>`** — used in `UnpolyHead.razor`, never exercised
-  because the sample has no POST yet. If it fails in Phase C, replace it with
-  `IAntiforgery.GetAndStoreTokens(ctx).RequestToken` rendered into a `<meta>` tag.
+- ~~`<AntiforgeryToken />` outside a `<form>`~~ — **resolved.** Unpoly ships CSRF support
+  (`up.protocol.config.csrfHeader` / `csrfToken`), so the hand-rolled `up:request:load`
+  listener and the hidden token div are gone. `UnpolyHead` now feeds the ASP.NET token
+  straight into `up.protocol.config.csrfToken`. 📖 https://unpoly.com/up.protocol.config
+- **`GetAndStoreTokens` vs streaming rendering** — the token is minted while `<head>` renders,
+  which is safe today. Re-verify if streaming rendering is ever enabled.
 - **`X-Up-Clear-Cache`** — may be legacy/superseded by expire+evict. Confirm against the
   spec in Phase B before implementing; delete the stub if it is obsolete.
 - **`daub.js` init model** — delegation or per-element? Decides whether Phase G needs

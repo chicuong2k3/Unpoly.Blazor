@@ -1,22 +1,36 @@
 @using System.Text
 @using System.Text.Json
+@using Microsoft.AspNetCore.Antiforgery
 @inject UnpolyOptions Options
+@inject IAntiforgery Antiforgery
 
 <link rel="stylesheet" href="_content/Unpoly.Blazor/unpoly.min.css" />
 <script src="_content/Unpoly.Blazor/unpoly.min.js"></script>
-
-@* Antiforgery token for requests that are NOT form submissions (e.g. [up-follow] on a POST link).
-   [up-keep] lets the element survive a swap even when the target is <body>. *@
-<div hidden id="up-csrf" up-keep><AntiforgeryToken /></div>
-
 <script>@(new MarkupString(BuildScript()))</script>
 
 @code {
+    // Null outside static SSR. Without it there is no request to mint a CSRF token for,
+    // so the token line is simply omitted.
+    [CascadingParameter] public HttpContext? Ctx { get; set; }
+
+    static string Json(string s) => JsonSerializer.Serialize(s);
+
     string BuildScript()
     {
         var sb = new StringBuilder();
 
         // 📖 https://unpoly.com/targeting-fragments
+        sb.Append("up.protocol.config.csrfHeader = ").Append(Json(Options.AntiforgeryHeaderName)).AppendLine(";");
+
+        // Unpoly ships CSRF support: it sends csrfHeader on every unsafe request by itself.
+        // Its default is to read <meta name="csrf-token">, but ASP.NET can hand us the token
+        // directly, so no meta tag and no up:request:load listener are needed.
+        // 📖 https://unpoly.com/up.protocol.config
+        if (Ctx is not null)
+            sb.Append("up.protocol.config.csrfToken = ")
+              .Append(Json(Antiforgery.GetAndStoreTokens(Ctx).RequestToken))
+              .AppendLine(";");
+
         sb.Append("up.fragment.config.mainTargets = ")
           .Append(JsonSerializer.Serialize(Options.MainTargets))
           .AppendLine(";");
@@ -27,14 +41,6 @@
             sb.AppendLine("up.link.config.followSelectors.push('a[href]');");
             sb.AppendLine("up.form.config.submitSelectors.push('form');");
         }
-
-        sb.AppendLine("up.on('up:request:load', function (event) {");
-        sb.AppendLine("  if (event.request.method === 'GET') return;");
-        sb.AppendLine("  var t = document.querySelector('#up-csrf input');");
-        sb.Append("  if (t) event.request.headers[")
-          .Append(JsonSerializer.Serialize(Options.AntiforgeryHeaderName))
-          .AppendLine("] = t.value;");
-        sb.AppendLine("});");
 
         if (!string.IsNullOrWhiteSpace(Options.ExtraScript))
             sb.AppendLine(Options.ExtraScript);
