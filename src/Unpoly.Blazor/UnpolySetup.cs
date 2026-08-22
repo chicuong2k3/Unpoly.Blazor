@@ -17,6 +17,22 @@ public sealed class UnpolyOptions
     /// </summary>
     public bool HandleAllLinksAndForms { get; set; } = true;
 
+    /// <summary>
+    /// Follow every link on mousedown instead of click, which feels roughly 100ms faster.
+    /// Off by default: it changes click semantics, so a link that shows a confirm dialog or
+    /// that the user drags rather than clicks needs [up-instant=false].
+    /// 📖 https://unpoly.com/handling-everything
+    /// </summary>
+    public bool InstantAllLinks { get; set; }
+
+    /// <summary>
+    /// Preload every link on hover. Off by default because it multiplies server load: on a
+    /// product listing, sweeping the mouse across the grid fires a request per card.
+    /// Only worth enabling once caching is understood — preloading fills the same cache that
+    /// revalidation later refetches. 📖 https://unpoly.com/handling-everything
+    /// </summary>
+    public bool PreloadAllLinks { get; set; }
+
     /// <summary>Header carrying the antiforgery token for requests that are not form submissions.</summary>
     public string AntiforgeryHeaderName { get; set; } = "RequestVerificationToken";
 

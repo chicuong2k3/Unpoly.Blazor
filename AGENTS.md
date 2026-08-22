@@ -22,13 +22,15 @@ This changes the usual trade-offs:
 
 1. **All comments and XML docs in English.** UI copy in `sample/Jubin` stays Vietnamese —
    it is content, not comments.
-2. **Every public method cites its spec**: `📖 https://unpoly.com/<guide>` in the XML doc.
+2. **Update `CONCEPTS.md`** when a guide's concepts are covered, so a page can be marked
+   finished with confidence. It distinguishes *not done* from *nothing to do*.
+3. **Every public method cites its spec**: `📖 https://unpoly.com/<guide>` in the XML doc.
    If you cannot name the guide, you do not understand the header well enough to ship it.
-3. **No new dependencies.** The library has exactly one `FrameworkReference`. Keep it that way.
-4. **No database in the sample.** `sample/Jubin/Data/Catalog.cs` is in-memory on purpose.
-5. **Every non-trivial behaviour gets a check** in `tests/Unpoly.Blazor.Tests/Program.cs`.
+4. **No new dependencies.** The library has exactly one `FrameworkReference`. Keep it that way.
+5. **No database in the sample.** `sample/Jubin/Data/Catalog.cs` is in-memory on purpose.
+6. **Every non-trivial behaviour gets a check** in `tests/Unpoly.Blazor.Tests/Program.cs`.
    Plain asserts, no test framework. It must print `OK — N checks passed`.
-6. **Update `TASKS.md` in the same change** that completes a checkbox.
+7. **Update `TASKS.md` in the same change** that completes a checkbox.
 
 ## Layout
 
@@ -48,8 +50,8 @@ Do not "fix" these without reading the reasoning:
 | Decision | Why |
 |---|---|
 | `blazor.web.js` is **removed** from `App.razor` | With `interactivity=None` it only adds enhanced navigation and enhanced forms — exactly Unpoly's job. Both present means they fight over clicks and submits. |
-| DAUB **classless** build until Phase G | `daub.js` initialises components per element. Unpoly swaps a fragment and those components are dead DOM — silently, no error. Phase G handles this with `up.compiler`. |
-| Unpoly owns anything that loads a URL | Login modal, cart drawer, quick-view are `[up-layer]`, styled with DAUB CSS. `daub.js` keeps only pure-client widgets (accordion, carousel, tooltip). Never let both own the same modal. |
+| Hand-written CSS, no framework | DAUB was dropped: its JS initialises components per element, so an Unpoly swap leaves them dead DOM, silently. Tailwind was declined too — a build step and a watch process would be a second toolchain in a repo whose whole workflow is `dotnet run`. Five pages do not need one. `sample/Jubin/wwwroot/app.css` is the whole theme. |
+| Unpoly owns anything that loads a URL | Login modal, cart drawer, quick-view are `[up-layer]`. Any client-only widget added later (carousel, tooltip) must never own the same element. |
 | Full-page responses are the default | Unpoly extracts the target client-side. `UpChrome` is the opt-in optimisation, not a requirement. Do not build fragment-only endpoints. |
 | SDK pinned in `global.json` | 10.0.3xx stable. The machine default is a preview. |
 

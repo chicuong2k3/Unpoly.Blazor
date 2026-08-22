@@ -42,6 +42,13 @@
             sb.AppendLine("up.form.config.submitSelectors.push('form');");
         }
 
+        // Opt out per element with [up-instant=false] / [up-preload=false].
+        if (Options.InstantAllLinks)
+            sb.AppendLine("up.link.config.instantSelectors.push('a[href]');");
+
+        if (Options.PreloadAllLinks)
+            sb.AppendLine("up.link.config.preloadSelectors.push('a[href]');");
+
         if (!string.IsNullOrWhiteSpace(Options.ExtraScript))
             sb.AppendLine(Options.ExtraScript);
 

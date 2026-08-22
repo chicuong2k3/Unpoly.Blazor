@@ -13,11 +13,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <base href="/" />
 
-        @* DAUB CLASSLESS build: CSS only, no JS, so it cannot fight Unpoly over components.
-           Phase G switches to the full build plus daub.js and an up.compiler that re-inits it. *@
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daub-ui@latest/daub-classless.css" />
+        @* Same typefaces jubinstudio.com loads. Plain CSS, no Tailwind: a build step and a
+           watch process would be a second toolchain in a repo whose workflow is `dotnet run`. *@
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap" />
         <link rel="stylesheet" href="@Assets["app.css"]" />
-        <link rel="stylesheet" href="@Assets["Jubin.styles.css"]" />
 
         <UnpolyHead />
     </UpChrome>

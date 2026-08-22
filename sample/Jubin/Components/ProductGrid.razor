@@ -1,25 +1,39 @@
-@* Shared product grid. The DAUB classless build already styles bare <article> elements. *@
+@* Shared product grid. No photography in this sample — the tinted panel with an initial
+   reads as a deliberate placeholder rather than a broken image. *@
 
 <div class="grid">
     @foreach (var p in Products)
     {
-        <article>
-            <h4><a href="/p/@p.Slug">@p.Name</a></h4>
-            @if (p.OnSale)
-            {
-                <p><s>@Money(p.Price)</s> <strong>@Money(p.Effective)</strong></p>
-            }
-            else
-            {
-                <p><strong>@Money(p.Price)</strong></p>
-            }
+        <article class="card">
+            <a href="/p/@p.Slug">
+                <figure>
+                    <div class="thumb">
+                        @p.Name[0]
+                        @if (p.OnSale)
+                        {
+                            <span class="badge">Sale</span>
+                        }
+                    </div>
+                </figure>
+                <h3>@p.Name</h3>
+                <p class="price">
+                    @if (p.OnSale)
+                    {
+                        <s>@Money(p.Price)</s><span class="now">@Money(p.Effective)</span>
+                    }
+                    else
+                    {
+                        <span>@Money(p.Price)</span>
+                    }
+                </p>
+            </a>
         </article>
     }
 </div>
 
 @if (!Products.Any())
 {
-    <p><em>Không có sản phẩm nào.</em></p>
+    <p class="empty">Không có sản phẩm nào.</p>
 }
 
 @code {

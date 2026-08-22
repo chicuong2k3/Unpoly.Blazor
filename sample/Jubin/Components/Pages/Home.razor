@@ -2,12 +2,13 @@
 
 <PageTitle>JUBIN — Trang chủ</PageTitle>
 
-<h2>Trang chủ</h2>
+<div class="page-head">
+    <h2>Spring Summer '26</h2>
+    <p class="count">Đang giảm giá</p>
+</div>
 
-@* Learning sample. Keep DevTools > Network open before clicking anything. *@
-<p>Sample để học Unpoly trên Blazor static SSR. Mở DevTools → Network trước khi bấm gì.</p>
+<ProductGrid Products="Catalog.Products.Where(p => p.OnSale).Take(8)" />
 
-<h3>Bán chạy</h3>
-<ProductGrid Products="Catalog.Products.Where(p => p.OnSale).Take(6)" />
-
-<p><a href="/shop">Xem tất cả sản phẩm →</a></p>
+<p style="text-align:center;margin-top:3rem">
+    <a class="back" href="/shop">Xem tất cả sản phẩm →</a>
+</p>

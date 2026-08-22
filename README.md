@@ -54,6 +54,7 @@ builder.Services.AddUnpoly(o => o.MainTargets = [".content"]);
 `NotImplementedException` carrying their phase and the guide URL that explains them.
 
 - [`TASKS.md`](TASKS.md) — the phase-by-phase plan and what to do next
+- [`CONCEPTS.md`](CONCEPTS.md) — per-guide coverage: what is covered, what has nothing to cover
 - [`AGENTS.md`](AGENTS.md) — working rules, locked decisions
 
 ## Why the project is shaped this way

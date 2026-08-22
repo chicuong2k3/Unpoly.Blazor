@@ -2,33 +2,56 @@
 
 @if (Item is null)
 {
-    <h2>Không tìm thấy sản phẩm</h2>
-    <p><a href="/shop">← Về cửa hàng</a></p>
+    <div class="page-head">
+        <h2>Không tìm thấy sản phẩm</h2>
+    </div>
+    <p style="text-align:center"><a class="back" href="/shop">← Về cửa hàng</a></p>
 }
 else
 {
     <PageTitle>@Item.Name — JUBIN</PageTitle>
 
-    <p><a href="/shop/@Item.Category">← @Catalog.CategoryName(Item.Category)</a></p>
+    <div class="detail">
+        <figure style="margin:0">
+            <div class="thumb">
+                @Item.Name[0]
+                @if (Item.OnSale)
+                {
+                    <span class="badge">Sale</span>
+                }
+            </div>
+        </figure>
 
-    <h2>@Item.Name</h2>
-    <p>
-        @if (Item.OnSale)
-        {
-            <s>@($"{Item.Price:N0}₫")</s>
-        }
-        <strong>@($"{Item.Effective:N0}₫")</strong>
-    </p>
-    <p><small>Bộ sưu tập: @Item.Collection</small></p>
+        <div>
+            <a class="back" href="/shop/@Item.Category">← @Catalog.CategoryName(Item.Category)</a>
 
-    @* Phase D turns this button into an overlay; Phase F adds an [up-hungry] cart badge. *@
-    <p><button disabled>Thêm vào giỏ (Phase D)</button></p>
+            <h2>@Item.Name</h2>
+
+            <p class="price">
+                @if (Item.OnSale)
+                {
+                    <s>@Money(Item.Price)</s><span class="now">@Money(Item.Effective)</span>
+                }
+                else
+                {
+                    <span>@Money(Item.Price)</span>
+                }
+            </p>
+
+            @* Phase D turns this button into an overlay; Phase F adds an [up-hungry] cart badge. *@
+            <p><button class="btn" disabled>Thêm vào giỏ (Phase D)</button></p>
+
+            <p class="meta">Bộ sưu tập: @Item.Collection</p>
+        </div>
+    </div>
 }
 
 @code {
     [Parameter] public string Slug { get; set; } = "";
 
     Product? Item;
+
+    static string Money(decimal d) => $"{d:N0}₫";
 
     protected override void OnParametersSet() => Item = Catalog.BySlug(Slug);
 }

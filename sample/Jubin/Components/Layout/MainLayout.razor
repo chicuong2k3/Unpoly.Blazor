@@ -8,21 +8,20 @@
    📖 https://unpoly.com/optimizing-responses
    ───────────────────────────────────────────────────────────────────────*@
 <UpChrome>
-    <header>
-        <h1><a href="/">JUBIN</a></h1>
-        <p><small>The perfect wardrobe for Petite Girls</small></p>
+    <header class="site-header">
+        <h1 class="brand"><a href="/">JUBIN</a></h1>
+        <p class="tagline">The perfect wardrobe for petite girls</p>
 
         @* [up-nav] keeps the .up-current class in sync with the current URL,
            even though this nav is never swapped itself.
            📖 https://unpoly.com/navigation-bars *@
-        <nav up-nav>
+        <nav class="site-nav" up-nav>
             <a href="/shop">Tất cả</a>
             @foreach (var c in Catalog.Categories)
             {
                 <a href="/shop/@c.Slug">@c.Name</a>
             }
         </nav>
-        <hr />
     </header>
 </UpChrome>
 
@@ -32,8 +31,7 @@
 </main>
 
 <UpChrome>
-    <footer>
-        <hr />
-        <small>This chrome disappears from fragment responses. That is the point of the exercise.</small>
+    <footer class="site-footer">
+        This chrome disappears from fragment responses. That is the point of the exercise.
     </footer>
 </UpChrome>

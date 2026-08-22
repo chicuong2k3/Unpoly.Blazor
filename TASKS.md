@@ -134,10 +134,11 @@ full-page request. Missing that made chrome vanish silently — check kept at
 ## Phase G · JavaScript layer
 
 - [ ] Read `/enhancing-elements`, `/data`, `/handling-asset-changes`, `/script-security`, `/legacy-scripts`
-- [ ] Swap DAUB classless → full build + `daub.js` in `sample/Jubin/Components/App.razor`
-- [ ] First check whether `daub.js` uses event delegation; if it does, no compiler is needed
-- [ ] Otherwise `up.compiler(...)` to re-init DAUB components after each swap
-- [ ] Jubin: image carousel; reCAPTCHA re-init on the login form
+- [ ] Add one third-party JS widget to the sample (carousel or a date picker) so there is
+      something real that needs re-initialising after a swap
+- [ ] `up.compiler(...)` to re-init it; verify it survives several fragment swaps
+- [ ] Jubin: reCAPTCHA re-init on the login form
+- [ ] Decide the asset-tracking question below (fragment responses have no `<head>`)
 - [ ] No C# in this phase
 
 ---
@@ -173,8 +174,6 @@ Spec: <https://unpoly.com/up.protocol>
   scripts or stylesheets are present to diff, so `up:assets:changed` can never fire for a
   fragment. Decide in Phase G whether to re-emit `[up-asset]` elements into fragment
   responses. 📖 https://unpoly.com/handling-asset-changes
-- **`daub.js` init model** — delegation or per-element? Decides whether Phase G needs
-  `up.compiler` at all. Cheap to check early.
 - **Vendored Unpoly version** — pinned by download, not by a version file. Consider
   recording the exact version so `/handling-asset-changes` in Phase G has something to test.
 
