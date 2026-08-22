@@ -557,6 +557,48 @@ async def main():
     record("and an unchanged poll is answered 304", 304 in statuses,
            f"statuses seen: {sorted(set(statuses))}")
 
+    # ---------------------------------------------------------------- compilers
+    print("\n== Compilers ==", flush=True)
+
+    await p.goto("/p/dam-4")
+    ran = await p.js("document.querySelector('[data-gallery]')?.dataset?.galleryLive")
+    record("a compiler runs on page load", ran == "true", f"galleryLive: {ran}")
+
+    live = await p.js("window.Gallery.liveCount()")
+    record("exactly one instance is live", live == 1, f"liveCount: {live}")
+
+    # [up-data] is relaxed JSON, handed to the compiler as its second argument. Read the
+    # value the widget was given rather than timing how fast slides move -- the first
+    # version of this check measured the clock and failed for that reason.
+    got = await p.js("document.querySelector('[data-gallery]')?.dataset?.galleryInterval")
+    record("[up-data] reached the compiler", got == "900",
+           f"interval: {got}; 1500 is the widget default, meaning data never arrived")
+
+    # The real question: does it survive being swapped away and back, repeatedly?
+    for _ in range(3):
+        await p.click(".site-nav a[href='/shop']", settle=1.4)
+        await p.click(".card a", settle=1.6)
+
+    ran_again = await p.js("document.querySelector('[data-gallery]')?.dataset?.galleryLive")
+    record("and again after three swaps away and back", ran_again == "true",
+           f"galleryLive: {ran_again}")
+
+    # Without the destructor every swap would leave another timer running on detached DOM.
+    # The count is the leak made visible.
+    leaked = await p.js("window.Gallery.liveCount()")
+    record("the destructor stopped the old instances", leaked == 1,
+           f"liveCount after 3 round trips: {leaked}; 4 would mean every swap leaked one")
+
+    # Assets are only tracked in <head>, so cutting the head switched detection off. One
+    # marker outside UpChrome restores it.
+    await p.goto("/shop")
+    m = p.mark()
+    await p.click(".card a", settle=1.6)
+    marker = await p.js("!!document.querySelector('meta[up-asset]')")
+    record("the asset marker survives fragment responses", marker,
+           "meta[up-asset] is outside UpChrome, so up:assets:changed can still fire")
+    await asyncio.sleep(PACE)
+
     # ---------------------------------------------------------------- summary
     ok = sum(1 for _, o, _ in results if o)
     print(f"\n{'=' * 58}\n{ok}/{len(results)} browser checks passed\n{'=' * 58}")

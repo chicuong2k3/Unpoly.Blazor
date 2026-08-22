@@ -73,15 +73,15 @@ else
 
             <p class="meta">Size đã chọn: <strong class="chosen-size">chưa chọn</strong></p>
 
-            @* An [up-on-*] attribute is evaluated as ONE expression. A multi-line body of
-               statements silently does nothing -- the callback runs, the value arrives, and
-               no DOM changes. A named function keeps the attribute to one call. *@
-            <script>
-                function onSizeChosen(value) {
-                    document.querySelector('.chosen-size').textContent = value.size;
-                    document.querySelector('.add-to-cart').disabled = false;
-                }
-            </script>
+            @* A third-party widget with an imperative init/destroy API and a timer inside.
+               [up-data] carries its options as relaxed JSON; the compiler receives the parsed
+               object as its second argument. 📖 https://unpoly.com/data *@
+            <div class="gallery" data-gallery up-data='{ "interval": 900 }'>
+                <span data-slide>Ảnh 1 / 3</span>
+                <span data-slide hidden>Ảnh 2 / 3</span>
+                <span data-slide hidden>Ảnh 3 / 3</span>
+            </div>
+
 
             <form method="post" @formname="addToCart" @onsubmit="AddToCart">
                 <AntiforgeryToken />

@@ -283,17 +283,28 @@ curl -s -o /dev/null -w "%{http_code}
 
 ---
 
-## Phase G · JavaScript layer
+## Phase G · JavaScript layer ✅
 
-**Browser-observable**
+**Browser-observable — 6 checks**
 
-- [ ] A third-party widget still works after **three** consecutive fragment swaps, not one
-- [ ] Navigating away and back does not leave duplicate event listeners
-      (check the listener count, not the appearance)
-- [ ] reCAPTCHA re-initialises on a swapped login form
-- [ ] Decide and record: whether fragment responses re-emit `[up-asset]`. If not,
-      `up:assets:changed` can never fire — say so in `CONCEPTS.md` rather than leaving it
-      looking unfinished
+- [x] A compiler runs on page load
+- [x] Exactly one widget instance is live
+- [x] `[up-data]` reaches the compiler — the check reads the value the widget was handed,
+      not how fast slides move. The first version timed the clock and failed for that reason
+- [x] The compiler runs again after **three** swaps away and back, not just one
+- [x] **The destructor stopped the old instances** — `liveCount()` is 1, not 4. Without it
+      every swap leaves a timer running against detached DOM, which nothing visible reveals
+- [x] The asset marker survives fragment responses
+
+**Resolved**
+
+- [x] Whether fragment responses can support asset tracking. They can: assets are only
+      tracked in `<head>`, so one `meta[up-asset]` outside `UpChrome` restores it. Cutting
+      the head had silently disabled `up:assets:changed` since Phase B
+
+**Open**
+
+- [ ] reCAPTCHA re-initialises on a swapped login form — needs a real site key
 
 ---
 

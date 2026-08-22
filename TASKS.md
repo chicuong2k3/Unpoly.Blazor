@@ -9,10 +9,10 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 
 | | |
 |---|---|
-| Phase | **A—F complete** |
+| Phase | **all 7 complete** |
 | Protocol coverage | **24 / 24** — complete |
 | Build | 4 projects, 0 errors |
-| Checks | 97 unit + 50 browser |
+| Checks | 97 unit + 56 browser |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -37,7 +37,11 @@ If the build fails with a file lock, a previous `dotnet run` is still alive: `ta
 
 ## Next action
 
-**Phase G · JavaScript layer.** Read `/enhancing-elements` first.
+**All seven phases are done.** 24/24 protocol headers, 97 unit checks, 56 browser checks.
+
+What is left is not a phase. Both remaining items are one missing sample feature — the
+sample never opens a **second** overlay, which blocks ten `/layer-option` rows and six
+`/history-in-overlays` rows. Build the stack, and seventeen `todo`s close at once.
 
 **All 24 protocol headers are implemented.** Phase G adds no C# at all — it is about
 `up.compiler` and re-initialising third-party widgets after a swap.
@@ -162,11 +166,15 @@ full-page request. Missing that made chrome vanish silently — check kept at
 ## Phase G · JavaScript layer
 
 - [ ] Read `/enhancing-elements`, `/data`, `/handling-asset-changes`, `/script-security`, `/legacy-scripts`
-- [ ] Add one third-party JS widget to the sample (carousel or a date picker) so there is
-      something real that needs re-initialising after a swap
-- [ ] `up.compiler(...)` to re-init it; verify it survives several fragment swaps
-- [ ] Jubin: reCAPTCHA re-init on the login form
-- [ ] Decide the asset-tracking question below (fragment responses have no `<head>`)
+- [x] A stand-in third-party widget with an imperative init/destroy API and a timer
+- [x] `up.compiler` re-inits it; verified across three swaps away and back
+- [x] The returned destructor stops the old instances — `liveCount()` stays at 1, not 4
+- [x] `[up-data]` reaches the compiler as its second argument
+- [x] **Asset tracking resolved.** Assets are only tracked in `<head>`, so cutting it had
+      silently disabled `up:assets:changed` for five phases. One `meta[up-asset]` outside
+      `UpChrome` buys it back
+- [x] Application scripts moved out of `<body>` — they re-executed on every swap
+- [ ] reCAPTCHA on the login form (needs a real key)
 - [ ] No C# in this phase
 
 ---

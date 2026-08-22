@@ -20,8 +20,22 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap" />
         <link rel="stylesheet" href="@Assets["app.css"]" />
 
+        @* Application scripts belong in <head> with [defer]. In <body> they re-execute on
+           every swap of that region. 📖 https://unpoly.com/legacy-scripts *@
+        <script src="@Assets["js/gallery.js"]" defer></script>
+        <script src="@Assets["js/app.js"]" defer></script>
+
         <UnpolyHead />
     </UpChrome>
+
+    @* OUTSIDE UpChrome on purpose.
+
+       Unpoly only tracks assets in <head>; elements in <body> are never tracked. Cutting the
+       whole head on fragment responses therefore switched asset detection off entirely --
+       up:assets:changed could never fire for a fragment. Keeping one marker outside the
+       wrapper restores it for about a hundred bytes.
+       📖 https://unpoly.com/up-asset *@
+    <meta name="app-version" content="@AssetVersion" up-asset />
 
     <HeadOutlet />
 </head>
@@ -35,3 +49,9 @@
 </body>
 
 </html>
+
+@code {
+    // Bump this to simulate a deploy: Unpoly compares assets between renders and fires
+    // up:assets:changed when they differ.
+    [Parameter] public string AssetVersion { get; set; } = "1";
+}

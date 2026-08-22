@@ -637,13 +637,86 @@ state. Nothing new on the wire.
 
 ## `up.script`
 
-### [/handling-asset-changes](https://unpoly.com/handling-asset-changes) — partial
+### [/enhancing-elements](https://unpoly.com/enhancing-elements) — 9/9 sections
 
-| Concept | Status | Sample |
-|---|---|---|
-| Unpoly diffs scripts and stylesheets in `<head>` | 🚫 **broken here on purpose** — cutting `<head>` leaves nothing to diff | `App.razor:11` |
-| `up:assets:changed` has no default behaviour | ⬜ **Phase G** — decide whether to re-emit `[up-asset]` | todo — Phase G |
-| Remaining sections | ⬜ **Phase G** | todo — Phase G |
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Registering compilers | ➖ | `wwwroot/js/app.js` · `up.compiler` |
+| 2 | Avoid `DOMContentLoaded` | ➖ compilers run for later fragments too | verified: survives 3 swaps |
+| 3 | Integrating JavaScript libraries | ➖ | `wwwroot/js/gallery.js` |
+| 4 | Cleaning up after yourself | ➖ | `app.js` · returned destructor |
+| 5 | Element-local effects require no clean-up | ➖ | n/a — the point is the contrast with §6 |
+| 6 | **Global effects require a destructor** | ➖ | `gallery.js` · `setInterval` |
+| 7 | Alternative ways to register destructors | ➖ `up.destructor()` | todo |
+| 8 | Passing parameters to a compiler | ➖ `[up-data]` | `ProductDetail.razor` |
+| 9 | Accessing information about the render pass | ➖ | todo |
+
+The widget is a stand-in for a third-party library: an imperative `init`/`destroy` API with
+a timer inside, knowing nothing about Unpoly. That shape is what breaks under fragment
+swaps. Without the returned destructor every swap leaves another timer running against
+detached DOM — `Gallery.liveCount()` makes the leak countable, and the check asserts it
+stays at 1 after three round trips rather than climbing to 4.
+
+### [/data](https://unpoly.com/data) — 8/8 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Data attributes for simple key/value pairs | ➖ | `ProductDetail.razor` · `data-gallery` |
+| 2 | Structured data with `[up-data]` | ➖ relaxed JSON, 2nd compiler argument | `ProductDetail.razor` |
+| 3 | Using arbitrary attributes | ➖ | todo |
+| 4 | Using data in an event handler | ➖ | todo |
+| 5 | Accessing data programmatically | ➖ | todo |
+| 6 | Overriding data for a render pass | ➖ | todo |
+| 7 | Mapping selectors to data | ➖ | todo |
+| 8 | Preserving data through reloads | ➖ data does **not** survive a swap unless `[up-keep]` | todo |
+
+### [/handling-asset-changes](https://unpoly.com/handling-asset-changes) — 7/7 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Tracking assets | ➖ remote scripts and stylesheets in `<head>` | `App.razor` · `meta[up-asset]` |
+| 2 | Handling new asset versions | ➖ `up:assets:changed` | todo |
+| 3 | Notifying the user of new app versions | ➖ | todo |
+| 4 | Reloading the app at the next opportunity | ➖ | todo |
+| 5 | Loading new assets | ➖ | todo |
+| 6 | Detecting new versions without a user interaction | ➖ | todo |
+| 7 | Detecting changes in backend code | ➖ | todo |
+
+**Resolved, and it was a real defect.** Cutting `<head>` on fragment responses switched asset
+detection off entirely: *"Unpoly only tracks assets in the `<head>`. Elements in the `<body>`
+are never tracked."* So `up:assets:changed` could never fire for a fragment, silently, for
+five phases.
+
+The fix is one `<meta name="app-version" up-asset>` placed **outside** `<UpChrome>`. About a
+hundred bytes buys the feature back. This was carried as "decide in Phase G" since Phase B;
+the answer was not to accept the trade but to notice it was avoidable.
+
+### [/script-security](https://unpoly.com/script-security) — 12/12 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1—5 | Callbacks: what is allowed, strict CSP, nonces, replacing with listeners | ➖ | todo — needs a CSP |
+| 6 | **Script elements** | ➖ a `<script>` in a swapped fragment **does** run | see the note below |
+| 7—10 | Nonces on scripts, `strict-dynamic`, rewriting, the document nonce | ➖ | todo |
+| 11 | How responses are altered | ➖ | todo |
+| 12 | Only `script-src` is supported | ➖ | n/a |
+
+`up.script.config.scriptElementPolicy` defaults to `'auto'`: scripts run unless a CSP stops
+them. That is why the next guide matters.
+
+### [/legacy-scripts](https://unpoly.com/legacy-scripts) — 4/4 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Migrating legacy JavaScripts | ➖ | `app.js` |
+| 2 | Migrating legacy scripts to a compiler | ➖ | `app.js` |
+| 3 | Migrating screen-specific scripts | ➖ inline script → attribute + `[up-data]` | `ProductDetail.razor` |
+| 4 | **Avoid application scripts in `<body>`** | ✅ fixed | `App.razor` · `<script defer>` in head |
+
+§4 named a defect this sample had. `onSizeChosen` was an inline `<script>` inside
+`ProductDetail`'s body, so it re-executed on every swap of that region. Moved to a deferred
+script in `<head>`, where it is defined once.
+
 
 ---
 

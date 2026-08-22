@@ -434,3 +434,12 @@ form[aria-busy="true"] { opacity: .5; }
     color: var(--ink);
     border-bottom: 1px solid var(--line);
 }
+
+.gallery {
+    border: 1px solid var(--line);
+    padding: .8rem 1rem;
+    margin: 1rem 0;
+    font-size: .8rem;
+    color: var(--muted);
+    letter-spacing: .1em;
+}

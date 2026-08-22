@@ -303,6 +303,25 @@ else
         </li>
     </ul>
 
+    <h3>Compilers <span class="meta">/enhancing-elements · /data</span></h3>
+    <ul>
+        <li>
+            <a href="/p/dam-4" up-target=".content">Trang sản phẩm (có widget)</a>
+            <span class="meta">
+                Widget bên thứ ba với API init/destroy và một <code>setInterval</code> bên trong.
+                Swap đi swap lại vài lần rồi kiểm <code>Gallery.liveCount()</code> trong console —
+                không có destructor thì con số cứ tăng
+            </span>
+        </li>
+        <li>
+            <a href="/lab" up-target=".content">Quay lại lab (huỷ widget)</a>
+            <span class="meta">
+                /enhancing-elements — destructor chạy khi fragment bị thay, dừng timer.
+                Đây là thứ <code>DOMContentLoaded</code> không bao giờ làm được
+            </span>
+        </li>
+    </ul>
+
     <h3>JavaScript API <span class="meta">up.render · up.submit</span></h3>
     <p class="meta">
         Hai thứ duy nhất ở đây không dùng được bằng attribute. Chúng vẫn demo được, chỉ là

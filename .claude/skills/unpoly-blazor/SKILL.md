@@ -288,7 +288,14 @@ inventing one.
     handler just did — in Blazor SSR the layout renders **before** the page's handler, so
     it swaps correctly and shows the previous value. The last one needs POST-redirect-GET.
 
-12. **A swap that targets the nav, a cart badge, or anything else inside the chrome does
+12. **A third-party widget dies after a swap, or the page slows down over time.** Unpoly
+    inserts fresh DOM that no `DOMContentLoaded` will ever see. Use `up.compiler`, and
+    **return a destructor** for anything global — a timer, a document listener, a resize
+    observer. Without one each swap leaks another instance, and nothing visible tells you.
+    Application scripts also belong in `<head defer>`: a `<script>` in the body re-executes
+    every time that region is swapped.
+
+13. **A swap that targets the nav, a cart badge, or anything else inside the chrome does
     nothing.** `UpChrome` stripped it from the response, so the selector is absent and the
     swap finds nothing — no error, no console message. Declare it:
     `<UpChrome Provides=".site-nav, .cart-badge">`.
