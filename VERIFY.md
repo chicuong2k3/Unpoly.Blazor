@@ -20,7 +20,7 @@ done on code review — every item below is a command to run or a thing to watch
 (Playwright for .NET), and run in the same command as everything else:
 
 ```bash
-dotnet test          # 50 tests
+dotnet test          # 58 tests
 HEADED=1 dotnet test # watch the browser do it
 ```
 
@@ -318,7 +318,7 @@ curl -s -o /dev/null -w "%{http_code}
 ## Cross-cutting, re-check at every phase
 
 - [x] `dotnet build` — 0 errors, 0 warnings
-- [x] `dotnet test` — 50 tests, all green
+- [x] `dotnet test` — 58 tests, all green
 - [x] `SKILL.md` carries no "not available yet" list any more — nothing throws
 - [x] **No route stopped working with JavaScript disabled** — 6/6 routes render over plain
       HTTP. Measured with `urllib`, not the browser: `setScriptExecutionDisabled` also stops

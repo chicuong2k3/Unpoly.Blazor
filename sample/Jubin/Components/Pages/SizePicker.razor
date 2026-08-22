@@ -41,6 +41,14 @@ else
             origin: <code>@Ctx.UpOriginMode()</code> ·
             context: <code>@(RawContext ?? "{}")</code>
         </p>
+
+        @* The context does not just get echoed -- it CHANGES what is rendered. Opened from a
+           product page the picker says so; opened from the lab it does not.
+           📖 https://unpoly.com/optimizing-responses (content that depends on layer context) *@
+        @if (From == "product")
+        {
+            <p class="meta from-product">Mở từ trang sản phẩm — chọn xong sẽ bật nút thêm vào giỏ.</p>
+        }
     }
 
     <form method="post" @formname="pick" @onsubmit="Pick" class="sizes">
@@ -72,6 +80,9 @@ else
 
     Product? Item;
     string? RawContext;
+
+    // Read as a typed value, not sniffed out of the raw header.
+    string? From => Ctx.UpContext<Dictionary<string, string>>() is { } c && c.TryGetValue("from", out var f) ? f : null;
 
     [SupplyParameterFromQuery] public int? ServerOpens { get; set; }
 

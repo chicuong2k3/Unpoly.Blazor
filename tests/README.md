@@ -9,7 +9,7 @@ dotnet test
 | Project | What it covers |
 |---|---|
 | `Unpoly.Blazor.Tests` | header logic: 9 xunit tests, 97 assertions, no I/O |
-| `Unpoly.Blazor.BrowserTests` | 41 tests driving a real Chromium against the sample |
+| `Unpoly.Blazor.BrowserTests` | 49 tests driving a real Chromium against the sample |
 
 ## Browser tests
 

@@ -94,7 +94,7 @@ Do not "fix" these without reading the reasoning:
 
 ```bash
 dotnet build
-dotnet test                        # 50 tests: 9 header + 41 browser (Playwright)
+dotnet test                        # 58 tests: 9 header + 49 browser (Playwright)
 dotnet run --project sample/Jubin  # to look at it by hand
 ```
 

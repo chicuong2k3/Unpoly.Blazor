@@ -288,10 +288,10 @@ No guides — this module is reference only. Its features:
 | 2 | Omitting content that isn't targeted | ✅ `UpChrome` | `App.razor:11` head · `MainLayout.razor:10,34` |
 | 3 | Example | — | `/p/dam-4`: 1865 → 459 bytes |
 | 4 | Note (the `Vary` requirement) | ✅ `UpVary()` + `UseUnpoly()` | `Program.cs:36` |
-| 5 | Rendering different content for overlays | ⬜ **Phase D** — needs `X-Up-Mode` | todo — Phase D, needs `X-Up-Mode` |
+| 5 | Rendering different content for overlays | ✅ `IsUpOverlay()` | `SizePicker.razor` · chrome heading vs overlay title |
 | 6 | Rendering different content for Unpoly requests | ✅ `IsUnpoly()` | `Program.cs:28` |
 | 7 | Example | — | n/a — structural row |
-| 8 | Rendering content that depends on layer context | ⬜ **Phase D** — needs `X-Up-Context` | todo — Phase D, needs `X-Up-Context` |
+| 8 | Rendering content that depends on layer context | ✅ `UpContext<T>()` changes the render, not just echoes it | `SizePicker.razor` · `.from-product` |
 
 `UpChrome` alone was wrong for any target that lives **inside** the chrome. A link asking
 for `.content, .site-nav` got the chrome stripped, so `.site-nav` was absent from the
@@ -306,7 +306,7 @@ stays granular: targeting `.site-nav` brings back the header and still omits the
 | `csrfHeader` | ✅ from `AntiforgeryHeaderName` | `App.razor:23` · `UnpolyHead` |
 | `csrfToken` | ✅ from `IAntiforgery.GetAndStoreTokens` | same |
 | `csrfParam` | ➖ `EditForm` renders its own hidden input | `Login.razor:22` |
-| `methodParam` (`_method`) | ⬜ **Phase E**, with the `_up_method` cookie | todo — Phase E, with the `_up_method` cookie |
+| `methodParam` (`_method`) | ✅ `UpMethodCookie()` | `Receipt.razor` · a POST that renders a full page |
 | `maxHeaderSize` | ➖ observed through `:unknown` | `Login.razor:64` |
 
 ### [/conditional-requests](https://unpoly.com/conditional-requests) — 7/7 sections
@@ -348,7 +348,7 @@ The URL is `/conditional-requests`; `/conditional-responses` (as `up.protocol` l
 | 18 | **Caching optimized responses** | ✅ this is why `Vary` is mandatory | `Program.cs:36` · `UseUnpoly` |
 | 19 | Example | — | n/a — structural row |
 | 20 | **How cache entries are matched** | ✅ keyed by URL, then partitioned by every header named in `Vary` | same |
-| 21 | Caching after redirects | ⬜ unread detail — revisit with `X-Up-Location` in Phase E | todo — unread; revisit with `X-Up-Location` in Phase E |
+| 21 | Caching after redirects | ✅ the add-to-cart POST redirects, and the cache follows | `ProductDetail.razor` · `Nav.NavigateTo` |
 
 GET responses cache for **15 s** (`cacheExpireAge`). A non-GET expires the **entire** cache
 by itself, so calling `UpExpireCache` after an ordinary POST is redundant — the sample
@@ -391,7 +391,7 @@ Not read. Expected to be entirely client-side; confirm before ticking.
 |---|---|---|---|
 | 1 | Validating forms | ✅ `IsUpValidating()` | `Login.razor:59,73,83` |
 | 2 | Contents | — | n/a — structural row |
-| 3 | Validating after submission | ⬜ not exercised — the sample only validates on change | todo — needs a browser: change a field after a 422 and watch it revalidate |
+| 3 | Validating after submission | ✅ a field changed after a 422 still validates | `ProtocolDetailTests` |
 | 4 | Signaling a failed submission | ✅ answer **422** | `Login.razor:83` · `Invalid()` |
 | 5 | Changing how validation errors are rendered | ➖ `[up-form-group]` picks the swapped region | `Login.razor:26,32` |
 | 6 | HTML5 validations | ➖ browser-native, runs before any request | `Login.razor` · `required` |
@@ -464,7 +464,7 @@ overlay is being opened, which is how a page tells "I am being opened as a modal
 | 9 | Using a layer reference | ➖ JS API | todo |
 | 10 | Matching in multiple layers | ➖ | todo |
 | 11 | Opening new layers (`new`, `swap`, `shatter`) | ✅ `new` used; `swap`/`shatter` untried | `ProductDetail.razor` · `up-layer="new modal"` |
-| 12 | Targeting another layer for server errors | ⬜ pairs with `X-Up-Fail-Mode` | todo |
+| 12 | Targeting another layer for server errors | ✅ `UpFailMode()` — the server is told up front | `SizeGuide.razor` · `up-fail-layer="root"` |
 
 Rows 2—10 all need a **stack** of overlays to mean anything, and the sample opens only one
 at a time. That is one exercise, not ten.
@@ -480,7 +480,7 @@ at a time. That is one exercise, not ten.
 | 5 | Opening overlays from JavaScript | ➖ `up.layer.open()` | todo |
 | 6 | **Opening overlays from the server** | ✅ `UpOpenLayer(options)` — relaxed JSON of render options | `SizePicker.razor` · `?serverOpens=1` |
 | 7 | Close conditions | ✅ see /closing-overlays | `SizePicker.razor` |
-| 8 | Replacing existing overlays (`swap`, `shatter`) | ⬜ | todo — with a stack |
+| 8 | Replacing existing overlays (`swap`, `shatter`) | ➖ | `SizeGuide.razor` · swap keeps 3 layers, shatter leaves 2 |
 
 ### [/closing-overlays](https://unpoly.com/closing-overlays) — 13/13 sections
 
@@ -495,7 +495,7 @@ at a time. That is one exercise, not ten.
 | 7 | Closing when a button is clicked | ➖ `[up-dismiss]` | `SizePicker.razor` · `up-dismiss` |
 | 8 | Closing when a link is followed | ➖ | todo |
 | 9 | Closing when a form is submitted | ✅ this is the sample's accept path | `SizePicker.razor` |
-| 10 | Closing by targeting a background layer (peeling) | ⬜ | todo — with a stack |
+| 10 | Closing by targeting a background layer (peeling) | ➖ | `SizeGuide.razor` · `up-layer="root"` peels both |
 | 11 | Customizing dismiss controls | ➖ CSS/attributes | todo |
 | 12 | Close animation | ➖ | todo |
 | 13 | Using overlays as promises | ➖ JS API | todo |

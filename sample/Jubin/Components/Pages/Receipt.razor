@@ -1,0 +1,37 @@
+@page "/receipt"
+
+@* A POST that renders a full document instead of redirecting. Unpoly is not involved -- the
+   browser navigated normally -- so no header can tell the client how this page was produced.
+   That is the whole reason the _up_method cookie exists; Unpoly pops it during boot.
+   📖 https://unpoly.com/X-Up-Method *@
+
+<PageTitle>Hoá đơn — JUBIN</PageTitle>
+
+<div class="page-head">
+    <h2>Hoá đơn</h2>
+    <p class="count">@(Posted ? "Trang này được tạo bởi một POST" : "Chưa gửi gì")</p>
+</div>
+
+<form method="post" @formname="receipt" @onsubmit="Submit" up-submit="false" class="refresh">
+    <AntiforgeryToken />
+    <button class="btn-quiet" type="submit">Gửi POST (full page load)</button>
+</form>
+
+<p class="meta">
+    <code>up-submit="false"</code> nên Unpoly không đụng vào; đây là một full page load thật.
+    Response mang cookie <code>_up_method</code> để Unpoly biết trang này sinh ra từ POST.
+</p>
+
+@code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+
+    bool Posted;
+
+    void Submit()
+    {
+        Posted = true;
+
+        // No Unpoly request means no header to attach. A cookie is the only channel.
+        Ctx.UpMethodCookie();
+    }
+}

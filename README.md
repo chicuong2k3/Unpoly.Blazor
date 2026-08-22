@@ -19,7 +19,7 @@ tests/                 9 header tests + 41 browser tests (Playwright), one dotne
 
 ```bash
 dotnet build
-dotnet test                                      # 50 tests: 9 header + 41 browser
+dotnet test                                      # 58 tests: 9 header + 49 browser
 dotnet run --project sample/Jubin
 ```
 

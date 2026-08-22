@@ -44,7 +44,10 @@ else
     <ul class="layer-targets">
         <li>
             <a href="/shop" up-layer="root" up-target=".content">root</a>
-            <span class="meta">/layer-option §3 — thay nội dung trang nền, sau cả hai overlay</span>
+            <span class="meta">
+                /layer-option §3 · /closing-overlays §10 — nhắm vào layer nền sẽ
+                <strong>peel</strong>: mọi overlay phía trên bị đóng để lộ nó ra
+            </span>
         </li>
         <li>
             <a href="/p/dam-4/size" up-layer="parent" up-target=".content">parent</a>
@@ -57,6 +60,27 @@ else
         <li>
             <a href="/shop" up-layer="any" up-target=".content">any</a>
             <span class="meta">/layer-option §2 — tắt cô lập layer, khớp ở bất kỳ đâu</span>
+        </li>
+        <li>
+            <a href="/size-guide" up-layer="swap" up-target=".content">swap</a>
+            <span class="meta">
+                /opening-overlays §8 — thay overlay hiện tại thay vì chồng thêm: vẫn 2 layer
+            </span>
+        </li>
+        <li>
+            <a href="/size-guide" up-layer="shatter" up-target=".content">shatter</a>
+            <span class="meta">
+                /opening-overlays §8 — đóng hết rồi mở một cái mới: còn đúng 1 overlay
+            </span>
+        </li>
+        <li>
+            <a href="/khong-ton-tai" up-target=".content" up-fail-layer="root" up-fail-target=".content">
+                Lỗi bắn về layer gốc
+            </a>
+            <span class="meta">
+                /layer-option §12 — response hỏng render vào <strong>layer khác</strong>.
+                Server thấy <code>X-Up-Fail-Mode: root</code>
+            </span>
         </li>
         <li>
             <button class="btn-quiet" type="button" up-dismiss>Đóng lớp trên</button>
