@@ -12,14 +12,14 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 | Phase | **all 7 complete** |
 | Protocol coverage | **24 / 24** — complete |
 | Build | 4 projects, 0 errors |
-| Checks | 97 unit + 68 browser |
+| Checks | 97 assertions in 9 xunit tests + 68 browser |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
 
 ```bash
 dotnet build                                       # expect 0 errors
-dotnet run --project tests/Unpoly.Blazor.Tests     # expect "OK — 14 checks passed (Phase A)"
+dotnet test                                       # 9 tests, 97 assertions
 dotnet run --project sample/Jubin                  # then the curl proof below
 ```
 
@@ -70,7 +70,7 @@ Summarised, a phase is done when:
 1. Its guides are read.
 2. Its methods no longer `throw new NotImplementedException`.
 3. `VERIFY.md` for that phase is fully ticked, including the browser-observable items.
-4. `tests/Unpoly.Blazor.Tests/Program.cs` has a new `── PHASE X ──` block and still prints OK.
+4. `tests/Unpoly.Blazor.Tests/UnpolyTests.cs` has a new `[Fact]` and `dotnet test` is green.
 5. `CONCEPTS.md` marks its guides, and `.claude/skills/unpoly-blazor/SKILL.md` is updated
    **both ways**: the phase's methods move out of "typed helpers that do not exist yet",
    and anything newly marked ➖ is added to "reach for HTML first".

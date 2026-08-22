@@ -7,8 +7,8 @@ done on code review — every item below is a command to run or a thing to watch
 
 ## Rules
 
-- **Automated** items live in `tests/Unpoly.Blazor.Tests/Program.cs`. They cover logic that
-  can go wrong silently. Run: `dotnet run --project tests/Unpoly.Blazor.Tests`
+- **Automated** items live in `tests/Unpoly.Blazor.Tests/UnpolyTests.cs` (xunit). They cover
+  logic that can go wrong silently. Run: `dotnet test`
 - **Server-observable** items are `curl` commands with an expected output. They cover the
   wire format, which unit tests cannot see.
 - **Browser-observable** items need a human watching. They cover behaviour no assertion
@@ -318,7 +318,7 @@ curl -s -o /dev/null -w "%{http_code}
 ## Cross-cutting, re-check at every phase
 
 - [x] `dotnet build` — 0 errors, 0 warnings
-- [x] `dotnet run --project tests/Unpoly.Blazor.Tests` — prints OK (97 checks)
+- [x] `dotnet test` — 9 tests, 97 assertions, all green
 - [x] `SKILL.md` carries no "not available yet" list any more — nothing throws
 - [x] **No route stopped working with JavaScript disabled** — 6/6 routes render over plain
       HTTP. Measured with `urllib`, not the browser: `setScriptExecutionDisabled` also stops

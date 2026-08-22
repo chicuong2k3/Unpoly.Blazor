@@ -19,7 +19,7 @@ tests/                 plain console checks, no framework
 
 ```bash
 dotnet build
-dotnet run --project tests/Unpoly.Blazor.Tests   # OK — N checks passed
+dotnet test                                      # 9 tests, 97 assertions
 dotnet run --project sample/Jubin
 ```
 

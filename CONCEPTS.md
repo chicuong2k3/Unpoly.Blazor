@@ -161,6 +161,123 @@ up.network.config.fail = (response) => badStatus(response) || response.header('X
 
 ---
 
+## `up.fragment`
+
+Marked read in `TASKS.md` since Phase A and never enumerated here — the fourth time in
+this project that a claim outran the record, and the largest. `/render-lifecycle` in
+particular has been called the most important page in these docs and had no row at all.
+
+### [/navigation](https://unpoly.com/navigation)
+
+| Concept | Status | Sample |
+|---|---|---|
+| Navigation = render + a bundle of defaults | ➖ `history/scroll/focus: auto`, `fallback: :main`, `cache: auto`, `revalidate: auto`, `peel: dismiss` | `Program.cs` · `ExtraScript` |
+| `up.render()` applies none of them | ➖ | `Lab.razor` · `up.render` button |
+
+### [/render-lifecycle](https://unpoly.com/render-lifecycle) — 14/14 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1—2 | Render lifecycle, lifecycle diagram | ➖ the map every other guide plugs into | n/a — structural |
+| 3 | Running code after rendering | ➖ `[up-on-rendered]` | `ProductDetail.razor` · `up-on-accepted` |
+| 4 | Awaiting postprocessing | ➖ JS API | todo |
+| 5 | Running code after each render pass | ➖ `up:fragment:inserted` | used in `diag_accept.py` |
+| 6 | Inspecting the render result | ➖ JS API | todo |
+| 7 | Controlling the render process | ➖ | todo |
+| 8—11 | Handling errors, errors in user code, debugging, example | ➖ | todo — needs a deliberate failure |
+| 12 | Preventing a render pass | ➖ `up:fragment:loaded` | todo |
+| 13 | Changing options before rendering | ➖ | todo |
+| 14 | Advanced example | ➖ | n/a — structural |
+
+**Where the server takes part:** delivering the response, returning a non-2xx that triggers
+the failure branch, and answering a revalidation. Everything after that is client-side.
+That single sentence is why this library is 400 lines and not 4000.
+
+### [/target-derivation](https://unpoly.com/target-derivation) — 4/4 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Identifying properties | ➖ | `MainLayout.razor` · `#cart-badge` |
+| 2 | **Derivation patterns** | ➖ see the order below | same |
+| 3 | Derived target verification | ➖ Unpoly re-checks the selector matches | same |
+| 4 | Deriving a target programmatically | ➖ `up.fragment.toTarget()` | `diag_double.py` |
+
+Priority order, highest first: `[up-id]`, `[id]`, `html`, `head`, `body`, `main`, `[up-main]`,
+`link[rel]`, `meta[property]`, `*[name]`, `form[action]`, `a[href]`, `[class]`, `form`.
+
+**This corrects a conclusion recorded in Phase F.** The `[up-hungry]` badge was said to need
+an `[id]` because "a bare class is not derivable". It is — `[class]` is pattern 13, and
+`a[href]` is pattern 12, so that badge was derivable twice over. The `[id]` did not fix
+anything; the actual cause was the Blazor render order, found two attempts later. Adding the
+`[id]` is still worth keeping — it is more stable than a class — but the reasoning was wrong.
+
+### [/providing-html](https://unpoly.com/providing-html) — 12/12 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1—2 | Loading HTML from the server, usage in forms | ✅ the ordinary path | everywhere |
+| 3—4 | Programmatic API, rendering a string of HTML | ➖ | `Lab.razor` · `up.render` |
+| 5 | Replacing a fragment's children | ➖ `{ content }` / `[up-content]` | `Lab.razor` · `up-content` |
+| 6—7 | Rendering a fragment string, omitting `[href]` | ➖ | `Lab.razor` · `up-content` |
+| 8 | Sanitizing user input | ➖ caller's responsibility | todo |
+| 9 | Extracting a fragment from a document | ➖ | n/a — this is what Unpoly does on every swap |
+| 10—12 | Rendering a `<template>`, an `Element`, an `up.Response` | ➖ JS API | todo |
+
+### [/preserving-elements](https://unpoly.com/preserving-elements) — 8/8 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1—2 | Use cases, basic example | ➖ `[up-keep]` | todo — needs a video or a scroll box |
+| 3—6 | Keep conditions: until HTML changes, until data changes, custom | ➖ | todo |
+| 7 | Forcing an update | ➖ | todo |
+| 8 | Updating data for kept elements | ➖ | todo |
+
+The server renders ordinary HTML; the client matches `[up-keep]` elements across versions by
+**derived selector**, which is why §3 of `/target-derivation` matters here too.
+
+### [/skipping-rendering](https://unpoly.com/skipping-rendering) — 7/7 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Rendering nothing | ✅ `:none` → **204** | `ProductDetail.razor` · ping form |
+| 2 | **Skipping rendering of unchanged content** | ✅ **304** via `UpNotModified` | `Shop.razor`, `ProductDetail.razor` |
+| 3 | Preventing rendering of loaded responses | ➖ `up:fragment:loaded` | todo |
+| 4 | Global skipping rules | ➖ | todo |
+| 5 | Partially rendering a response | ✅ this is `UpChrome` | `MainLayout.razor`, `App.razor` |
+| 6 | Preserving elements in a targeted fragment | ➖ `[up-keep]` | todo |
+| 7 | Preventing a render pass before it starts | ➖ | todo |
+
+This guide is the one that names all three server-side ways to say "render nothing":
+`X-Up-Target: :none`, **204**, and **304**. All three are implemented and checked.
+
+### [/templates](https://unpoly.com/templates) — 10/10 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1—3 | Rendering a template, shorthand, features that support it | ➖ | todo — pairs with placeholders |
+| 4—9 | Dynamic templates: compiler data, template engines, parsing expressions, integrations, programmatic | ➖ | todo |
+| 10 | Template lookup order | ➖ | todo |
+
+Templates let the client clone fragments **without a request**. The server's only part is
+embedding the `<template>` in a response. Worth revisiting if optimistic rendering is ever
+built.
+
+---
+
+## `up.event`
+
+No guides — this module is reference only. Its features:
+
+| Feature | Status | Sample |
+|---|---|---|
+| `up.on()` · `up.off()` | ➖ | `app.js`, the browser suite |
+| `up.emit()` | ➖ the client-side twin of `UpEmit` | todo |
+| `[up-emit]` on an element | ➖ | todo |
+| `up.event.build()` · `halt()` · `onEscape()` | ➖ | todo |
+| **Server-emitted events** | ✅ `UpEmit` → `X-Up-Events` | `ProductDetail.razor` |
+
+---
+
 ## `up.protocol`
 
 ### [/optimizing-responses](https://unpoly.com/optimizing-responses) — 8/8 sections
@@ -315,21 +432,6 @@ Antiforgery verified on the wire: valid token 200/422, missing token **400**.
 Not read. `[up-switch]`, `[up-autosubmit]`, `[up-watch-delay]` are client-side;
 `/reactive-server-forms` may have a server story — read it before ticking Phase C.
 
----
-
-## `up.status`
-
-### /feedback-classes · /navigation-bars — partial
-
-Read only far enough to style three classes early, so Unpoly's feedback is visible in the
-browser rather than only in the docs. Full coverage is **Phase F**.
-
-| Concept | Status | Sample |
-|---|---|---|
-| `[up-nav]` keeps `.up-current` in sync without swapping the nav | ➖ | `MainLayout.razor:18` · `app.css:83` |
-| `.up-active` on the link or form in flight | ➖ | `app.css:90` |
-| `.up-loading` on the fragment awaiting replacement | ➖ | `app.css:93` |
-| Remaining sections of both guides | ⬜ **Phase F** | todo — Phase F |
 
 ---
 
@@ -740,9 +842,8 @@ The playground paid for itself immediately: its `.content, .site-nav` link expos
 
 ---
 
-## Not yet opened
+## Not opened, by decision
 
-`up.fragment` · `up.event`
 
 Skipped for the whole project: `up.motion` · `up.element` · `up.util` · `up.log` ·
 `up.framework`, plus the *Features* tier everywhere — that tier is a dictionary. Look

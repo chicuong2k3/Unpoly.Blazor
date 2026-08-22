@@ -28,8 +28,11 @@ This changes the usual trade-offs:
    If you cannot name the guide, you do not understand the header well enough to ship it.
 4. **No new dependencies.** The library has exactly one `FrameworkReference`. Keep it that way.
 5. **No database in the sample.** `sample/Jubin/Data/Catalog.cs` is in-memory on purpose.
-6. **Every non-trivial behaviour gets a check** in `tests/Unpoly.Blazor.Tests/Program.cs`.
-   Plain asserts, no test framework. It must print `OK — N checks passed`.
+6. **Every non-trivial behaviour gets a check.** Wire-format and header logic go in
+   `tests/Unpoly.Blazor.Tests/UnpolyTests.cs` (xunit, one `[Fact]` per concept group).
+   Anything only a browser can see goes in `tests/browser/test_unpoly.py`. A check must
+   report what it *saw*, not just pass — a bare verdict hides a check measuring the wrong
+   element, which has happened here.
 7. **Update `TASKS.md` in the same change** that completes a checkbox.
 8. **Update `.claude/skills/unpoly-blazor/SKILL.md` whenever the public API changes.**
    That file tells downstream agents which methods exist and which throw. A stale copy is
@@ -90,8 +93,8 @@ Do not "fix" these without reading the reasoning:
 
 ```bash
 dotnet build
-dotnet run --project tests/Unpoly.Blazor.Tests
-dotnet run --project sample/Jubin
+dotnet test                        # 9 xunit tests, 97 assertions
+dotnet run --project sample/Jubin  # then: python tests/browser/test_unpoly.py
 ```
 
 Build failing on a locked DLL means a previous `dotnet run` is still alive:
