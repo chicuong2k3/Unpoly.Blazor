@@ -31,6 +31,10 @@ This changes the usual trade-offs:
 6. **Every non-trivial behaviour gets a check** in `tests/Unpoly.Blazor.Tests/Program.cs`.
    Plain asserts, no test framework. It must print `OK — N checks passed`.
 7. **Update `TASKS.md` in the same change** that completes a checkbox.
+8. **Update `.claude/skills/unpoly-blazor/SKILL.md` whenever the public API changes.**
+   That file tells downstream agents which methods exist and which throw. A stale copy is
+   worse than none: it makes an agent recommend a method that throws. Treat it as part of
+   the API, not as documentation.
 
 ## Layout
 

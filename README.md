@@ -48,6 +48,24 @@ builder.Services.AddUnpoly(o => o.MainTargets = [".content"]);
 }
 ```
 
+## For AI agents using this library
+
+[`.claude/skills/unpoly-blazor/SKILL.md`](.claude/skills/unpoly-blazor/SKILL.md) is a
+consumer-facing reference: setup, the API that currently exists, and the mistakes worth
+checking first. Copy it into the consuming project:
+
+```bash
+mkdir -p .claude/skills/unpoly-blazor
+curl -o .claude/skills/unpoly-blazor/SKILL.md   https://raw.githubusercontent.com/chicuong2k3/Unpoly.Blazor/main/.claude/skills/unpoly-blazor/SKILL.md
+```
+
+Claude Code picks it up automatically. Other agents read it as plain markdown — point their
+`AGENTS.md` at the file. It is deliberately **not** an MCP server: this is static reference
+text, and a server process would add installation and a runtime for nothing.
+
+Note the file states which methods exist and which throw. That is load-bearing — without it
+an agent will confidently suggest `UpAcceptLayer` and hand you a `NotImplementedException`.
+
 ## Status
 
 **Phase B of 7 · 7 of 26 protocol headers.** Unimplemented methods throw
