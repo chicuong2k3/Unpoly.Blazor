@@ -9,10 +9,10 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 
 | | |
 |---|---|
-| Phase | **A complete**, B in progress |
-| Protocol coverage | **7 / 26** headers |
+| Phase | **A complete**, B code complete — one browser check still open |
+| Protocol coverage | **11 / 24** headers |
 | Build | 4 projects, 0 errors |
-| Checks | 22 passing |
+| Checks | 37 passing |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -37,10 +37,12 @@ If the build fails with a file lock, a previous `dotnet run` is still alive: `ta
 
 ## Next action
 
-**Phase B, continued.** `Vary` and the `<head>` cut are done. Next: read
-<https://unpoly.com/caching> twice, then add a request counter to
-`sample/Jubin/Program.cs` and click around. You should observe **two** server requests per
-click. Understand why before writing any code.
+**Phase C · Forms.** Read `/submitting-forms` and `/validation` first.
+
+One Phase B item is still open and needs *you*, not an agent: open the browser, click one
+link, and count the request-log lines the sample now prints. The docs describe two render
+passes; whether that is two HTTP requests was never confirmed here because the Chrome
+extension would not connect. See VERIFY.md.
 
 ---
 
@@ -82,10 +84,10 @@ full-page request. Missing that made chrome vanish silently — check kept at
 
 ## Phase B · Network and cache ⬅️ NEXT
 
-- [ ] Read `/caching` **twice**
-- [ ] Read `/aborting-requests`, `/network-issues`, `/progress-bar`
+- [x] Read `/caching` **twice**
+- [x] Read `/progress-bar` · [ ] `/aborting-requests`, `/network-issues` (nothing server-side expected)
 - [x] Read `/optimizing-responses`
-- [ ] Read `/conditional-responses`
+- [x] Read `/conditional-requests` (the `/conditional-responses` URL 404s)
 - [ ] `UpExpireCache` `UpEvictCache` `UpClearCache` (UpResponse.cs)
 - [ ] `UpReloadFromTime` (UpRequest.cs)
 - [ ] ETag / `If-None-Match` → return **304** with empty body
@@ -151,18 +153,23 @@ full-page request. Missing that made chrome vanish silently — check kept at
 
 ---
 
-## Protocol coverage — 7 / 26
+## Protocol coverage — 11 / 24
 
 Grep `NotImplementedException` in `src/` for the live list.
 
-**Request (12)** — ✅ `X-Up-Version` `X-Up-Target` `X-Up-Fail-Target`
+**Request (11)** — ✅ `X-Up-Version` `X-Up-Target` `X-Up-Fail-Target` `If-None-Match`
+`If-Modified-Since`
 ⬜ `X-Up-Mode` `X-Up-Fail-Mode` `X-Up-Origin-Mode` `X-Up-Validate` `X-Up-Context`
-`X-Up-Fail-Context` `X-Up-Reload-From-Time` `If-Modified-Since` `If-None-Match`
+`X-Up-Fail-Context`
 
-**Response (14)** — ✅ `X-Up-Target` `Vary`
+**Response (13)** — ✅ `X-Up-Target` `Vary` `X-Up-Expire-Cache` `X-Up-Evict-Cache` `ETag`
+`Last-Modified`
 ⬜ `X-Up-Title` `X-Up-Location` `X-Up-Method` `X-Up-Open-Layer` `X-Up-Accept-Layer`
-`X-Up-Dismiss-Layer` `X-Up-Events` `X-Up-Clear-Cache` `X-Up-Evict-Cache`
-`X-Up-Expire-Cache` `ETag` `Last-Modified` + cookie `_up_method`
+`X-Up-Dismiss-Layer` `X-Up-Events` + cookie `_up_method`
+
+**Dropped from the target (was 26):** `X-Up-Clear-Cache` appears in no current guide, and
+`X-Up-Reload-From-Time` is deprecated in favour of `Last-Modified`. Implementing either
+would have been work that made the library worse.
 
 Spec: <https://unpoly.com/up.protocol>
 
@@ -176,8 +183,7 @@ Spec: <https://unpoly.com/up.protocol>
   straight into `up.protocol.config.csrfToken`. 📖 https://unpoly.com/up.protocol.config
 - **`GetAndStoreTokens` vs streaming rendering** — the token is minted while `<head>` renders,
   which is safe today. Re-verify if streaming rendering is ever enabled.
-- **`X-Up-Clear-Cache`** — may be legacy/superseded by expire+evict. Confirm against the
-  spec in Phase B before implementing; delete the stub if it is obsolete.
+- ~~`X-Up-Clear-Cache`~~ — **resolved:** in no current guide. Stub deleted.
 - **Asset tracking is now impossible on fragment responses** — cutting `<head>` means no
   scripts or stylesheets are present to diff, so `up:assets:changed` can never fire for a
   fragment. Decide in Phase G whether to re-emit `[up-asset]` elements into fragment

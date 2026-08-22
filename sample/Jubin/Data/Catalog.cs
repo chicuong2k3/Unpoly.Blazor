@@ -37,6 +37,16 @@ public static class Catalog
 
     public static readonly IReadOnlyList<Product> Products = Build();
 
+    /// <summary>
+    /// Version of the catalog. A real app would derive this from the data — a row version,
+    /// a MAX(updated_at), a hash. Bumped by Touch() so the 304 path can be exercised.
+    /// </summary>
+    public static DateTimeOffset LastModified { get; private set; } = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+    public static string ETag => $"\"catalog-{LastModified.ToUnixTimeSeconds()}\"";
+
+    public static void Touch() => LastModified = DateTimeOffset.UtcNow;
+
     static Product[] Build()
     {
         string[] damNames  = ["Đầm Lụa Ánh Trăng", "Đầm Xoè Tiểu Thư", "Đầm Ôm Cổ Vuông", "Đầm Hai Dây Bèo", "Đầm Sơ Mi Dáng A", "Đầm Voan Hoa Nhí", "Đầm Cúp Ngực Nơ", "Đầm Suông Tay Phồng"];

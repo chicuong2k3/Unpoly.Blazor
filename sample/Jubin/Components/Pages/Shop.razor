@@ -1,6 +1,8 @@
 @page "/shop"
 @page "/shop/{Category}"
 
+@if (!NotModified)
+{
 <PageTitle>@Heading — JUBIN</PageTitle>
 
 <div class="page-head">
@@ -9,14 +11,25 @@
 </div>
 
 <ProductGrid Products="Items" />
+}
 
 @code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+
     [Parameter] public string? Category { get; set; }
 
     List<Product> Items = [];
+    bool NotModified;
 
     string Heading => Category is null ? "Tất cả sản phẩm" : Catalog.CategoryName(Category);
 
-    protected override void OnParametersSet() =>
-        Items = [.. Catalog.ByCategory(Category)];
+    protected override void OnParametersSet()
+    {
+        // Publishes ETag/Last-Modified and answers 304 when the client is already current.
+        // Unpoly uses conditional requests for reload, revalidation and polling.
+        // 📖 https://unpoly.com/conditional-requests
+        NotModified = Ctx.UpNotModified(Catalog.ETag, Catalog.LastModified);
+
+        Items = NotModified ? [] : [.. Catalog.ByCategory(Category)];
+    }
 }

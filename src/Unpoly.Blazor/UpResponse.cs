@@ -44,20 +44,87 @@ public static class UpResponse
         c.Response.Headers.Vary = string.Join(", ", merged);
     }
 
-    /// <summary>X-Up-Expire-Cache — mark cache entries stale; Unpoly refetches them when needed. TODO Phase B</summary>
-    public static void UpExpireCache(this HttpContext c, string pattern = "*")
-        => throw new NotImplementedException("Phase B · 📖 https://unpoly.com/caching");
+    /// <summary>
+    /// X-Up-Expire-Cache — mark cache entries stale. Expired content is still rendered
+    /// immediately, then refetched; it is not thrown away.
+    ///
+    /// Rarely needed: Unpoly already expires the ENTIRE cache after any non-GET request.
+    /// Reach for this only to expire a subset, or to expire from a GET.
+    ///
+    /// <paramref name="urlPattern"/> is a URL glob such as "/notes/*", or "*" for everything.
+    /// 📖 https://unpoly.com/X-Up-Expire-Cache
+    /// </summary>
+    public static void UpExpireCache(this HttpContext c, string urlPattern = "*")
+        => c.Response.Headers["X-Up-Expire-Cache"] = urlPattern;
 
     /// <summary>
-    /// X-Up-Evict-Cache — drop entries from the cache entirely.
-    /// Unlike expiry, evicted content is never reused. TODO Phase B
+    /// X-Up-Expire-Cache: false — keep the cache that a non-GET request would otherwise clear.
+    /// For a POST that changed nothing the user can see, such as recording an analytics hit.
     /// </summary>
-    public static void UpEvictCache(this HttpContext c, string pattern = "*")
-        => throw new NotImplementedException("Phase B · 📖 https://unpoly.com/caching");
+    public static void UpKeepCache(this HttpContext c)
+        => c.Response.Headers["X-Up-Expire-Cache"] = "false";
 
-    /// <summary>X-Up-Clear-Cache — legacy header; check the spec before using it. TODO Phase B</summary>
-    public static void UpClearCache(this HttpContext c, string pattern = "*")
-        => throw new NotImplementedException("Phase B");
+    /// <summary>
+    /// X-Up-Evict-Cache — drop entries outright. Unlike expiry, evicted content is never
+    /// rendered again, so the user waits for the network instead of seeing a stale flash.
+    /// Use it when stale content would be wrong to show at all, not merely out of date.
+    /// 📖 https://unpoly.com/caching
+    /// </summary>
+    public static void UpEvictCache(this HttpContext c, string urlPattern = "*")
+        => c.Response.Headers["X-Up-Evict-Cache"] = urlPattern;
+
+    // ─────────────────────────────────────────────────────────────
+    // PHASE B · Conditional requests           📖 /conditional-requests
+    // ─────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Publishes the fragment's version and reports whether the client already has it.
+    ///
+    /// Returns true when the client's copy is current: the response is set to 304 and the
+    /// caller must render NOTHING. Unpoly uses this for reloading, cache revalidation and
+    /// polling, so on a polled fragment it turns most requests into an empty 304.
+    ///
+    /// Pass an <paramref name="etag"/> (a content hash) or a <paramref name="lastModified"/>
+    /// time, or both. Last-Modified is compared at whole-second precision because that is
+    /// all an HTTP date carries — without truncating, a sub-second difference would make
+    /// every comparison miss.
+    /// 📖 https://unpoly.com/conditional-requests
+    /// </summary>
+    public static bool UpNotModified(this HttpContext c, string? etag = null, DateTimeOffset? lastModified = null)
+    {
+        if (etag is not null) c.Response.Headers.ETag = etag;
+
+        var truncated = lastModified?.AddTicks(-(lastModified.Value.Ticks % TimeSpan.TicksPerSecond));
+        if (truncated is not null) c.Response.Headers.LastModified = truncated.Value.ToString("R");
+
+        var fresh = etag is not null && MatchesETag(c, etag)
+                 || truncated is not null && NotNewerThan(c, truncated.Value);
+
+        if (fresh) c.Response.StatusCode = StatusCodes.Status304NotModified;
+        return fresh;
+    }
+
+    private static bool MatchesETag(HttpContext c, string etag)
+    {
+        var header = c.Request.Headers.IfNoneMatch.ToString();
+        if (string.IsNullOrEmpty(header)) return false;
+        if (header.Trim() == "*") return true;
+
+        foreach (var candidate in header.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            // A cache may weaken a strong tag on the way back, so compare past the W/ prefix.
+            var bare = candidate.StartsWith("W/", StringComparison.Ordinal) ? candidate[2..] : candidate;
+            var mine = etag.StartsWith("W/", StringComparison.Ordinal) ? etag[2..] : etag;
+            if (bare == mine) return true;
+        }
+        return false;
+    }
+
+    private static bool NotNewerThan(HttpContext c, DateTimeOffset lastModified)
+    {
+        var header = c.Request.Headers.IfModifiedSince.ToString();
+        return DateTimeOffset.TryParse(header, out var since) && lastModified <= since;
+    }
 
     // ─────────────────────────────────────────────────────────────
     // PHASE D · Layers                         📖 /closing-overlays

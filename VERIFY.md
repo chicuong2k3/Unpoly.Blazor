@@ -59,16 +59,21 @@ curl -s -H "X-Up-Version: 3.10.2" -H "X-Up-Target: .content" $U | grep -c 'class
 
 ---
 
-## Phase B · Network and cache ⏳ (Vary and head-cut done)
+## Phase B · Network and cache ⏳ (code complete, one browser check open)
 
 **Automated**
 
 - [x] `UpVary` writes both header names
 - [x] `UpVary` merges with an existing `Vary` instead of overwriting (`Accept-Encoding`)
 - [x] `UpVary` dedupes case-insensitively
-- [ ] A 304 path returns an empty body
-- [ ] `UpReloadFromTime` parses the header into a `DateTimeOffset`
-- [ ] Cache-control headers carry the pattern they were given
+- [x] `UpExpireCache` writes a URL glob, defaults to `*`
+- [x] `UpKeepCache` writes `false` — the opt-out from Unpoly clearing everything after a non-GET
+- [x] `UpEvictCache` writes its own header, not Expire's
+- [x] A matching ETag returns true and sets 304; a stale one does not
+- [x] `W/` prefix, comma lists and `*` all match
+- [x] `If-Modified-Since` compares, and sub-second precision is truncated first
+      (without truncating, the 304 path silently never fires)
+- [x] ~~`UpReloadFromTime`~~ — deprecated by Unpoly, removed rather than implemented
 
 **Server-observable**
 
@@ -80,15 +85,31 @@ curl -s -D - -o /dev/null http://localhost:5199/p/dam-4 | grep -i '^vary'
 - [x] `Vary` present on **both** shapes of response
 - [x] Fragment response carries no stylesheet, no `unpoly.min.js`, no config script,
       but still carries `<title>` and `.content` (1865 → 459 bytes on `/p/dam-4`)
-- [ ] A second request with `If-None-Match` matching the previous `ETag` returns **304**
-      with `Content-Length: 0`
+- [x] A second request with `If-None-Match` matching the previous `ETag` returns **304**
+      with a 0-byte body — measured on `/shop`: 9194 → 0
+
+```bash
+U=http://localhost:5199/shop
+ET=$(curl -s -D - -o /dev/null $U | grep -i '^etag' | tr -d '' | cut -d' ' -f2)
+curl -s -o /dev/null -w "%{http_code} %{size_download}
+" -H "If-None-Match: $ET" $U   # 304 0
+curl -s -o /dev/null -w "%{http_code} %{size_download}
+" -H 'If-None-Match: "x"'  $U   # 200 9194
+```
+
+- [x] `Vary` survives on the 304 as well
 
 **Browser-observable**
 
-- [ ] **The central one:** log every request server-side, click one link, confirm the server
-      is hit **twice** — cached render first, then revalidation. If you see one, you have not
-      reproduced the behaviour the rest of the phase depends on
-- [ ] After a cart mutation, the listing is not stale
+- [ ] **The central one, still open.** The sample now prints a numbered request log. Click
+      one link and count the lines. The docs describe two *render passes*; they never say
+      whether the server sees two *HTTP requests*, and this was not confirmed here because
+      the Chrome extension would not connect. Do not tick it on the strength of the docs.
+
+      Note the cache expires after **15 seconds** (`cacheExpireAge`), so a slow click is not
+      a revalidation — go back and forth quickly.
+- [ ] After a cart mutation, the listing is not stale — note Unpoly already expires the
+      whole cache after any non-GET, so this should pass **without** calling `UpExpireCache`
 - [ ] The progress bar appears on a slow response and not on a fast one
 
 ---

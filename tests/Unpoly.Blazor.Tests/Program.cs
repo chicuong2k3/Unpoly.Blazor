@@ -70,4 +70,57 @@ varyDupe.UpVary("X-Up-Target");
 varyDupe.UpVary("x-up-target", "X-Up-Version");
 Check(varyDupe.Response.Headers.Vary == "X-Up-Target, X-Up-Version", "UpVary dedupes case-insensitively");
 
-Console.WriteLine($"OK — {passed} checks passed (Phase A + Vary)");
+// ── PHASE B: cache control ──────────────────────────────────────────────
+
+var expire = new DefaultHttpContext();
+expire.UpExpireCache("/shop/*");
+Check(expire.Response.Headers["X-Up-Expire-Cache"] == "/shop/*", "UpExpireCache writes the URL pattern");
+
+var expireAll = new DefaultHttpContext();
+expireAll.UpExpireCache();
+Check(expireAll.Response.Headers["X-Up-Expire-Cache"] == "*", "UpExpireCache defaults to everything");
+
+// Unpoly clears the whole cache after any non-GET; "false" is how a POST opts out.
+var keep = new DefaultHttpContext();
+keep.UpKeepCache();
+Check(keep.Response.Headers["X-Up-Expire-Cache"] == "false", "UpKeepCache preserves the cache after a non-GET");
+
+var evict = new DefaultHttpContext();
+evict.UpEvictCache("/cart");
+Check(evict.Response.Headers["X-Up-Evict-Cache"] == "/cart", "UpEvictCache writes its own header, not Expire");
+
+// ── PHASE B: conditional requests ───────────────────────────────────────
+
+static HttpContext Cond(string? ifNoneMatch = null, string? ifModifiedSince = null)
+{
+    var c = new DefaultHttpContext();
+    if (ifNoneMatch is not null) c.Request.Headers.IfNoneMatch = ifNoneMatch;
+    if (ifModifiedSince is not null) c.Request.Headers.IfModifiedSince = ifModifiedSince;
+    return c;
+}
+
+var firstVisit = Cond();
+Check(!firstVisit.UpNotModified("\"v1\""), "no If-None-Match means the client has nothing");
+Check(firstVisit.Response.Headers.ETag == "\"v1\"", "the ETag is published even on a 200");
+
+var current = Cond(ifNoneMatch: "\"v1\"");
+Check(current.UpNotModified("\"v1\""), "a matching ETag means the client is current");
+Check(current.Response.StatusCode == 304, "a current client gets 304");
+
+Check(!Cond(ifNoneMatch: "\"v0\"").UpNotModified("\"v1\""), "a stale ETag still renders");
+
+// A cache may weaken a strong tag in transit, so the W/ prefix must not break the match.
+Check(Cond(ifNoneMatch: "W/\"v1\"").UpNotModified("\"v1\""), "a weakened ETag still matches");
+Check(Cond(ifNoneMatch: "*").UpNotModified("\"v1\""), "If-None-Match: * matches anything");
+Check(Cond(ifNoneMatch: "\"a\", \"v1\"").UpNotModified("\"v1\""), "If-None-Match may be a list");
+
+var t = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+Check(Cond(ifModifiedSince: t.ToString("R")).UpNotModified(lastModified: t), "unchanged since that time means 304");
+Check(!Cond(ifModifiedSince: t.ToString("R")).UpNotModified(lastModified: t.AddSeconds(1)), "newer data still renders");
+
+// HTTP dates carry whole seconds. Without truncating, sub-second precision would make
+// every comparison miss and the 304 path would silently never fire.
+Check(Cond(ifModifiedSince: t.ToString("R")).UpNotModified(lastModified: t.AddMilliseconds(400)),
+      "sub-second precision is truncated before comparing");
+
+Console.WriteLine($"OK — {passed} checks passed (Phase A + B)");

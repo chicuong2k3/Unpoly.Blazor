@@ -18,6 +18,19 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+// Phase B observation aid: log every request so cache revalidation is visible.
+// Click one link in the browser and count the lines. 📖 https://unpoly.com/caching
+var hits = 0;
+app.Use(async (ctx, next) =>
+{
+    if (!ctx.Request.Path.StartsWithSegments("/_content") && !ctx.Request.Path.StartsWithSegments("/_framework"))
+    {
+        var target = ctx.UpTarget() is { } t ? $" target={t}" : "";
+        Console.WriteLine($"[{++hits,3}] {ctx.Request.Method} {ctx.Request.Path}{target}");
+    }
+    await next();
+});
+
 // Marks every response as varying by Unpoly's request headers, because UpChrome
 // branches the body on X-Up-Target. 📖 https://unpoly.com/optimizing-responses
 app.UseUnpoly();

@@ -79,6 +79,10 @@ The library is built phase by phase. **Only these exist**; everything else throw
 |---|---|
 | `Ctx.UpRetarget(".sidebar")` | swap something else than requested; `":none"` swaps nothing |
 | `Ctx.UpVary("X-Up-Target")` | merges into `Vary`; `UseUnpoly()` already does this |
+| `Ctx.UpExpireCache("/shop/*")` | mark cached URLs stale — still rendered, then refetched |
+| `Ctx.UpKeepCache()` | keep the cache a non-GET would otherwise clear |
+| `Ctx.UpEvictCache("/cart")` | drop outright; stale content is never shown again |
+| `Ctx.UpNotModified(etag, lastModified)` | publishes the version, returns true when the client is current (response becomes 304 — render nothing) |
 
 | Components | |
 |---|---|
@@ -86,9 +90,12 @@ The library is built phase by phase. **Only these exist**; everything else throw
 | `<UpChrome>…</UpChrome>` | content rendered only on full-page requests |
 
 **Not available yet** — calling any of these throws, do not suggest them as solutions:
-form validation (`IsUpValidating`), layers (`UpAcceptLayer`, `UpOpenLayer`, `UpContext<T>`),
-cache control (`UpExpireCache`, `UpEvictCache`), history (`UpTitle`, `UpLocation`),
-events (`UpEmit`), conditional requests (`UpReloadFromTime`).
+form validation (`IsUpValidating`, `UpValidatingField`), layers (`UpAcceptLayer`,
+`UpDismissLayer`, `UpOpenLayer`, `UpContext<T>`, `UpMode`), history (`UpTitle`,
+`UpLocation`, `UpMethod`), events (`UpEmit`).
+
+**Never existed, do not reach for them:** `UpClearCache` (in no current guide) and
+`UpReloadFromTime` (deprecated by Unpoly — use `Last-Modified` through `UpNotModified`).
 
 For those, use Unpoly's HTML attributes directly — most features need no server code at all.
 
@@ -115,10 +122,13 @@ For those, use Unpoly's HTML attributes directly — most features need no serve
 6. **The `.content` element is missing from a fragment response.** The target itself was
    wrapped in `<UpChrome>`. Wrap the chrome around it, never the target.
 
-7. **A handler appears to run twice.** Unpoly caches GET responses and revalidates: it
-   renders the cached copy, then refetches and renders again. Keep handlers idempotent.
-   (Verify against <https://unpoly.com/caching> — the library does not yet expose cache
-   control.)
+7. **A handler appears to run twice.** Unpoly caches GET responses for 15 seconds
+   (`cacheExpireAge`) and revalidates: it renders the cached copy, then refetches and
+   renders again. Keep GET handlers idempotent.
+
+8. **Someone called `UpExpireCache` after a POST.** Usually redundant — Unpoly clears the
+   entire cache after any non-GET by itself. The header is for expiring a *subset*, or from
+   a GET. To stop the automatic clearing, use `UpKeepCache()`.
 
 ## CSRF
 

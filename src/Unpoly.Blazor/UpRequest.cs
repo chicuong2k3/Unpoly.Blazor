@@ -141,15 +141,11 @@ public static class UpRequest
     public static T? UpFailContext<T>(this HttpContext c)
         => throw new NotImplementedException("Phase D");
 
-    // ─────────────────────────────────────────────────────────────
-    // PHASE B · Conditional requests           📖 /conditional-responses
-    // ─────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// X-Up-Reload-From-Time — [up-poll] sends the timestamp of the content currently on screen.
-    /// If nothing is newer than that, answer 304 with an empty body.
-    /// TODO Phase B
-    /// </summary>
-    public static DateTimeOffset? UpReloadFromTime(this HttpContext c)
-        => throw new NotImplementedException("Phase B · 📖 https://unpoly.com/conditional-responses");
+    // X-Up-Reload-From-Time is deliberately absent. Unpoly deprecated it in favour of the
+    // standard Last-Modified header, and supporting it would require the client to load
+    // unpoly-migrate.js. See UpResponse.UpNotModified for the supported path.
+    // 📖 https://unpoly.com/X-Up-Reload-From-Time
+    //
+    // X-Up-Clear-Cache is absent for the same kind of reason: it appears in no current guide.
+    // Use UpExpireCache or UpEvictCache.
 }
