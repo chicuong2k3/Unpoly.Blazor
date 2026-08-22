@@ -9,10 +9,10 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 
 | | |
 |---|---|
-| Phase | **A complete**, B not started |
-| Protocol coverage | **6 / 26** headers |
+| Phase | **A complete**, B in progress |
+| Protocol coverage | **7 / 26** headers |
 | Build | 4 projects, 0 errors |
-| Checks | 14 passing |
+| Checks | 17 passing |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -37,9 +37,10 @@ If the build fails with a file lock, a previous `dotnet run` is still alive: `ta
 
 ## Next action
 
-**Phase B.** Start by reading <https://unpoly.com/caching> twice, then add a request
-counter to `sample/Jubin/Program.cs` and click around. You should observe **two** server
-requests per click. Understand why before writing any code.
+**Phase B, continued.** `Vary` and the `<head>` cut are done. Next: read
+<https://unpoly.com/caching> twice, then add a request counter to
+`sample/Jubin/Program.cs` and click around. You should observe **two** server requests per
+click. Understand why before writing any code.
 
 ---
 
@@ -75,10 +76,17 @@ full-page request. Missing that made chrome vanish silently — check kept at
 
 - [ ] Read `/caching` **twice**
 - [ ] Read `/aborting-requests`, `/network-issues`, `/progress-bar`
-- [ ] Read `/optimizing-responses`, `/conditional-responses`
+- [x] Read `/optimizing-responses`
+- [ ] Read `/conditional-responses`
 - [ ] `UpExpireCache` `UpEvictCache` `UpClearCache` (UpResponse.cs)
 - [ ] `UpReloadFromTime` (UpRequest.cs)
 - [ ] ETag / `If-None-Match` → return **304** with empty body
+- [x] `Vary` via `UpVary` + `UseUnpoly()` middleware — **required**, not an optimisation:
+      the body changes with `X-Up-Target`, so without it a shared cache can serve a
+      fragment to a full page load
+- [x] Cut `<head>` on fragment responses by reusing `UpChrome` inside `App.razor`.
+      `<HeadOutlet />` stays outside the wrapper so `<PageTitle>` keeps working — which is
+      why `X-Up-Title` is not needed yet. `/p/dam-4`: 1865 -> 459 bytes
 - [ ] Jubin: expire the listing cache after a cart mutation; enable the progress bar
 - [ ] Checks: cache pattern header written; 304 path returns no body
 - [ ] Write the double-request finding into README so library users hit it in docs, not in prod
@@ -134,7 +142,7 @@ full-page request. Missing that made chrome vanish silently — check kept at
 
 ---
 
-## Protocol coverage — 6 / 26
+## Protocol coverage — 7 / 26
 
 Grep `NotImplementedException` in `src/` for the live list.
 
@@ -142,10 +150,10 @@ Grep `NotImplementedException` in `src/` for the live list.
 ⬜ `X-Up-Mode` `X-Up-Fail-Mode` `X-Up-Origin-Mode` `X-Up-Validate` `X-Up-Context`
 `X-Up-Fail-Context` `X-Up-Reload-From-Time` `If-Modified-Since` `If-None-Match`
 
-**Response (14)** — ✅ `X-Up-Target`
+**Response (14)** — ✅ `X-Up-Target` `Vary`
 ⬜ `X-Up-Title` `X-Up-Location` `X-Up-Method` `X-Up-Open-Layer` `X-Up-Accept-Layer`
 `X-Up-Dismiss-Layer` `X-Up-Events` `X-Up-Clear-Cache` `X-Up-Evict-Cache`
-`X-Up-Expire-Cache` `ETag` `Last-Modified` `Vary` + cookie `_up_method`
+`X-Up-Expire-Cache` `ETag` `Last-Modified` + cookie `_up_method`
 
 Spec: <https://unpoly.com/up.protocol>
 
@@ -161,6 +169,10 @@ Spec: <https://unpoly.com/up.protocol>
   which is safe today. Re-verify if streaming rendering is ever enabled.
 - **`X-Up-Clear-Cache`** — may be legacy/superseded by expire+evict. Confirm against the
   spec in Phase B before implementing; delete the stub if it is obsolete.
+- **Asset tracking is now impossible on fragment responses** — cutting `<head>` means no
+  scripts or stylesheets are present to diff, so `up:assets:changed` can never fire for a
+  fragment. Decide in Phase G whether to re-emit `[up-asset]` elements into fragment
+  responses. 📖 https://unpoly.com/handling-asset-changes
 - **`daub.js` init model** — delegation or per-element? Decides whether Phase G needs
   `up.compiler` at all. Cheap to check early.
 - **Vendored Unpoly version** — pinned by download, not by a version file. Consider

@@ -2,17 +2,26 @@
 <html lang="vi">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/" />
+    @* Assets are only needed on a full page load. On a fragment request Unpoly is already
+       running in the page, so re-sending stylesheets, the bundle and the config script is
+       pure waste. <HeadOutlet /> stays outside the wrapper so <PageTitle> keeps working —
+       that is what saves us from needing X-Up-Title this early.
+       Trade-off: with no assets in <head>, Unpoly cannot detect asset changes on fragment
+       responses. Revisit in Phase G. 📖 https://unpoly.com/handling-asset-changes *@
+    <UpChrome>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <base href="/" />
 
-    @* DAUB CLASSLESS build: CSS only, no JS, so it cannot fight Unpoly over components.
-       Phase G switches to the full build plus daub.js and an up.compiler that re-inits it. *@
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daub-ui@latest/daub-classless.css" />
-    <link rel="stylesheet" href="@Assets["app.css"]" />
-    <link rel="stylesheet" href="@Assets["Jubin.styles.css"]" />
+        @* DAUB CLASSLESS build: CSS only, no JS, so it cannot fight Unpoly over components.
+           Phase G switches to the full build plus daub.js and an up.compiler that re-inits it. *@
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daub-ui@latest/daub-classless.css" />
+        <link rel="stylesheet" href="@Assets["app.css"]" />
+        <link rel="stylesheet" href="@Assets["Jubin.styles.css"]" />
 
-    <UnpolyHead />
+        <UnpolyHead />
+    </UpChrome>
+
     <HeadOutlet />
 </head>
 

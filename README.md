@@ -50,7 +50,7 @@ builder.Services.AddUnpoly(o => o.MainTargets = [".content"]);
 
 ## Status
 
-**Phase A of 7 · 6 of 26 protocol headers.** Unimplemented methods throw
+**Phase B of 7 · 7 of 26 protocol headers.** Unimplemented methods throw
 `NotImplementedException` carrying their phase and the guide URL that explains them.
 
 - [`TASKS.md`](TASKS.md) — the phase-by-phase plan and what to do next

@@ -18,6 +18,9 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+// Marks every response as varying by Unpoly's request headers, because UpChrome
+// branches the body on X-Up-Target. 📖 https://unpoly.com/optimizing-responses
+app.UseUnpoly();
 app.UseAntiforgery();
 
 app.MapStaticAssets();

@@ -24,6 +24,26 @@ public static class UpResponse
     // PHASE B · Cache                          📖 /caching
     // ─────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Vary — declare which request headers changed this response body.
+    /// Required whenever the server branches on X-Up-Target: without it a shared cache may
+    /// hand a fragment response to a full page load, or the reverse.
+    /// Merges with any Vary already set instead of overwriting it.
+    /// 📖 https://unpoly.com/optimizing-responses
+    /// </summary>
+    public static void UpVary(this HttpContext c, params string[] requestHeaderNames)
+    {
+        var existing = c.Response.Headers.Vary.ToString();
+
+        var merged = existing
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Concat(requestHeaderNames)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        c.Response.Headers.Vary = string.Join(", ", merged);
+    }
+
     /// <summary>X-Up-Expire-Cache — mark cache entries stale; Unpoly refetches them when needed. TODO Phase B</summary>
     public static void UpExpireCache(this HttpContext c, string pattern = "*")
         => throw new NotImplementedException("Phase B · 📖 https://unpoly.com/caching");

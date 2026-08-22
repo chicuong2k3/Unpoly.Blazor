@@ -44,4 +44,21 @@ var retargeted = new DefaultHttpContext();
 retargeted.UpRetarget(".sidebar");
 Check(retargeted.Response.Headers["X-Up-Target"] == ".sidebar", "UpRetarget writes the header");
 
-Console.WriteLine($"OK — {passed} checks passed (Phase A)");
+// ── PHASE B (partial: Vary) ─────────────────────────────────────────────
+
+var vary = new DefaultHttpContext();
+vary.UpVary("X-Up-Target", "X-Up-Version");
+Check(vary.Response.Headers.Vary == "X-Up-Target, X-Up-Version", "UpVary writes both header names");
+
+// Must merge, not clobber: compression and content negotiation set Vary too.
+var varyMerge = new DefaultHttpContext();
+varyMerge.Response.Headers.Vary = "Accept-Encoding";
+varyMerge.UpVary("X-Up-Target");
+Check(varyMerge.Response.Headers.Vary == "Accept-Encoding, X-Up-Target", "UpVary merges with an existing Vary");
+
+var varyDupe = new DefaultHttpContext();
+varyDupe.UpVary("X-Up-Target");
+varyDupe.UpVary("x-up-target", "X-Up-Version");
+Check(varyDupe.Response.Headers.Vary == "X-Up-Target, X-Up-Version", "UpVary dedupes case-insensitively");
+
+Console.WriteLine($"OK — {passed} checks passed (Phase A + Vary)");
