@@ -1,0 +1,39 @@
+@inherits LayoutComponentBase
+
+@* ── CHROME ──────────────────────────────────────────────────────────────
+   Wrapped in <UpChrome>, so when Unpoly requests a fragment (.content) the
+   header and footer are not rendered at all. Their child components are never
+   initialised, so their queries never run.
+   Open the Network tab and compare the two response sizes to see it.
+   📖 https://unpoly.com/optimizing-responses
+   ───────────────────────────────────────────────────────────────────────*@
+<UpChrome>
+    <header>
+        <h1><a href="/">JUBIN</a></h1>
+        <p><small>The perfect wardrobe for Petite Girls</small></p>
+
+        @* [up-nav] keeps the .up-current class in sync with the current URL,
+           even though this nav is never swapped itself.
+           📖 https://unpoly.com/navigation-bars *@
+        <nav up-nav>
+            <a href="/shop">Tất cả</a>
+            @foreach (var c in Catalog.Categories)
+            {
+                <a href="/shop/@c.Slug">@c.Name</a>
+            }
+        </nav>
+        <hr />
+    </header>
+</UpChrome>
+
+@* Not wrapped: this IS the target, so it must always be present. *@
+<main class="content">
+    @Body
+</main>
+
+<UpChrome>
+    <footer>
+        <hr />
+        <small>This chrome disappears from fragment responses. That is the point of the exercise.</small>
+    </footer>
+</UpChrome>

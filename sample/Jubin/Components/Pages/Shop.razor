@@ -1,0 +1,20 @@
+@page "/shop"
+@page "/shop/{Category}"
+
+<PageTitle>@Heading — JUBIN</PageTitle>
+
+<h2>@Heading</h2>
+<p><small>@Items.Count sản phẩm</small></p>
+
+<ProductGrid Products="Items" />
+
+@code {
+    [Parameter] public string? Category { get; set; }
+
+    List<Product> Items = [];
+
+    string Heading => Category is null ? "Tất cả sản phẩm" : Catalog.CategoryName(Category);
+
+    protected override void OnParametersSet() =>
+        Items = [.. Catalog.ByCategory(Category)];
+}

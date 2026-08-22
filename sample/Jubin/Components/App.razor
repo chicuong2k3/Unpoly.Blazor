@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+
+    @* DAUB CLASSLESS build: CSS only, no JS, so it cannot fight Unpoly over components.
+       Phase G switches to the full build plus daub.js and an up.compiler that re-inits it. *@
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daub-ui@latest/daub-classless.css" />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["Jubin.styles.css"]" />
+
+    <UnpolyHead />
+    <HeadOutlet />
+</head>
+
+<body>
+    <Routes />
+
+    @* blazor.web.js is omitted on purpose.
+       With interactivity=None it only provides enhanced navigation and enhanced forms —
+       exactly what Unpoly is doing here. Keeping both makes them fight over clicks and submits. *@
+</body>
+
+</html>

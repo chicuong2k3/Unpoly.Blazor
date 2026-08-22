@@ -1,0 +1,21 @@
+@*
+    Renders ChildContent ONLY for full-page requests.
+
+    When Unpoly asks for a specific fragment, ChildContent is never invoked, so the child
+    components are never initialised and any queries in their OnInitializedAsync never run.
+    That — not the byte count — is where the real saving comes from.
+
+    📖 https://unpoly.com/optimizing-responses
+*@
+@if (Ctx?.IsUpFragment() != true)
+{
+    @ChildContent
+}
+
+@code {
+    // Null outside static SSR (e.g. an interactive render mode), which renders the chrome.
+    // That is the safe default.
+    [CascadingParameter] public HttpContext? Ctx { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

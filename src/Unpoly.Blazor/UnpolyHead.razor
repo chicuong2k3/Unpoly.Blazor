@@ -1,0 +1,44 @@
+@using System.Text
+@using System.Text.Json
+@inject UnpolyOptions Options
+
+<link rel="stylesheet" href="_content/Unpoly.Blazor/unpoly.min.css" />
+<script src="_content/Unpoly.Blazor/unpoly.min.js"></script>
+
+@* Antiforgery token for requests that are NOT form submissions (e.g. [up-follow] on a POST link).
+   [up-keep] lets the element survive a swap even when the target is <body>. *@
+<div hidden id="up-csrf" up-keep><AntiforgeryToken /></div>
+
+<script>@(new MarkupString(BuildScript()))</script>
+
+@code {
+    string BuildScript()
+    {
+        var sb = new StringBuilder();
+
+        // 📖 https://unpoly.com/targeting-fragments
+        sb.Append("up.fragment.config.mainTargets = ")
+          .Append(JsonSerializer.Serialize(Options.MainTargets))
+          .AppendLine(";");
+
+        // 📖 https://unpoly.com/handling-everything
+        if (Options.HandleAllLinksAndForms)
+        {
+            sb.AppendLine("up.link.config.followSelectors.push('a[href]');");
+            sb.AppendLine("up.form.config.submitSelectors.push('form');");
+        }
+
+        sb.AppendLine("up.on('up:request:load', function (event) {");
+        sb.AppendLine("  if (event.request.method === 'GET') return;");
+        sb.AppendLine("  var t = document.querySelector('#up-csrf input');");
+        sb.Append("  if (t) event.request.headers[")
+          .Append(JsonSerializer.Serialize(Options.AntiforgeryHeaderName))
+          .AppendLine("] = t.value;");
+        sb.AppendLine("});");
+
+        if (!string.IsNullOrWhiteSpace(Options.ExtraScript))
+            sb.AppendLine(Options.ExtraScript);
+
+        return sb.ToString();
+    }
+}

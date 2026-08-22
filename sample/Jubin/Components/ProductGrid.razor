@@ -1,0 +1,29 @@
+@* Shared product grid. The DAUB classless build already styles bare <article> elements. *@
+
+<div class="grid">
+    @foreach (var p in Products)
+    {
+        <article>
+            <h4><a href="/p/@p.Slug">@p.Name</a></h4>
+            @if (p.OnSale)
+            {
+                <p><s>@Money(p.Price)</s> <strong>@Money(p.Effective)</strong></p>
+            }
+            else
+            {
+                <p><strong>@Money(p.Price)</strong></p>
+            }
+        </article>
+    }
+</div>
+
+@if (!Products.Any())
+{
+    <p><em>Không có sản phẩm nào.</em></p>
+}
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<Product> Products { get; set; } = [];
+
+    static string Money(decimal d) => $"{d:N0}₫";
+}

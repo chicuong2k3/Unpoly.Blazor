@@ -1,0 +1,13 @@
+@page "/"
+
+<PageTitle>JUBIN — Trang chủ</PageTitle>
+
+<h2>Trang chủ</h2>
+
+@* Learning sample. Keep DevTools > Network open before clicking anything. *@
+<p>Sample để học Unpoly trên Blazor static SSR. Mở DevTools → Network trước khi bấm gì.</p>
+
+<h3>Bán chạy</h3>
+<ProductGrid Products="Catalog.Products.Where(p => p.OnSale).Take(6)" />
+
+<p><a href="/shop">Xem tất cả sản phẩm →</a></p>

@@ -1,0 +1,34 @@
+@page "/p/{Slug}"
+
+@if (Item is null)
+{
+    <h2>Không tìm thấy sản phẩm</h2>
+    <p><a href="/shop">← Về cửa hàng</a></p>
+}
+else
+{
+    <PageTitle>@Item.Name — JUBIN</PageTitle>
+
+    <p><a href="/shop/@Item.Category">← @Catalog.CategoryName(Item.Category)</a></p>
+
+    <h2>@Item.Name</h2>
+    <p>
+        @if (Item.OnSale)
+        {
+            <s>@($"{Item.Price:N0}₫")</s>
+        }
+        <strong>@($"{Item.Effective:N0}₫")</strong>
+    </p>
+    <p><small>Bộ sưu tập: @Item.Collection</small></p>
+
+    @* Phase D turns this button into an overlay; Phase F adds an [up-hungry] cart badge. *@
+    <p><button disabled>Thêm vào giỏ (Phase D)</button></p>
+}
+
+@code {
+    [Parameter] public string Slug { get; set; } = "";
+
+    Product? Item;
+
+    protected override void OnParametersSet() => Item = Catalog.BySlug(Slug);
+}
