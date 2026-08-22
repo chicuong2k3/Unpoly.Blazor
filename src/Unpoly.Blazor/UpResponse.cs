@@ -7,6 +7,13 @@ namespace Unpoly.Blazor;
 /// <summary>
 /// Writes Unpoly's response headers.
 /// Spec: https://unpoly.com/up.protocol (14 response headers + 1 cookie)
+///
+/// Several of these headers are documented as taking **relaxed JSON** — a superset that also
+/// allows single quotes, unquoted keys and trailing commas. No JSON5 writer is needed here:
+/// "every JSON object is also a Relaxed JSON object", so ordinary
+/// <see cref="JsonSerializer"/> output is always accepted. The permissiveness is for humans
+/// writing HTML attributes by hand, not for servers.
+/// 📖 https://unpoly.com/relaxed-json
 /// </summary>
 public static class UpResponse
 {
@@ -53,8 +60,14 @@ public static class UpResponse
     /// Rarely needed: Unpoly already expires the ENTIRE cache after any non-GET request.
     /// Reach for this only to expire a subset, or to expire from a GET.
     ///
-    /// <paramref name="urlPattern"/> is a URL glob such as "/notes/*", or "*" for everything.
-    /// 📖 https://unpoly.com/X-Up-Expire-Cache
+    /// <paramref name="urlPattern"/> is an Unpoly **URL pattern**, not a plain glob:
+    /// <list type="bullet">
+    ///   <item><c>*</c> matches any characters, <c>$</c> matches digits only</item>
+    ///   <item>alternatives are separated by a space or comma: <c>"/shop/*, /cart"</c></item>
+    ///   <item><c>-</c> excludes: <c>"/shop/* -/shop/secret"</c></item>
+    /// </list>
+    /// So <c>"/users/$"</c> expires /users/123 but not /users/new.
+    /// 📖 https://unpoly.com/url-patterns
     /// </summary>
     public static void UpExpireCache(this HttpContext c, string urlPattern = "*")
         => c.Response.Headers["X-Up-Expire-Cache"] = urlPattern;
@@ -70,7 +83,8 @@ public static class UpResponse
     /// X-Up-Evict-Cache — drop entries outright. Unlike expiry, evicted content is never
     /// rendered again, so the user waits for the network instead of seeing a stale flash.
     /// Use it when stale content would be wrong to show at all, not merely out of date.
-    /// 📖 https://unpoly.com/caching
+    /// Takes the same URL pattern syntax as <see cref="UpExpireCache"/>.
+    /// 📖 https://unpoly.com/url-patterns
     /// </summary>
     public static void UpEvictCache(this HttpContext c, string urlPattern = "*")
         => c.Response.Headers["X-Up-Evict-Cache"] = urlPattern;

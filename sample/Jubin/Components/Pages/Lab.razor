@@ -303,6 +303,63 @@ else
         </li>
     </ul>
 
+    <h3>Motion <span class="meta">up.motion</span></h3>
+    <ul>
+        <li>
+            <a href="/shop" up-target=".content" up-transition="cross-fade">cross-fade</a>
+            <span class="meta">/predefined-transitions — cũng là mặc định toàn cục qua <code>navigateOptions</code></span>
+        </li>
+        <li>
+            <a href="/shop" up-target=".content" up-transition="move-left">move-left</a>
+            <span class="meta">/predefined-transitions — cùng bộ với move-up/down/right</span>
+        </li>
+        <li>
+            <a href="/shop" up-target=".content" up-transition="move-up" up-duration="600">move-up, 600ms</a>
+            <span class="meta">/motion-tuning — <code>up.motion.config.duration</code> mặc định 175ms</span>
+        </li>
+        <li>
+            <a href="/shop" up-target=".content" up-transition="none">none</a>
+            <span class="meta">/motion-tuning — tắt cho riêng link này; toàn cục là <code>up.motion.config.enabled = false</code></span>
+        </li>
+    </ul>
+
+    <h3>Utilities <span class="meta">up.util · up.log · up.framework</span></h3>
+    <ul>
+        <li>
+            @* Relaxed JSON: single quotes and unquoted keys, which strict JSON forbids.
+               Unpoly accepts it in attributes AND headers; strict JSON is always valid
+               relaxed JSON, which is why the server never needs a JSON5 writer.
+               📖 https://unpoly.com/relaxed-json *@
+            <a href="/shop" up-target=".content" up-data="{ source: 'lab', relaxed: true, }">Relaxed JSON</a>
+            <span class="meta">
+                /relaxed-json — nháy đơn, key không nháy, dấu phẩy thừa. JSON chặt luôn hợp lệ
+                với relaxed, nên server chỉ cần <code>JsonSerializer</code>
+            </span>
+        </li>
+        <li>
+            <a href="/p/$" up-target=".content" up-fallback=":main">URL pattern <code>$</code></a>
+            <span class="meta">
+                /url-patterns — <code>*</code> khớp mọi ký tự, <code>$</code> chỉ khớp chữ số,
+                <code>-</code> loại trừ. Đây là cú pháp <code>UpExpireCache</code> nhận
+            </span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button" onclick="up.log.enable(); alert('up.log đã bật — xem Console rồi bấm link bất kỳ')">
+                Bật up.log
+            </button>
+            <span class="meta">up.log — <code>up.log.enable()</code> in mọi bước render ra Console</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button" onclick="alert('booted: ' + up.framework.booted + ' · supported: ' + up.framework.isSupported())">
+                Trạng thái framework
+            </button>
+            <span class="meta">
+                up.framework — <code>up.framework.booted</code>, <code>isSupported()</code>.
+                Hoãn boot bằng <code>[up-boot=manual]</code> rồi gọi <code>up.boot()</code>
+            </span>
+        </li>
+    </ul>
+
     <h3>Compilers <span class="meta">/enhancing-elements · /data</span></h3>
     <ul>
         <li>

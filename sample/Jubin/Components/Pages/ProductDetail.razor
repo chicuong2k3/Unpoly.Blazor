@@ -61,11 +61,15 @@ else
             @* THE SUBINTERACTION. The size picker is a real route; [up-layer=new] turns it
                into an overlay, and this page stays exactly as it is behind it. When the
                overlay accepts, `value` is whatever the server passed to UpAcceptLayer.
-               📖 https://unpoly.com/subinteractions *@
+               [up-context] is written in relaxed JSON here on purpose: single quotes and an
+               unquoted key, which strict JSON forbids and Unpoly accepts.
+               [up-accept-location] takes a URL pattern; "$id" captures digits only.
+               📖 https://unpoly.com/subinteractions · https://unpoly.com/url-patterns *@
             <p>
                 <a class="btn" href="/p/@Item.Slug/size"
                    up-layer="new modal" up-size="small"
-                   up-context='{ "from": "product" }'
+                   up-context="{ from: 'product' }"
+                   up-accept-location="/p/$id/size"
                    up-on-accepted="onSizeChosen(value)">
                     Chọn size
                 </a>

@@ -16,18 +16,17 @@ done on code review — every item below is a command to run or a thing to watch
 - If an item cannot be verified, say so in the phase's notes rather than ticking it. An
   untested tick is worse than an open box.
 
-**Browser-observable** items are automated now, in `tests/browser/test_unpoly.py`
-(browser-use over CDP, no LLM, no API key). Run them:
+**Browser-observable** items are automated in `tests/Unpoly.Blazor.BrowserTests`
+(Playwright for .NET), and run in the same command as everything else:
 
 ```bash
-python tests/browser/test_unpoly.py             # visible Chrome, paced to watch
-python tests/browser/test_unpoly.py --headless  # fast
+dotnet test          # 50 tests
+HEADED=1 dotnet test # watch the browser do it
 ```
 
-27 checks, exit code non-zero on failure. A box below is ticked only if that suite covers
-it; anything it cannot reach stays open with a note.
+A box below is ticked only if a test covers it; anything out of reach stays open with a note.
 
-Start the sample first for anything below the automated section:
+The browser tests start the sample themselves. To poke at it by hand:
 
 ```bash
 dotnet run --project sample/Jubin --urls http://localhost:5199
@@ -65,7 +64,8 @@ curl -s -H "X-Up-Version: 3.10.2" -H "X-Up-Target: .content" $U | grep -c 'class
 
 - [x] Clicking a category swaps the grid with no white flash and no full reload
 - [x] The clicked category gets `.up-current` styling; the nav itself never re-renders
-- [x] Screenshots captured by `tests/browser/shots.py`. The visual judgement is the user's;
+- [x] Screenshots are a `page.ScreenshotAsync` call away in any browser test. The visual
+      judgement is the user's;
       the tooling no longer blocks it
 
 ---
@@ -113,7 +113,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download}
 
 **Browser-observable**
 
-- [x] **ANSWERED by `tests/browser/test_unpoly.py`.** A click on a **fresh** cached URL
+- [x] **ANSWERED by `CachingTests`.** A click on a **fresh** cached URL
       (within `cacheExpireAge`, 15s) makes **no request at all**. A click on an **expired**
       one renders the stale copy and refetches -- that is the second render pass. So
       "one click, two requests" was wrong as a blanket claim: it depends on expiry.
@@ -318,7 +318,7 @@ curl -s -o /dev/null -w "%{http_code}
 ## Cross-cutting, re-check at every phase
 
 - [x] `dotnet build` — 0 errors, 0 warnings
-- [x] `dotnet test` — 9 tests, 97 assertions, all green
+- [x] `dotnet test` — 50 tests, all green
 - [x] `SKILL.md` carries no "not available yet" list any more — nothing throws
 - [x] **No route stopped working with JavaScript disabled** — 6/6 routes render over plain
       HTTP. Measured with `urllib`, not the browser: `setScriptExecutionDisabled` also stops

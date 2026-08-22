@@ -822,6 +822,109 @@ script in `<head>`, where it is defined once.
 
 ---
 
+## `up.util`
+
+Reference-heavy, but two of its guides describe formats **this library writes**, which is why
+"skip up.util" was the wrong call.
+
+### [/relaxed-json](https://unpoly.com/relaxed-json) — 4/4 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Example | ➖ | n/a — structural row |
+| 2 | **Syntax rules** | ➖ single quotes, unquoted keys, trailing commas | `Lab.razor` · `up-data="{ source: 'lab', relaxed: true, }"` |
+| 3 | Postel's law | ✅ see below | `UpResponse.cs` · class doc |
+| 4 | Parsing relaxed JSON | ➖ `up.util.parseRelaxedJSON()`; backends use a JSON5 parser | n/a here — nothing sends us relaxed JSON |
+
+**Why the library needs no JSON5 writer.** Several headers are documented as taking *relaxed*
+JSON, which looked like a gap for months. It is not: *"Every JSON object is also a Relaxed
+JSON object."* Strict JSON is a subset, so ordinary `JsonSerializer` output is always
+accepted. The permissiveness exists for humans hand-writing HTML attributes, not for servers.
+
+The reverse would matter: if a client ever sent us relaxed JSON in `X-Up-Context`, `System.Text.Json`
+would reject it. It does not: Unpoly serialises context with `JSON.stringify`.
+
+### [/url-patterns](https://unpoly.com/url-patterns) — 5/5 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Matching an exact URL | ✅ | `ProductDetail.razor` · `up-accept-location` |
+| 2 | Matching with wildcards (`*` any, `$` digits) | ✅ | `Shop.razor` · `"/shop*, /p/*"` |
+| 3 | Multiple alternatives, space or comma separated | ✅ | same |
+| 4 | **Excluding with `-`** | ✅ | `Shop.razor` · `-/shop/secret` |
+| 5 | Capturing named segments (`:name`, `$id`) | ➖ the capture becomes the accept value | `ProductDetail.razor` · `/p/$id/size` |
+
+`UpExpireCache` and `UpEvictCache` take these, not plain globs — documented on the methods now.
+`[up-accept-location]` takes them too, which is how an overlay closes on a redirect without
+any JavaScript callback.
+
+---
+
+## `up.motion`
+
+No server side at all. Included because "no C# to write" is not a reason to leave a module
+undocumented — the same mistake that hid seven target-syntax variants for three phases.
+
+### [/predefined-transitions](https://unpoly.com/predefined-transitions) — 3/3 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Predefined transitions: `cross-fade`, `move-up`, `move-down`, `move-left`, `move-right`, `none` | ➖ | `Lab.razor` · four of them |
+| 2 | Combining animations (`move-to-bottom`/`fade-in` pairs) | ➖ | todo |
+| 3 | Custom transitions | ➖ `up.transition()` | todo |
+
+### [/predefined-animations](https://unpoly.com/predefined-animations)
+
+| Concept | Status | Sample |
+|---|---|---|
+| `fade-in`, `move-to-left`, `move-from-top`, ... | ➖ used when opening overlays | `SizePicker.razor` · `UpOpenLayer(animation)` |
+
+### [/motion-tuning](https://unpoly.com/motion-tuning) — 3/3 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Changing the duration — `up.motion.config.duration`, default **175ms** | ➖ | `Lab.razor` · `up-duration="600"` |
+| 2 | Easing | ➖ | todo |
+| 3 | **Disabling animation globally** — `up.motion.config.enabled = false` | ➖ the guide names automated testing as the reason | `Lab.razor` · `up-transition="none"` per link |
+
+---
+
+## `up.element`
+
+No guides — reference only. Low-level DOM helpers.
+
+| Feature | Status | Sample |
+|---|---|---|
+| `affix()` `attr()` `createFromHTML()` `hide()`/`show()` `setAttrs()` `style()` | ➖ | n/a — nothing here needs raw DOM utilities |
+
+---
+
+## `up.framework`
+
+No guides — reference only.
+
+| Feature | Status | Sample |
+|---|---|---|
+| `up.framework.booted` `isSupported()` | ➖ | `Lab.razor` · framework status button |
+| `up.boot()` and `[up-boot=manual]` | ➖ defers booting until called | todo — only needed if Unpoly must start after something else |
+| `up:framework:booted` | ➖ | todo |
+
+`[up-boot=manual]` is the hook worth remembering for Blazor: it is how Unpoly would be made
+to start after some other initialisation, rather than on its own.
+
+---
+
+## `up.log`
+
+No guides — reference only.
+
+| Feature | Status | Sample |
+|---|---|---|
+| `up.log.enable()` / `disable()` | ➖ prints every render step to the console | `Lab.razor` · enable button |
+| `up.log.config` | ➖ | todo |
+
+---
+
 ## Implemented but never exercised
 
 Passes unit checks, never runs in the sample. Gaps in the *lab*, not the library.
@@ -845,6 +948,10 @@ The playground paid for itself immediately: its `.content, .site-nav` link expos
 ## Not opened, by decision
 
 
-Skipped for the whole project: `up.motion` · `up.element` · `up.util` · `up.log` ·
-`up.framework`, plus the *Features* tier everywhere — that tier is a dictionary. Look
-things up in it **before** writing glue; the CSRF listener above is what happens otherwise.
+**Every one of Unpoly's 17 modules now has a section.** The five once listed as "skipped"
+— `up.motion`, `up.element`, `up.util`, `up.log`, `up.framework` — are documented above.
+Dropping `up.util` in particular was a mistake: two of its guides describe formats this
+library writes.
+
+The *Features* tier remains a dictionary rather than reading material. Look things up in it
+**before** writing glue; the CSRF listener is what happens otherwise.

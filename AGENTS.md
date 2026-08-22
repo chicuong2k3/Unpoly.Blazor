@@ -30,7 +30,8 @@ This changes the usual trade-offs:
 5. **No database in the sample.** `sample/Jubin/Data/Catalog.cs` is in-memory on purpose.
 6. **Every non-trivial behaviour gets a check.** Wire-format and header logic go in
    `tests/Unpoly.Blazor.Tests/UnpolyTests.cs` (xunit, one `[Fact]` per concept group).
-   Anything only a browser can see goes in `tests/browser/test_unpoly.py`. A check must
+   Anything only a browser can see goes in `tests/Unpoly.Blazor.BrowserTests` (Playwright,
+   same `dotnet test` run). A check must
    report what it *saw*, not just pass — a bare verdict hides a check measuring the wrong
    element, which has happened here.
 7. **Update `TASKS.md` in the same change** that completes a checkbox.
@@ -93,8 +94,8 @@ Do not "fix" these without reading the reasoning:
 
 ```bash
 dotnet build
-dotnet test                        # 9 xunit tests, 97 assertions
-dotnet run --project sample/Jubin  # then: python tests/browser/test_unpoly.py
+dotnet test                        # 50 tests: 9 header + 41 browser (Playwright)
+dotnet run --project sample/Jubin  # to look at it by hand
 ```
 
 Build failing on a locked DLL means a previous `dotnet run` is still alive:

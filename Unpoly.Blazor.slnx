@@ -6,6 +6,7 @@
     <Project Path="src/Unpoly.Blazor/Unpoly.Blazor.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Unpoly.Blazor.BrowserTests/Unpoly.Blazor.BrowserTests.csproj" />
     <Project Path="tests/Unpoly.Blazor.Tests/Unpoly.Blazor.Tests.csproj" />
   </Folder>
 </Solution>

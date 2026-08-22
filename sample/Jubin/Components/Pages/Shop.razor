@@ -122,10 +122,13 @@
         // Expire keeps stale content renderable while it refetches; evict throws it away so
         // the user waits for the network instead of seeing a stale flash. The button chooses.
         // \📖 https://unpoly.com/caching
+        // A real URL pattern, not a glob: alternatives separated by a comma, and "-" excludes.
+        // This expires every shop listing and the product pages, but never /shop/secret.
+        // 📖 https://unpoly.com/url-patterns
         if (Ctx.Request.Form["mode"] == "evict")
-            Ctx.UpEvictCache("/shop*");
+            Ctx.UpEvictCache("/shop*, /p/*");
         else
-            Ctx.UpExpireCache("/shop*");
+            Ctx.UpExpireCache("/shop*, /p/* -/shop/secret");
 
         // The button sits inside .content, but say so explicitly so the swap does not depend
         // on what the client happened to ask for. 📖 https://unpoly.com/targeting-fragments

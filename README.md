@@ -12,14 +12,14 @@ No Blazor internals are touched. No extra dependencies.
 ```
 src/Unpoly.Blazor      the library (Razor Class Library)
 sample/Jubin           e-commerce sample, static SSR — the lab
-tests/                 plain console checks, no framework
+tests/                 9 header tests + 41 browser tests (Playwright), one dotnet test
 ```
 
 ## Run
 
 ```bash
 dotnet build
-dotnet test                                      # 9 tests, 97 assertions
+dotnet test                                      # 50 tests: 9 header + 41 browser
 dotnet run --project sample/Jubin
 ```
 
