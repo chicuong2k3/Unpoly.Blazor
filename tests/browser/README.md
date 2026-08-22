@@ -30,7 +30,11 @@ the release.
 (15s) a cached click makes **no request at all**; only an **expired** entry is rendered
 stale and then refetched. That is the second render pass.
 
-**Open: duplicate requests.** Every navigation request arrives at the server twice with
-byte-identical `X-Up-*` headers, confirmed from both the CDP capture and the sample's own
-request log. Ruled out: duplicate CDP listeners, and substring URL matching. Unexplained,
-so the assertions check that a feature fires rather than how often.
+**Counting.** cdp-use delivers each `Network.requestWillBeSent` **twice**, with the same
+`requestId`. Recording both doubled every count and read as "Unpoly fires two requests per
+action" — a finding that survived two wrong explanations before the sample's own request
+log settled it: three actions, three lines. `Probe` deduplicates by `requestId`; removing
+that reintroduces the phantom.
+
+With honest counts, every action costs exactly one request: preload, instant,
+preload-on-insert, and the revalidation of an expired cache entry.

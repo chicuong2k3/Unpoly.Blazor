@@ -106,11 +106,10 @@ curl -s -o /dev/null -w "%{http_code} %{size_download}
       (within `cacheExpireAge`, 15s) makes **no request at all**. A click on an **expired**
       one renders the stale copy and refetches -- that is the second render pass. So
       "one click, two requests" was wrong as a blanket claim: it depends on expiry.
-- [ ] **NEW, open:** every navigation request reaches the server **twice**, with identical
-      X-Up-* headers. Seen in both the CDP capture and the sample's own request log
-      (consecutive pairs). Ruled out: duplicate CDP listeners, and substring URL matching.
-      Unexplained.
-- [ ] *(superseded)* The sample now prints a numbered request log. Click
+- [x] ~~every navigation request reaches the server twice~~ — **it does not.** The harness
+      was miscounting: cdp-use delivers each `Network.requestWillBeSent` twice with the
+      *same* `requestId`. The sample's own request log settled it: three actions produced
+      three lines. Deduplicating by `requestId` brought every count to exactly one The sample now prints a numbered request log. Click
       one link and count the lines. The docs describe two *render passes*; they never say
       whether the server sees two *HTTP requests*, and this was not confirmed here because
       the Chrome extension would not connect. Do not tick it on the strength of the docs.

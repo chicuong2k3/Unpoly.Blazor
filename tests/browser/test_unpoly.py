@@ -1,10 +1,9 @@
 """Browser checks for the Unpoly.Blazor sample, driven by browser-use over CDP.
 
-OPEN: every navigation-triggered request arrives at the server TWICE, with byte-identical
-X-Up-* headers. Confirmed from both sides -- CDP capture and the sample's own request log,
-which shows consecutive pairs. Not a duplicate CDP listener (registering once changed
-nothing) and not a substring filter (exact URL matching changed nothing). Unexplained;
-the assertions below check that a feature fires, not how many times.
+Counting note: cdp-use delivers each Network.requestWillBeSent twice, with the SAME
+requestId. Recording both makes every count double, which read as "Unpoly fires two
+requests" until the sample's own request log showed one line per action. Requests are
+deduplicated by requestId below; do not remove that.
 
 These cover what unit checks cannot see: whether Unpoly actually swaps, what it puts on
 the wire, and the behaviour VERIFY.md has been carrying as open browser items.
@@ -38,6 +37,7 @@ class Probe:
         self.session = session
         self.requests = []          # (method, url, headers)
         self.responses = []         # (url, status)
+        self._seen_ids = set()      # cdp-use delivers each event twice, same requestId
         self._registered = False
 
     async def attach(self):
@@ -50,6 +50,10 @@ class Probe:
         # count in the first run of this suite.
         if not self._registered:
             def on_request(event, session_id=None):
+                rid = event.get("requestId")
+                if rid in self._seen_ids:
+                    return
+                self._seen_ids.add(rid)
                 r = event.get("request", {})
                 self.requests.append((r.get("method"), r.get("url", ""), r.get("headers", {})))
 
@@ -190,8 +194,8 @@ async def main():
     await p.click(".site-nav a[href='/shop/dam']")
     await asyncio.sleep(1.5)
     stale = len(p.since(m, exact="/shop/dam"))
-    record("an EXPIRED cache hit revalidates", stale >= 1,
-           f"{stale} request(s) after expiry -- this is the second render pass")
+    record("an EXPIRED cache hit revalidates exactly once", stale == 1,
+           f"{stale} request(s) after expiry -- the second render pass")
     await asyncio.sleep(PACE)
 
     # ---------------------------------------------------------------- preload
@@ -202,11 +206,10 @@ async def main():
     await p.hover("a[href='/lab/slow?case=preload']", hold=0.8)
     hits = p.since(m, exact="/lab/slow?case=preload")
     n = len(hits)
-    record("[up-preload] fires on hover past 90ms", n >= 1,
-           f"{n} request(s) while hovering (see OPEN: duplicate requests)")
+    record("[up-preload] fires on hover past 90ms", n == 1, f"{n} request(s) while hovering")
 
     fired = len([r for r in p.requests if r[1] == BASE + "/lab/slow?case=preload-insert"])
-    record("[up-preload=insert] fires without interaction", fired >= 1,
+    record("[up-preload=insert] fires without interaction", fired == 1,
            f"{fired} request(s) since the page rendered")
     await asyncio.sleep(PACE)
 
@@ -214,7 +217,7 @@ async def main():
     m = p.mark()
     ok = await p.press_only("a[href='/lab/slow?case=instant']", hold=0.8)
     n = len(p.since(m, exact="/lab/slow?case=instant"))
-    record("[up-instant] fires on mousedown, before release", ok and n >= 1,
+    record("[up-instant] fires on mousedown, before release", ok and n == 1,
            f"{n} request(s) with the button still held")
     await p.release("a[href='/lab/slow?case=instant']")
     await asyncio.sleep(PACE)
