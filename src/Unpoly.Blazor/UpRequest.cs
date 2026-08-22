@@ -48,14 +48,24 @@ public static class UpRequest
         var targets = c.UpTargets();
         if (targets.Length == 0) return false;
 
-        // A whole-page target anywhere in the list means we must still render everything.
-        // "body:after" appends into <body>, so it is a whole-page target too.
-        foreach (var t in targets)
+        // Both branches must be considered. Unpoly treats any status outside 2xx and 304 as
+        // a failure and swaps X-Up-Fail-Target instead, but the chrome is rendered by the
+        // layout before the page has decided on a status — so a form declaring
+        // [up-fail-target=body] would otherwise get a body swap with no nav in it.
+        // Rendering chrome that turns out unnecessary costs bytes; omitting it breaks a page.
+        // 📖 https://unpoly.com/failed-responses
+        foreach (var t in targets.Concat(c.UpFailTargets()))
             if (BaseTarget(t) is "body" or "html" or ":main" or ":layer")
                 return false;
 
         return true;
     }
+
+    /// <summary>X-Up-Fail-Target, split and trimmed. Empty when the header is absent.</summary>
+    public static string[] UpFailTargets(this HttpContext c) =>
+        c.UpFailTarget() is { Length: > 0 } t
+            ? t.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            : [];
 
     /// <summary>True when the client wants no content at all (:none). Safe to answer 204.</summary>
     public static bool WantsNothing(this HttpContext c) => c.UpTargets() is [":none"];
@@ -96,19 +106,31 @@ public static class UpRequest
     // ─────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// X-Up-Validate — the client only wants validation feedback and MUST NOT persist anything.
-    /// TODO Phase C
+    /// X-Up-Validate — the client wants validation feedback only and the handler
+    /// MUST NOT persist anything.
+    /// 📖 https://unpoly.com/validation
     /// </summary>
-    public static bool IsUpValidating(this HttpContext c)
-        => throw new NotImplementedException("Phase C · 📖 https://unpoly.com/validation");
+    public static bool IsUpValidating(this HttpContext c) => c.Request.Headers.ContainsKey("X-Up-Validate");
 
     /// <summary>
-    /// X-Up-Validate — the name of the field that changed.
-    /// An empty string or ":unknown" means the whole form.
-    /// TODO Phase C
+    /// X-Up-Validate — the fields being validated, **space** separated (not comma):
+    /// Unpoly batches several fields into one request, e.g. "email password".
+    /// Empty when the client could not name them — see <see cref="IsUpValidatingUnknown"/>.
+    /// 📖 https://unpoly.com/X-Up-Validate
     /// </summary>
-    public static string? UpValidatingField(this HttpContext c)
-        => throw new NotImplementedException("Phase C · 📖 https://unpoly.com/validation");
+    public static string[] UpValidatingFields(this HttpContext c) =>
+        c.Request.Headers["X-Up-Validate"].ToString() is { Length: > 0 } v && v != ":unknown"
+            ? v.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            : [];
+
+    /// <summary>
+    /// X-Up-Validate: :unknown — the client is validating but cannot say which fields.
+    /// Two causes: the origin was not a field, or the list exceeded
+    /// up.protocol.config.maxHeaderSize and was collapsed to avoid a 413 from
+    /// intermediary infrastructure. Either way, validate the whole form.
+    /// </summary>
+    public static bool IsUpValidatingUnknown(this HttpContext c) =>
+        c.Request.Headers["X-Up-Validate"].ToString() == ":unknown";
 
     // ─────────────────────────────────────────────────────────────
     // PHASE D · Layers                         📖 /layer-terminology

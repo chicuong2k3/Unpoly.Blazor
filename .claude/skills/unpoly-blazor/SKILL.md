@@ -71,7 +71,10 @@ The library is built phase by phase. **Only these exist**; everything else throw
 | `Ctx.IsUnpoly()` | request came from Unpoly (`X-Up-Version`) |
 | `Ctx.UpTarget()` | the raw selector, **may be a list**: `".content, .flash"` |
 | `Ctx.UpTargets()` | that list, split and trimmed |
-| `Ctx.UpFailTarget()` | selector used on 4xx/5xx |
+| `Ctx.UpFailTarget()` / `UpFailTargets()` | selector used on failure — anything outside 2xx and 304 |
+| `Ctx.IsUpValidating()` | validation-only request — **must not persist anything** |
+| `Ctx.UpValidatingFields()` | the fields, **space** separated by Unpoly, batched into one request |
+| `Ctx.IsUpValidatingUnknown()` | `:unknown` — validate the whole form |
 | `Ctx.IsUpFragment()` | a specific fragment was asked for, so chrome can be skipped |
 | `Ctx.WantsNothing()` | target is `:none` |
 
@@ -158,6 +161,11 @@ inventing one.
 
 6. **The `.content` element is missing from a fragment response.** The target itself was
    wrapped in `<UpChrome>`. Wrap the chrome around it, never the target.
+
+9. **An invalid form submission looks like a success.** The handler answered 200. Unpoly
+   treats anything outside 2xx and 304 as failure — answer **422** so the fail target is
+   used. And guard the handler with `IsUpValidating()`: a validation request asks for a
+   fresh form state, not for the action to happen.
 
 7. **A handler appears to run twice.** Unpoly caches GET responses for 15 seconds
    (`cacheExpireAge`) and revalidates: it renders the cached copy, then refetches and

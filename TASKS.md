@@ -9,10 +9,10 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 
 | | |
 |---|---|
-| Phase | **A complete**, B code complete — one browser check still open |
-| Protocol coverage | **11 / 24** headers |
+| Phase | **A complete**; B and C code complete — browser checks still open |
+| Protocol coverage | **12 / 24** headers |
 | Build | 4 projects, 0 errors |
-| Checks | 37 passing |
+| Checks | 50 passing |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -37,12 +37,16 @@ If the build fails with a file lock, a previous `dotnet run` is still alive: `ta
 
 ## Next action
 
-**Phase C · Forms.** Read `/submitting-forms` and `/validation` first.
+**Phase D · Layers.** Read `/layer-terminology`, then `/opening-overlays`.
 
-One Phase B item is still open and needs *you*, not an agent: open the browser, click one
-link, and count the request-log lines the sample now prints. The docs describe two render
-passes; whether that is two HTTP requests was never confirmed here because the Chrome
-extension would not connect. See VERIFY.md.
+Two items from B and C need *you*, not an agent — both need a browser, which was not
+available here:
+
+1. Click one link and count the request-log lines the sample prints. The docs describe two
+   render passes; whether that is two HTTP requests was never confirmed.
+2. Blur a field on `/login` and confirm the error appears without a full submit.
+
+See VERIFY.md. Everything else in B and C is verified on the wire.
 
 ---
 
@@ -107,13 +111,14 @@ full-page request. Missing that made chrome vanish silently — check kept at
 
 ## Phase C · Forms
 
-- [ ] Read `/submitting-forms`, `/validation`, `/switching-form-state`, `/reactive-server-forms`, `/disabling-forms`, `/watch-options`
-- [ ] `IsUpValidating` `UpValidatingField`
-- [ ] Make `UpRetarget` fail-aware (4xx/5xx uses `X-Up-Fail-Target`)
+- [x] Read `/validation`, `/failed-responses`, `/X-Up-Validate`, `/submitting-forms`
+- [x] `IsUpValidating` `UpValidatingFields` `IsUpValidatingUnknown` `UpFailTargets`
+- [x] `IsUpFragment` now honours the **failure** branch — a `[up-fail-target=body]` form was
+      getting a 422 body swap with no nav in it
+- [x] Jubin: login form, 422 on invalid, no persistence while validating
+- [x] 13 checks
 - [ ] Jubin: price/collection filter via `[up-autosubmit]` + `[up-watch-delay=300]`
-- [ ] Jubin: login form returning **422** on invalid input, not 200
-- [ ] Checks: validating request must not persist; 422 path selects the fail target
-- [ ] ⚠️ Verify `<AntiforgeryToken />` renders correctly **outside** a `<form>` (see Open questions)
+- [ ] Read `/reactive-server-forms`
 
 ## Phase D · Layers
 

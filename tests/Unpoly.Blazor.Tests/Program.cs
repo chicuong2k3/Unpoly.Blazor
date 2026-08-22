@@ -123,4 +123,40 @@ Check(!Cond(ifModifiedSince: t.ToString("R")).UpNotModified(lastModified: t.AddS
 Check(Cond(ifModifiedSince: t.ToString("R")).UpNotModified(lastModified: t.AddMilliseconds(400)),
       "sub-second precision is truncated before comparing");
 
-Console.WriteLine($"OK — {passed} checks passed (Phase A + B)");
+// ── PHASE C: forms ──────────────────────────────────────────────────────
+
+static HttpContext Val(string? validate = null, string? target = null, string? failTarget = null)
+{
+    var c = new DefaultHttpContext();
+    c.Request.Headers["X-Up-Version"] = "3.10.2";
+    if (validate is not null) c.Request.Headers["X-Up-Validate"] = validate;
+    if (target is not null) c.Request.Headers["X-Up-Target"] = target;
+    if (failTarget is not null) c.Request.Headers["X-Up-Fail-Target"] = failTarget;
+    return c;
+}
+
+Check(!Val().IsUpValidating(), "no X-Up-Validate means a real submission");
+Check(Val("email").IsUpValidating(), "X-Up-Validate marks a validation request");
+Check(Val("").IsUpValidating(), "an empty X-Up-Validate is still a validation request");
+
+// Unpoly batches fields into ONE request, separated by spaces — not commas.
+// 📖 https://unpoly.com/X-Up-Validate
+Check(Val("email").UpValidatingFields() is ["email"], "a single field parses");
+Check(Val("email password").UpValidatingFields() is ["email", "password"], "fields split on spaces");
+Check(Val("email  password").UpValidatingFields().Length == 2, "repeated spaces do not produce empties");
+
+// :unknown has two causes: the origin was not a field, or the list overflowed
+// up.protocol.config.maxHeaderSize. Both mean "validate the whole form".
+Check(Val(":unknown").IsUpValidatingUnknown(), ":unknown is recognised");
+Check(Val(":unknown").UpValidatingFields().Length == 0, ":unknown names no fields");
+Check(!Val("email").IsUpValidatingUnknown(), "a named field is not :unknown");
+
+// Failure swaps X-Up-Fail-Target, but chrome is rendered by the layout before the page has
+// picked a status — so both branches must be considered. 📖 https://unpoly.com/failed-responses
+Check(Val(target: ".content").IsUpFragment(), "no fail target behaves as before");
+Check(Val(target: ".content", failTarget: ".form").IsUpFragment(), "two fragment targets stay a fragment");
+Check(!Val(target: ".content", failTarget: "body").IsUpFragment(),
+      "a whole-page FAIL target forces chrome, or a 422 body swap arrives with no nav");
+Check(Val(target: ".a", failTarget: ".b, .c").UpFailTargets().Length == 2, "fail targets split on commas");
+
+Console.WriteLine($"OK — {passed} checks passed (Phase A + B + C)");

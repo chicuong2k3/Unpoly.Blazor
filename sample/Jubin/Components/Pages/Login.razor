@@ -1,0 +1,97 @@
+@page "/login"
+@using System.ComponentModel.DataAnnotations
+
+<PageTitle>Đăng nhập — JUBIN</PageTitle>
+
+<div class="page-head">
+    <h2>Đăng nhập</h2>
+</div>
+
+<div class="form-wrap">
+    @if (Succeeded)
+    {
+        <p class="notice">Đăng nhập thành công với <strong>@Model.Email</strong>.</p>
+        <p><a class="back" href="/shop">← Tiếp tục mua sắm</a></p>
+    }
+    else
+    {
+        @* [up-validate] revalidates on blur without submitting. Unpoly replaces the form
+           group around the changed field with the one in the response.
+           [up-fail-target] is what Unpoly swaps when the status is not 2xx/304.
+           📖 https://unpoly.com/validation *@
+        <EditForm Model="Model" FormName="login" OnValidSubmit="Submit" OnInvalidSubmit="Invalid"
+                  up-fail-target=".form-wrap" up-disable>
+            <DataAnnotationsValidator />
+
+            <div up-form-group>
+                <label for="email">Email</label>
+                <InputText id="email" @bind-Value="Model.Email" up-validate />
+                <ValidationMessage For="() => Model.Email" />
+            </div>
+
+            <div up-form-group>
+                <label for="password">Mật khẩu</label>
+                <InputText id="password" type="password" @bind-Value="Model.Password" up-validate />
+                <ValidationMessage For="() => Model.Password" />
+            </div>
+
+            <button class="btn" type="submit">Đăng nhập</button>
+        </EditForm>
+
+        @if (Debug is not null)
+        {
+            <p class="meta">@Debug</p>
+        }
+    }
+</div>
+
+@code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+
+    [SupplyParameterFromForm(FormName = "login")]
+    public LoginModel Model { get; set; } = new();
+
+    bool Succeeded;
+    string? Debug;
+
+    protected override void OnParametersSet()
+    {
+        if (!Ctx.IsUpValidating()) return;
+
+        // Surfaced in the page so the header format is visible while learning: Unpoly
+        // batches fields into one SPACE separated list, and sends :unknown when it cannot
+        // name them. 📖 https://unpoly.com/X-Up-Validate
+        Debug = Ctx.IsUpValidatingUnknown()
+            ? "validating: :unknown (validate the whole form)"
+            : $"validating: {string.Join(" + ", Ctx.UpValidatingFields())}";
+    }
+
+    void Submit()
+    {
+        // A validation request must never persist. Unpoly asks for a fresh form state, not
+        // for the action to happen. 📖 https://unpoly.com/validation
+        if (Ctx.IsUpValidating()) return;
+
+        Succeeded = true;
+    }
+
+    void Invalid()
+    {
+        // Unpoly treats anything outside 2xx and 304 as a failure and swaps the fail target.
+        // Answering 200 here would make an invalid form look like a success.
+        // 📖 https://unpoly.com/failed-responses
+        if (!Ctx.IsUpValidating())
+            Ctx.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+    }
+
+    public sealed class LoginModel
+    {
+        [Required(ErrorMessage = "Nhập email")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        public string? Email { get; set; }
+
+        [Required(ErrorMessage = "Nhập mật khẩu")]
+        [MinLength(6, ErrorMessage = "Mật khẩu tối thiểu 6 ký tự")]
+        public string? Password { get; set; }
+    }
+}

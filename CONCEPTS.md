@@ -74,9 +74,12 @@ chrome from a request that wanted to append into `<body>`.
 
 | Concept | Status |
 |---|---|
-| `X-Up-Fail-Target` is read | ✅ `UpFailTarget()` |
-| Making `UpRetarget` aware of the failure branch | ⬜ **Phase C** |
-| Answering 422 so the fail target is used | ⬜ **Phase C** |
+| Failure is any status **outside 2xx and 304** | ✅ note 304 is *not* a failure, so Phase B's conditional path never trips a fail target |
+| `X-Up-Fail-Target` is read and split | ✅ `UpFailTarget()`, `UpFailTargets()` |
+| `IsUpFragment()` accounts for the failure branch | ✅ chrome is kept if **either** branch names a whole-page target; verified on the wire |
+| Answering 422 so the fail target is used | ✅ in the sample's login form |
+| A separate response header to retarget on failure | ➖ there is none — the one `X-Up-Target` response header overrides both branches |
+| `[up-fail-target]` on the element | ➖ client-side |
 
 ---
 
@@ -150,6 +153,40 @@ expiring a subset, or expiring from a GET. Calling it after an ordinary POST is 
 | `[up-background]` requests never show it; preload and poll are background | ➖ |
 
 ---
+
+## `up.form`
+
+### [/validation](https://unpoly.com/validation)
+
+| Concept | Status |
+|---|---|
+| `X-Up-Validate` marks a validation-only request | ✅ `IsUpValidating()` |
+| Fields are **space** separated, batched into one request | ✅ `UpValidatingFields()`; checked |
+| `:unknown` — origin was not a field, **or** the list exceeded `maxHeaderSize` | ✅ `IsUpValidatingUnknown()` |
+| The handler must not persist on a validation request | ✅ enforced in the sample; the guard is the whole point of the header |
+| Server renders a fresh form state; the form group around the field is swapped | ➖ `[up-validate]` + `[up-form-group]` |
+
+### [/submitting-forms](https://unpoly.com/submitting-forms)
+
+| Concept | Status |
+|---|---|
+| Forms submit through Unpoly | ✅ `up.form.config.submitSelectors` via `HandleAllLinksAndForms` |
+| Antiforgery on a real POST | ✅ verified: valid token 200/422, missing token **400** |
+
+### [/disabling-forms](https://unpoly.com/disabling-forms)
+
+| Concept | Status |
+|---|---|
+| `[up-disable]` while in flight | ➖ client-side; the sample styles `form[aria-busy]` |
+
+### [/switching-form-state](https://unpoly.com/switching-form-state) · [/watch-options](https://unpoly.com/watch-options)
+
+Not read — `[up-switch]`, `[up-autosubmit]`, `[up-watch-delay]` are client-side. Nothing to
+implement; revisit only if a server-side need appears.
+
+### [/reactive-server-forms](https://unpoly.com/reactive-server-forms)
+
+Not read yet.
 
 ## `up.script`
 

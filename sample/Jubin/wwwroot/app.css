@@ -231,3 +231,45 @@ img { max-width: 100%; display: block; }
     font-size: .74rem;
     letter-spacing: .06em;
 }
+
+/* ── forms ──────────────────────────────────────────────────────────── */
+
+.form-wrap { max-width: 380px; margin: 0 auto; }
+
+[up-form-group] { margin-bottom: 1.5rem; }
+
+[up-form-group] label {
+    display: block;
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .5rem;
+}
+
+[up-form-group] input {
+    width: 100%;
+    padding: .8rem .9rem;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-family: var(--text);
+    font-size: .95rem;
+    color: var(--ink);
+}
+
+[up-form-group] input:focus { outline: none; border-color: var(--ink); }
+
+.validation-message {
+    display: block;
+    color: var(--sale);
+    font-size: .78rem;
+    margin-top: .4rem;
+}
+
+.notice {
+    border-left: 2px solid var(--ink);
+    padding-left: 1rem;
+}
+
+/* Unpoly's [up-disable] marks the form while it is in flight. */
+form[aria-busy="true"] { opacity: .5; }

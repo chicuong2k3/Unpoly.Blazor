@@ -90,7 +90,8 @@ curl -s -D - -o /dev/null http://localhost:5199/p/dam-4 | grep -i '^vary'
 
 ```bash
 U=http://localhost:5199/shop
-ET=$(curl -s -D - -o /dev/null $U | grep -i '^etag' | tr -d '' | cut -d' ' -f2)
+ET=$(curl -s -D - -o /dev/null $U | grep -i '^etag' | tr -d '
+' | cut -d' ' -f2)
 curl -s -o /dev/null -w "%{http_code} %{size_download}
 " -H "If-None-Match: $ET" $U   # 304 0
 curl -s -o /dev/null -w "%{http_code} %{size_download}
@@ -114,27 +115,45 @@ curl -s -o /dev/null -w "%{http_code} %{size_download}
 
 ---
 
-## Phase C · Forms
+## Phase C · Forms ⏳ (code complete, browser checks open)
 
-**Automated**
+**Automated — 13 checks**
 
-- [ ] `IsUpValidating` true only when `X-Up-Validate` is present
-- [ ] `UpValidatingField` returns the field name; empty and `:unknown` mean the whole form
-- [ ] `UpRetarget` targets the fail branch on a 4xx/5xx status
+- [x] `IsUpValidating` true only when `X-Up-Validate` is present, including when empty
+- [x] `UpValidatingFields` splits on **spaces**, not commas, and collapses repeats
+- [x] `:unknown` is recognised and names no fields
+- [x] `IsUpFragment` keeps chrome when the **fail** target is whole-page, and only then
 
-**Server-observable**
+**Server-observable** — reproduce with the sample running:
 
-- [ ] An invalid login POST answers **422**, not 200
-- [ ] A validating request answers 200 with the re-rendered form
-- [ ] Antiforgery: a POST without the token is rejected; a POST from Unpoly is accepted
-      (this is the first real exercise of `up.protocol.config.csrfToken`)
+```bash
+TOK=$(curl -s -c cj http://localhost:5199/login       | grep -o 'name="__RequestVerificationToken" value="[^"]*"' | sed 's/.*value="//;s/"//')
+P=(--data-urlencode _handler=login --data-urlencode "__RequestVerificationToken=$TOK")
 
-**Browser-observable**
+# invalid submit -> 422
+curl -s -b cj -o /dev/null -w "%{http_code}
+" -X POST http://localhost:5199/login "${P[@]}"   --data-urlencode "Model.Email=x" --data-urlencode "Model.Password=1"          # 422
+
+# validation request -> 200, and NOT a success
+curl -s -b cj -X POST http://localhost:5199/login -H "X-Up-Version: 3.10.2"   -H "X-Up-Validate: Model.Email Model.Password" "${P[@]}"   --data-urlencode "Model.Email=x" --data-urlencode "Model.Password=1" | grep -c 'thành công'   # 0
+
+# no antiforgery token -> rejected
+curl -s -o /dev/null -w "%{http_code}
+" -X POST http://localhost:5199/login   --data-urlencode _handler=login                                              # 400
+```
+
+- [x] An invalid login POST answers **422**, not 200, and the body carries the messages
+- [x] A validating request answers 200, re-renders the form, and does **not** succeed
+- [x] A POST without the antiforgery token is rejected with **400**
+- [x] `X-Up-Fail-Target: body` keeps the nav in a 422 response; `.form-wrap` drops it
+
+**Browser-observable — still open**
 
 - [ ] Leaving an invalid field shows its error without submitting the form
-- [ ] **A validating request writes nothing to the database.** Check the data, not the UI
-- [ ] Filter inputs autosubmit after the debounce, not on every keystroke
-- [ ] The form is disabled while in flight and re-enabled after
+- [ ] **A validating request writes nothing.** Check the data, not the UI. The curl check
+      above proves the guard fires; only a browser proves `[up-validate]` triggers it
+- [ ] The form dims while in flight (`[up-disable]`) and recovers after
+- [ ] Filter inputs autosubmit after the debounce, not on every keystroke — **not built yet**
 
 ---
 
