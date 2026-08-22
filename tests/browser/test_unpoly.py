@@ -325,10 +325,13 @@ async def main():
     print("\n== Cache staleness after a mutation ==", flush=True)
 
     await p.goto("/shop")
-    before = await p.js("document.querySelector('.meta')?.textContent?.trim()")
+    # Target the version element, not "the first .meta" -- that selector matched a different
+    # element after the swap, so the check passed while measuring the wrong thing.
+    before = await p.js("document.querySelector('.version')?.textContent?.trim()")
     await p.click("form.refresh button[type=submit]", settle=1.8)
-    after = await p.js("document.querySelector('.meta')?.textContent?.trim()")
-    record("a mutation is reflected, not served stale", before != after,
+    after = await p.js("document.querySelector('.version')?.textContent?.trim()")
+    record("a mutation is reflected, not served stale",
+           bool(before) and bool(after) and before != after and "catalog-" in after,
            f"version {before} -> {after}")
     await asyncio.sleep(PACE)
 
