@@ -181,6 +181,19 @@ Spec: <https://unpoly.com/up.protocol>
 
 ---
 
+## Exercise gaps
+
+`CONCEPTS.md` ends with a list of methods that pass unit checks but have never run in the
+sample. They are candidate work, not bugs — pick them up alongside the phase that fits:
+
+- `UpRetarget()` — login success could retarget `.site-nav` to swap in a greeting
+- `UpExpireCache()` `UpEvictCache()` `UpKeepCache()` — need a cart, so Phase D or F
+- `WantsNothing()` / `:none` — a fire-and-forget POST
+- Explicit `[up-target]`, target lists, `:after` — infinite scroll in Phase E
+- `Catalog.Touch()` — nothing mutates the catalog, so the conditional path has only ever
+  been proven in its *fresh* direction. Nothing has changed the data and confirmed the 304
+  stops
+
 ## Open questions
 
 - ~~`<AntiforgeryToken />` outside a `<form>`~~ — **resolved.** Unpoly ships CSRF support
