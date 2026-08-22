@@ -459,6 +459,59 @@ async def main():
     shown = await p.js("document.querySelector('up-modal')?.textContent?.includes('flavour')")
     record("the server read that context and echoed it", bool(shown))
 
+    # ---------------------------------------------------------------- history
+    print("\n== History ==", flush=True)
+
+    await p.goto("/lab")
+    await p.click("a[href='/lab/titled']", settle=1.8)
+    t = await p.js("document.title")
+    record("X-Up-Title sets the document title", "server" in (t or "").lower(), f"title: {t}")
+
+    await p.goto("/lab")
+    await p.click("a[href='/lab/relocated']", settle=1.8)
+    where = await p.js("location.pathname")
+    record("X-Up-Location wins over the requested URL", where == "/lab/somewhere-else",
+           f"address bar: {where}")
+
+    await p.goto("/lab")
+    before = await p.js("location.pathname")
+    await p.click("a[up-history='false']", settle=1.8)
+    after = await p.js("location.pathname")
+    swapped = await p.js("!!document.querySelector('.card')")
+    record("[up-history=false] swaps without touching the address bar",
+           after == before and swapped, f"{before} -> {after}, content swapped: {swapped}")
+    await asyncio.sleep(PACE)
+
+    # ---------------------------------------------------------------- infinite scroll
+    print("\n== Infinite scroll ==", flush=True)
+
+    await p.goto("/shop")
+    first = await p.js("document.querySelectorAll('.listing .card').length")
+    record("the first page is a slice, not everything", first == 12, f"{first} cards")
+
+    # [up-defer=reveal] is the trigger, so the test scrolls rather than clicks -- doing both
+    # loads the same page twice. It also keeps firing while the trigger stays in view, so one
+    # scroll can pull several pages. Asserting an exact intermediate count was wrong about
+    # the feature, not about the code.
+    await p.js("window.scrollTo(0, document.body.scrollHeight)")
+    await asyncio.sleep(3.0)
+    grown = await p.js("document.querySelectorAll('.listing .card').length")
+    record(".listing:after APPENDS rather than replaces", grown > first,
+           f"{first} -> {grown} cards; staying at 12 would mean it replaced")
+
+    record("it stops at the total, never past it", grown == 30, f"{grown} of 30")
+
+    # The real risk of appending is appending the same slice twice.
+    unique = await p.js("new Set(Array.from(document.querySelectorAll('.listing .card a'))"
+                        ".map(a => a.getAttribute('href'))).size")
+    record("and appends no duplicates", unique == grown, f"{unique} distinct of {grown} cards")
+
+    done = await p.js("!document.querySelector('.more a')")
+    exhausted = await p.js("document.querySelector('.more')?.textContent?.includes('hết')")
+    record("the .more region was REPLACED, not appended", done and bool(exhausted),
+           "the load-more link is gone and the exhausted message took its place")
+    await asyncio.sleep(PACE)
+
     # ---------------------------------------------------------------- summary
     ok = sum(1 for _, o, _ in results if o)
     print(f"\n{'=' * 58}\n{ok}/{len(results)} browser checks passed\n{'=' * 58}")

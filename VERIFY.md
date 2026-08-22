@@ -222,20 +222,33 @@ curl -s -o /dev/null -w "%{http_code}
 
 ---
 
-## Phase E · History, scrolling and focus
+## Phase E · History, scrolling and focus ✅ (two items open)
 
-**Automated**
+**Automated — 8 checks**
 
-- [ ] `UpTitle` writes a **JSON-encoded** string, not a bare one
-- [ ] `UpLocation` and `UpMethod` write their headers
+- [x] `UpTitle` keeps the quotes: `"Playlist browser"`, not a bare string
+- [x] and escapes non-ASCII, so a Vietnamese title stays ASCII-safe in a header while still
+      decoding to the original
+- [x] `UpLocation` is a plain URL, `UpMethod` is upper-cased
+- [x] `_up_method` defaults to the request method, takes an explicit override, and is set for
+      the whole site
 
-**Browser-observable**
+**Browser-observable — 8 checks**
 
-- [ ] Filtering changes the URL, and pasting that URL into a new tab reproduces the view
-- [ ] Back and Forward restore both the fragment and the scroll position
-- [ ] The document title follows navigation, including after a fragment-only response
-- [ ] Keyboard focus lands in the new fragment, not back at the top of the document
-- [ ] Infinite scroll appends without losing the scroll position
+- [x] `X-Up-Title` sets the document title
+- [x] `X-Up-Location` wins over the URL that was actually requested
+- [x] `[up-history=false]` swaps content without touching the address bar
+- [x] Infinite scroll: `.listing:after` **appends**, the first page stays put
+- [x] It stops at the total and never goes past it
+- [x] **No duplicates** — 30 distinct of 30. Appending the same slice twice is the real
+      risk, and it is what the first version of this sample did
+- [x] The `.more` region is **replaced** in the same response that appended — one target
+      list doing two different jobs
+
+**Open**
+
+- [ ] Back and Forward restore the scroll position
+- [ ] Keyboard focus lands in the new fragment rather than the top of the document
 
 ---
 

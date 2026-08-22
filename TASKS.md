@@ -9,10 +9,10 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 
 | | |
 |---|---|
-| Phase | **A, B, C and D complete** |
-| Protocol coverage | **20 / 24** headers |
+| Phase | **A—E complete** |
+| Protocol coverage | **23 / 24** headers |
 | Build | 4 projects, 0 errors |
-| Checks | 82 unit + 37 browser |
+| Checks | 90 unit + 45 browser |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -37,14 +37,17 @@ If the build fails with a file lock, a previous `dotnet run` is still alive: `ta
 
 ## Next action
 
-**Phase E · History, scrolling and focus.** Read `/updating-history` first.
+**Phase F · Status and passive updates.** Read `/flashes` and `/polling` first.
 
-Nothing is open in A–D. Every browser-observable claim is automated in
-`tests/browser/test_unpoly.py`.
+One header left: `X-Up-Events` (Phase F). Everything else in the protocol is covered.
 
-One exercise is worth carrying into E: the sample only ever opens **one** overlay. Ten rows
-of `/layer-option` (root / parent / closest / ancestor / child / any …) need a *stack* to
-mean anything. That is one feature to build, not ten checks to write.
+Two exercises are still carried forward, both blocked on the same missing feature — the
+sample opens only **one** overlay at a time:
+
+- ten `/layer-option` rows (root / parent / closest / ancestor / child / any …)
+- `/history-in-overlays` rows 2—7
+
+That is one feature to build, not seventeen checks to write.
 
 ---
 
@@ -136,10 +139,14 @@ full-page request. Missing that made chrome vanish silently — check kept at
 
 - [ ] Read `/updating-history`, `/restoring-history`, `/history-in-overlays`, `/analytics`
 - [ ] Read `/scrolling`, `/scroll-tuning`, `/focus`, `/focus-visibility`, `/infinite-scrolling`
-- [ ] `UpTitle` (value is a **JSON-encoded** string) `UpLocation` `UpMethod`
-- [ ] Investigate the `_up_method` cookie
-- [ ] Jubin: filters push to the URL; infinite scroll on `/shop`; scroll restored on Back
-- [ ] Checks: `UpTitle` writes valid JSON, not a bare string
+- [x] `UpTitle` (JSON-encoded, quotes included) `UpLocation` `UpMethod`
+- [x] `UpMethodCookie` — the cookie exists because a full page load carries no Unpoly
+      request to put a header on; Unpoly pops it during boot
+- [x] Jubin: infinite scroll on `/shop` via `.listing:after` — closes the `:after` row open
+      since Phase A
+- [x] 8 unit + 8 browser checks
+- [ ] Scroll position restored on Back
+- [ ] Read `/scrolling`, `/focus`, `/analytics`
 
 ## Phase F · Status and passive updates
 

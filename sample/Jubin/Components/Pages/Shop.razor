@@ -42,6 +42,27 @@
     <ProductGrid Products="Items" />
 </div>
 
+@* INFINITE SCROLL. [up-target=".listing:after, .more"] is a target LIST doing two different
+   jobs in one response: append into .listing, replace .more. Without the `:after` modifier
+   the second page would replace the first instead of extending it.
+   [up-defer=reveal] loads it when the link scrolls into view, so there is no button to press.
+   📖 https://unpoly.com/infinite-scrolling *@
+<div class="more">
+    @if (HasMore)
+    {
+        @* [up-defer=reveal] is the trigger: this loads itself when scrolled into view.
+           Do NOT also make it inviting to click -- both paths fire, and the same page is
+           appended twice. That is what makes it infinite scroll rather than a button. *@
+        <a href="@NextUrl" up-target=".listing:after, .more" up-defer="reveal" up-follow="false">
+            Đang tải thêm… (@Shown/@Total)
+        </a>
+    }
+    else if (Total > 0)
+    {
+        <span class="meta">Đã hiển thị hết @Total sản phẩm</span>
+    }
+</div>
+
 @* Explicit [up-target] instead of falling through to mainTargets, plus [up-fallback] for
    when .listing is missing from either side. 📖 https://unpoly.com/targeting-fragments *@
 <form method="post" @formname="refresh" @onsubmit="Refresh"
@@ -64,6 +85,25 @@
 
     [SupplyParameterFromQuery] public string? Collection { get; set; }
     [SupplyParameterFromQuery] public int? MaxPrice { get; set; }
+    [SupplyParameterFromQuery] public int? Page { get; set; }
+
+    const int PerPage = 12;
+
+    int Total;
+    int Shown => Math.Min((Page ?? 1) * PerPage, Total);
+    bool HasMore => Shown < Total;
+
+    string NextUrl
+    {
+        get
+        {
+            var q = new List<string> { $"page={(Page ?? 1) + 1}" };
+            if (!string.IsNullOrEmpty(Collection)) q.Add($"collection={Collection}");
+            if (MaxPrice is { } m) q.Add($"maxPrice={m}");
+            var path = Category is null ? "/shop" : $"/shop/{Category}";
+            return $"{path}?{string.Join("&", q)}";
+        }
+    }
 
     List<Product> Items = [];
     bool NotModified;
@@ -107,6 +147,15 @@
         if (MaxPrice is { } max)
             q = q.Where(p => p.Effective <= max);
 
-        Items = NotModified ? [] : [.. q];
+        var all = q.ToList();
+        Total = all.Count;
+
+        // A page request appends, so it must return ONLY the new slice. A first page returns
+        // everything up to the cursor, which is what a direct visit or a Back needs.
+        Items = NotModified
+            ? []
+            : Page is { } p and > 1
+                ? [.. all.Skip((p - 1) * PerPage).Take(PerPage)]
+                : [.. all.Take(PerPage)];
     }
 }

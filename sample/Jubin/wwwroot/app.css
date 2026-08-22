@@ -383,3 +383,13 @@ form[aria-busy="true"] { opacity: .5; }
 }
 .sizes { display: flex; gap: .6rem; flex-wrap: wrap; margin: 1.25rem 0; }
 .chosen-size { color: var(--sale); }
+
+.more { text-align: center; margin-top: 3rem; }
+.more a {
+    border-bottom: 1px solid var(--line);
+    font-size: .78rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.more a:hover { color: var(--ink); border-bottom-color: var(--ink); }

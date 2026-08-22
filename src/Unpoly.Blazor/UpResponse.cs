@@ -182,19 +182,53 @@ public static class UpResponse
     // ─────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// X-Up-Title — set the document title when the response carries no &lt;head&gt;.
-    /// The value is a JSON-encoded string, not a bare string. TODO Phase E
+    /// X-Up-Title — set the document title from a response that carries no &lt;title&gt;.
+    ///
+    /// The value is a **JSON-encoded** string: the quotes are part of the header, so a title
+    /// of Playlist browser is sent as <c>X-Up-Title: "Playlist browser"</c>. Sending it bare
+    /// is the mistake worth guarding against, which is why this method does the encoding.
+    ///
+    /// Not needed here while &lt;HeadOutlet /&gt; stays outside &lt;UpChrome&gt; — the real
+    /// &lt;title&gt; survives fragment responses. Reach for it when a page wants a title
+    /// different from its &lt;PageTitle&gt;.
+    /// 📖 https://unpoly.com/X-Up-Title
     /// </summary>
     public static void UpTitle(this HttpContext c, string title)
-        => throw new NotImplementedException("Phase E · 📖 https://unpoly.com/updating-history");
+        => c.Response.Headers["X-Up-Title"] = JsonSerializer.Serialize(title);
 
-    /// <summary>X-Up-Location — report the response's real URL after redirects. TODO Phase E</summary>
+    /// <summary>
+    /// X-Up-Location — the URL Unpoly should show, as a plain string.
+    ///
+    /// Without it Unpoly uses the request URL. Send it when the response is not what the
+    /// request URL suggests: a redirect Unpoly cannot see, or a canonical form.
+    /// 📖 https://unpoly.com/updating-history
+    /// </summary>
     public static void UpLocation(this HttpContext c, string url)
-        => throw new NotImplementedException("Phase E");
+        => c.Response.Headers["X-Up-Location"] = url;
 
-    /// <summary>X-Up-Method — the real HTTP method of the final response. Pairs with the _up_method cookie. TODO Phase E</summary>
+    /// <summary>
+    /// X-Up-Method — the HTTP method Unpoly should record for this location, plain text.
+    ///
+    /// Unpoly assumes a redirect landed on GET, which is right for 301, 302 and 303 and
+    /// wrong for 307 and 308. It also cannot see a redirect to the *same* URL with a
+    /// different method, such as POST /users to GET /users. Send it in those two cases.
+    /// 📖 https://unpoly.com/X-Up-Method
+    /// </summary>
     public static void UpMethod(this HttpContext c, string method)
-        => throw new NotImplementedException("Phase E");
+        => c.Response.Headers["X-Up-Method"] = method.ToUpperInvariant();
+
+    /// <summary>
+    /// The _up_method cookie — tells Unpoly that the FULL PAGE it is booting on was produced
+    /// by a non-GET request. Headers cannot carry that: the browser navigated normally, so no
+    /// Unpoly request was involved to put a header on.
+    ///
+    /// Unpoly pops the cookie (reads it, then deletes it) during boot, so it is single-use.
+    /// Set it only when rendering a full document in response to a non-GET.
+    /// 📖 https://unpoly.com/X-Up-Method
+    /// </summary>
+    public static void UpMethodCookie(this HttpContext c, string? method = null)
+        => c.Response.Cookies.Append("_up_method", (method ?? c.Request.Method).ToUpperInvariant(),
+            new CookieOptions { Path = "/", HttpOnly = false, IsEssential = true });
 
     // ─────────────────────────────────────────────────────────────
     // PHASE F · Events                         📖 /flashes

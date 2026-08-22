@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Unpoly.Blazor;
 
@@ -266,4 +267,43 @@ layerVary.UpVary("X-Up-Target", "X-Up-Version", "X-Up-Mode", "X-Up-Context");
 Check(layerVary.Response.Headers.Vary.ToString().Contains("X-Up-Context"),
       "Vary covers X-Up-Context, or layers with different context share a cache entry");
 
-Console.WriteLine($"OK — {passed} checks passed (Phase A + B + C + D)");
+// ── PHASE E: history ────────────────────────────────────────────────────
+
+// X-Up-Title is JSON-encoded: the quotes are PART of the header value. Sending it bare is
+// the mistake, so the method encodes rather than trusting the caller.
+// 📖 https://unpoly.com/X-Up-Title
+var title = new DefaultHttpContext();
+title.UpTitle("Playlist browser");
+Check(title.Response.Headers["X-Up-Title"] == "\"Playlist browser\"", "UpTitle keeps the quotes");
+
+// And it escapes non-ASCII, which matters: an HTTP header carrying raw UTF-8 is not safe.
+var viet = new DefaultHttpContext();
+viet.UpTitle("Đầm");
+var raw = viet.Response.Headers["X-Up-Title"].ToString();
+Check(raw.All(ch => ch < 128), $"UpTitle stays ASCII-safe: {raw}");
+Check(JsonSerializer.Deserialize<string>(raw) == "Đầm", "and still decodes to the original title");
+
+var loc = new DefaultHttpContext();
+loc.UpLocation("/shop?page=2");
+Check(loc.Response.Headers["X-Up-Location"] == "/shop?page=2", "UpLocation is a plain URL, not JSON");
+
+var meth = new DefaultHttpContext();
+meth.UpMethod("get");
+Check(meth.Response.Headers["X-Up-Method"] == "GET", "UpMethod is upper-cased");
+
+// The cookie exists because a full page load carries no Unpoly request to put a header on.
+// Unpoly pops it during boot, so it is single-use.
+var cook = new DefaultHttpContext();
+cook.Request.Method = "POST";
+cook.UpMethodCookie();
+var setCookie = cook.Response.Headers.SetCookie.ToString();
+Check(setCookie.Contains("_up_method=POST"), $"_up_method defaults to the request method: {setCookie}");
+Check(setCookie.Contains("path=/"), "and is set for the whole site");
+
+var cook2 = new DefaultHttpContext();
+cook2.Request.Method = "GET";
+cook2.UpMethodCookie("PUT");
+Check(cook2.Response.Headers.SetCookie.ToString().Contains("_up_method=PUT"),
+      "an explicit method wins over the request method");
+
+Console.WriteLine($"OK — {passed} checks passed (Phase A + B + C + D + E)");

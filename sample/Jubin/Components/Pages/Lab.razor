@@ -17,7 +17,20 @@
     <p class="count">Các khái niệm client-side, quan sát trong Network tab</p>
 </div>
 
-@if (Case == "slow")
+@if (Case == "titled")
+{
+    <p class="notice">
+        Tiêu đề tài liệu do <code>X-Up-Title</code> đặt, không phải <code>&lt;PageTitle&gt;</code>.
+    </p>
+}
+else if (Case == "relocated")
+{
+    <p class="notice">
+        URL đã request là <code>/lab/relocated</code>, nhưng <code>X-Up-Location</code>
+        bảo trình duyệt hiện <code>/lab/somewhere-else</code>.
+    </p>
+}
+else if (Case == "slow")
 {
     <p class="notice">
         Route chậm (@DelayMs ms)@(Which is null ? "" : $" — từ: {Which}").
@@ -195,6 +208,28 @@ else
         </ul>
     </section>
 
+    <h3>History <span class="meta">/updating-history</span></h3>
+    <ul>
+        <li>
+            <a href="/lab/titled" up-target=".content">Server đặt tiêu đề</a>
+            <span class="meta">
+                <code>X-Up-Title</code> — giá trị là <strong>JSON-encoded</strong>, dấu nháy nằm
+                trong header: <code>"Tiêu đề"</code>. Gửi trần là hỏng
+            </span>
+        </li>
+        <li>
+            <a href="/lab/relocated" up-target=".content">Server đổi URL hiển thị</a>
+            <span class="meta">
+                <code>X-Up-Location</code> — thanh địa chỉ hiện URL server chỉ định,
+                không phải URL đã request
+            </span>
+        </li>
+        <li>
+            <a href="/shop" up-target=".content" up-history="false">Không đụng history</a>
+            <span class="meta">/updating-history — swap mà thanh địa chỉ đứng yên</span>
+        </li>
+    </ul>
+
     <h3>Layers <span class="meta">/layer-option · /closing-overlays</span></h3>
     <ul>
         <li>
@@ -280,6 +315,16 @@ else
         {
             // Long enough to exceed up.network.config.lateDelay so the bar appears.
             await Task.Delay(DelayMs);
+        }
+        else if (Case == "titled")
+        {
+            // JSON-encoded, quotes included. The method does the encoding so a bare string
+            // cannot be sent by accident. 📖 https://unpoly.com/X-Up-Title
+            Ctx.UpTitle("Tiêu đề do server đặt — JUBIN");
+        }
+        else if (Case == "relocated")
+        {
+            Ctx.UpLocation("/lab/somewhere-else");
         }
         else if (Case == "unauthorized")
         {

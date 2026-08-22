@@ -445,6 +445,81 @@ is used in the sample; the rest is styling.
 
 ---
 
+## `up.history`
+
+### [/updating-history](https://unpoly.com/updating-history) — 9/9 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | When history is changed | ➖ client decides | `Lab.razor` |
+| 2 | What is updated when history changes | ✅ URL, title, meta | `Lab.razor` |
+| 3 | Only major fragments change history | ➖ `mainTargets` decides | `Program.cs` |
+| 4 | Forcing a history change | ➖ `[up-history=true]` | todo |
+| 5 | Preventing a history change | ➖ `[up-history=false]` | `Lab.razor` · `up-history="false"` |
+| 6 | Only `GET` requests change history | ➖ | n/a — nothing to observe beyond the rule |
+| 7 | Changing history after a form submission | ✅ `UpLocation()` | `Lab.razor` · `/lab/relocated` |
+| 8 | Changing history during programmatic rendering | ➖ JS API | todo |
+| 9 | Partial history updates | ✅ `UpTitle()` | `Lab.razor` · `/lab/titled` |
+
+`X-Up-Title` is **JSON-encoded**: the quotes are part of the header value, so
+`X-Up-Title: "Playlist browser"`. The `/updating-history` summary reads as plain text; the
+dedicated `/X-Up-Title` page is explicit that "the quotes must be included". When the two
+disagree, the header page wins.
+
+A second reason to encode rather than pass through: `JsonSerializer` escapes non-ASCII to
+`\uXXXX`, which keeps the header ASCII-safe. A Vietnamese title sent raw would not be.
+
+### [/restoring-history](https://unpoly.com/restoring-history) — 4/4 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Default restoration behaviour | ➖ Unpoly refetches or reuses cache | todo — Back after a filter |
+| 2 | Custom restoration behaviour | ➖ `up:location:restore` | todo |
+| 3 | Handled history entries | ➖ | n/a — internal bookkeeping |
+| 4 | History restoration with overlays | ➖ | todo — needs a stack |
+
+### [/history-in-overlays](https://unpoly.com/history-in-overlays) — 7/7 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | When overlays update history | ➖ | `SizePicker.razor` opened as modal |
+| 2 | Configuring history visibility | ➖ `[up-history]` on the layer | todo |
+| 3—4 | Behaviour with visible / invisible history | ➖ | todo |
+| 5 | Navigation bars work with invisible history | ➖ | todo |
+| 6 | Invisible history is inherited | ➖ | todo — needs a stack |
+| 7 | History restoration | ➖ | todo |
+
+The server plays no part in deciding what shows in the address bar. Its only obligation is
+the one this project already follows: **every route renders a full page**, so an overlay URL
+opened directly still works.
+
+### [/analytics](https://unpoly.com/analytics)
+
+Not read — tracking page views with a third-party script. Revisit in Phase G with
+`up.compiler`.
+
+---
+
+## `up.viewport`
+
+### [/infinite-scrolling](https://unpoly.com/infinite-scrolling)
+
+| Concept | Status | Sample |
+|---|---|---|
+| Append the next page instead of replacing | ✅ `.listing:after` | `Shop.razor` · `up-target=".listing:after, .more"` |
+| Replace the trigger in the same response | ✅ target **list**, two jobs at once | same |
+| `[up-defer=reveal]` as the trigger | ➖ | `Shop.razor` · `up-defer="reveal"` |
+
+This closes the `:before` / `:after` row that had sat at `todo` since Phase A. It also
+exposed a sample bug worth keeping: a link with `[up-defer=reveal]` that is *also* clickable
+loads the same page twice and appends it twice. Deferred is a trigger, not a decoration — the link now carries `[up-follow=false]`.
+
+### /scrolling · /scroll-tuning · /focus · /focus-visibility
+
+Not read. Expected to be entirely client-side; confirm before ticking.
+
+---
+
 ## `up.script`
 
 ### [/handling-asset-changes](https://unpoly.com/handling-asset-changes) — partial
@@ -479,7 +554,7 @@ The playground paid for itself immediately: its `.content, .site-nav` link expos
 
 ## Not yet opened
 
-`up.fragment` · `up.radio` · `up.history` · `up.viewport` · `up.event`
+`up.fragment` · `up.radio` · `up.event`
 
 Skipped for the whole project: `up.motion` · `up.element` · `up.util` · `up.log` ·
 `up.framework`, plus the *Features* tier everywhere — that tier is a dictionary. Look
