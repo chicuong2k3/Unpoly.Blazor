@@ -11,6 +11,15 @@
 </div>
 
 <ProductGrid Products="Items" />
+
+@* Explicit [up-target] instead of falling through to mainTargets, plus [up-fallback] for
+   when .listing is missing from either side. 📖 https://unpoly.com/targeting-fragments *@
+<form method="post" @formname="refresh" @onsubmit="Refresh"
+      up-target=".content" up-fallback="body" class="refresh">
+    <AntiforgeryToken />
+    <button class="btn-quiet" type="submit">Làm mới kho (đổi phiên bản)</button>
+</form>
+<p class="meta">Phiên bản: @Catalog.ETag</p>
 }
 
 @code {
@@ -22,6 +31,22 @@
     bool NotModified;
 
     string Heading => Category is null ? "Tất cả sản phẩm" : Catalog.CategoryName(Category);
+
+    void Refresh()
+    {
+        // Mutating the data is what makes the conditional path meaningful: until something
+        // changes, 304 has only ever been proven in its "unchanged" direction.
+        Catalog.Touch();
+
+        // Redundant on its own — Unpoly expires the whole cache after any non-GET — but it
+        // is the narrower form, and the only way this header gets exercised at all.
+        // 📖 https://unpoly.com/X-Up-Expire-Cache
+        Ctx.UpExpireCache("/shop*");
+
+        // The button sits inside .content, but say so explicitly so the swap does not depend
+        // on what the client happened to ask for. 📖 https://unpoly.com/targeting-fragments
+        Ctx.UpRetarget(".content");
+    }
 
     protected override void OnParametersSet()
     {

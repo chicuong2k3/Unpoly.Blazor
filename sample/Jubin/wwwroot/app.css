@@ -273,3 +273,18 @@ img { max-width: 100%; display: block; }
 
 /* Unpoly's [up-disable] marks the form while it is in flight. */
 form[aria-busy="true"] { opacity: .5; }
+
+.refresh { margin-top: 3rem; text-align: center; }
+
+.btn-quiet {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: var(--text);
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    padding: .6rem 1.4rem;
+    cursor: pointer;
+}
+.btn-quiet:hover { border-color: var(--ink); color: var(--ink); }

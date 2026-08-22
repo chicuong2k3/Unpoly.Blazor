@@ -1,103 +1,116 @@
 # CONCEPTS.md
 
-Per-guide tracking: which concepts from each Unpoly guide are handled, where the code lives,
-and **where the sample exercises them**.
+Per-guide tracking. **Every section of a guide that has been read gets a row** — including
+the ones with nothing to do. A guide is only finished when its whole table of contents
+appears here.
 
-`TASKS.md` tracks *what to do next*. `VERIFY.md` tracks *how you prove it works*. This file
-tracks *what has been understood and covered*, guide by guide.
+`TASKS.md` tracks *what to do next*. `VERIFY.md` tracks *how you prove it works*.
 
 **Legend**
 
 | | |
 |---|---|
-| ✅ | covered — the code exists and a check or a wire observation proves it |
+| ✅ | covered — code exists and a check or wire observation proves it |
 | ⬜ | not covered yet — the phase that will cover it is named |
 | ➖ | nothing for **us** to write — pure client-side. Still goes into the skill's "reach for HTML first" table, because it is exactly where an agent invents a C# helper for a one-attribute job |
 | 🚫 | deliberately declined — the reason is stated |
 
-The **Sample** column points into `sample/Jubin/`. Line numbers drift; the token after the
-dot is what to grep for. A dash means *the sample does not exercise this yet* — see
+**Sample** points into `sample/Jubin/` as `file:line · token`. Lines drift; grep the token.
+A dash means the sample does not exercise it — collected under
 [Implemented but never exercised](#implemented-but-never-exercised).
-
-Rows are added as guides are read. An empty guide section means it has not been read yet.
 
 ---
 
 ## `up.link`
 
-### [/handling-everything](https://unpoly.com/handling-everything)
+### [/handling-everything](https://unpoly.com/handling-everything) — 6/6 sections
 
-| Concept | Config | Status | Sample |
+| § | Concept | Status | Sample |
 |---|---|---|---|
-| Following all links | `followSelectors.push('a[href]')` | ✅ `HandleAllLinksAndForms`, default **on** | `Program.cs:8` · `AddUnpoly` |
-| Following on mousedown | `instantSelectors.push('a[href]')` | ✅ `InstantAllLinks`, default **off** | — |
-| Preloading all links | `preloadSelectors.push('a[href]')` | ✅ `PreloadAllLinks`, default **off** | — |
-| Handling all forms | `submitSelectors.push(['form'])` | ✅ same option | `Login.razor:22` · `EditForm` |
-| Opt-outs `[up-follow=false]` etc. | — | ➖ attributes only | — |
-| Fixing legacy JavaScript | — | ➖ Phase G territory | — |
-| Customizing navigation defaults | `navigateOptions` | ➖ `ExtraScript` already carries it | — |
+| 1 | Following all links | ✅ `HandleAllLinksAndForms`, default **on** | `Program.cs:8` · `AddUnpoly` |
+| 2 | Following all links on mousedown | ✅ `InstantAllLinks`, default **off** | — |
+| 3 | Preloading all links | ✅ `PreloadAllLinks`, default **off** | — |
+| 4 | Handling all forms | ✅ same option | `Login.razor:22` · `EditForm` |
+| 5 | Fixing legacy JavaScript code | ➖ Phase G territory | — |
+| 6 | Customizing navigation defaults | ➖ `ExtraScript` carries `navigateOptions` | — |
 
-Navigation applies defaults `up.render()` does not — `history: 'auto'`, `scroll: 'auto'`,
-`fallback: ':main'`, `cache: 'auto'`, `revalidate: 'auto'`, `focus: 'auto'`,
-`peel: 'dismiss'`. Override through `ExtraScript`:
+Navigation applies defaults `up.render()` does not — `history/scroll/focus: 'auto'`,
+`fallback: ':main'`, `cache: 'auto'`, `revalidate: 'auto'`, `peel: 'dismiss'`. Override via
+`o.ExtraScript = "up.fragment.config.navigateOptions.transition = 'cross-fade'"`.
 
-```csharp
-o.ExtraScript = "up.fragment.config.navigateOptions.transition = 'cross-fade'";
+Both new flags default **off**: `instant` changes click semantics; `preload` multiplies
+server load — sweeping a mouse across a product grid fires one request per card.
+
+### [/targeting-fragments](https://unpoly.com/targeting-fragments) — 19/19 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Swapping a fragment | ✅ explicit `[up-target]` now used, not only `mainTargets` | `Home.razor` · `up-target` · `Shop.razor` · `refresh` |
+| 2 | Updating multiple fragments | ✅ `UpTargets()` splits lists; checked | — |
+| 3 | Optional targets | ✅ `:maybe` stripped by `BaseTarget()` | — |
+| 4 | Targeting the main element | ✅ `:main` is whole-page; checked | `Program.cs:11` · `MainTargets` |
+| 5 | Targeting the entire layer | ✅ `:layer` is whole-page; checked | — |
+| 6 | Targeting an element object | ➖ JS API | — |
+| 7 | Appending or prepending children | ✅ `:after` / `:before` stripped; checked | — |
+| 8 | Replacing all children | ✅ `:content` stripped; checked | — |
+| 9 | Targeting nothing | ✅ `WantsNothing()` → 204, 0 bytes | `ProductDetail.razor` · `up-target=":none"` |
+| 10 | Resolving ambiguous selectors | ➖ client-side matching | — |
+| 11 | Targeting an ancestor element | ➖ selector syntax | — |
+| 12 | Targeting a sibling element | ➖ selector syntax | — |
+| 13 | Disabling region-aware matching | ➖ client config | — |
+| 14 | Referring to the origin element | ➖ `:origin` resolves to a derived selector before the header is sent | — |
+| 15 | Dealing with missing targets | ➖ client-side | — |
+| 16 | Providing a fallback target | ➖ resolved on the client | `Home.razor` · `up-fallback` |
+| 17 | Falling back to the main target | ➖ `{ fallback: true }` | — |
+| 18 | Making targets optional | ✅ same `:maybe` handling as §3 | — |
+| 19 | Changing the target in-flight | ✅ `UpRetarget()` — the server half | `Shop.razor` · `UpRetarget` |
+
+`BaseTarget()` exists because §3, §7, §8 and §18 all append a modifier to a selector.
+Modifiers change **how** a match is applied, never **what** is matched. Comparing raw
+strings made `body:after` look like a fragment and dropped the chrome from a request that
+wanted to append into `<body>`.
+
+### [/failed-responses](https://unpoly.com/failed-responses) — 8/8 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Rendering failed responses differently | ✅ `UpFailTarget()`, `UpFailTargets()` | `Login.razor:23` · `up-fail-target` |
+| 2 | Ignoring HTTP error codes | ➖ `{ fail: false }` client-side | — |
+| 3 | **Customizing failure detection** | ⬜ **server-relevant** — `up.network.config.fail` is a function the app can widen, e.g. treat a response header as failure. Reachable today through `ExtraScript`; no C# helper yet | — |
+| 4 | Local content cannot fail | ➖ no request involved | — |
+| 5 | Handling unexpected content | ➖ `up:fragment:loaded` | — |
+| 6 | Handling fatal network errors | ➖ client-side | — |
+| 7 | Handling aborted requests | ➖ client-side | — |
+| 8 | Detecting a failed response programmatically | ➖ JS API | — |
+
+Failure is any status **outside 2xx and 304** — so Phase B's conditional 304 never trips a
+fail target. `IsUpFragment()` keeps chrome when *either* branch names a whole-page target,
+because the layout renders chrome before the page has picked a status.
+
+§3 is the one with a server story: the server can emit a header and the client be
+configured to treat it as failure:
+
+```js
+let badStatus = up.network.config.fail
+up.network.config.fail = (response) => badStatus(response) || response.header('X-Unauthorized')
 ```
-
-Both new flags default **off** on purpose:
-
-- `instant` changes click semantics. A link that needs a confirm, or that users drag rather
-  than click, must opt out.
-- `preload` multiplies server load. On a product grid, sweeping the mouse across the cards
-  fires one request per card, into the same cache that revalidation later refetches.
-
-### [/targeting-fragments](https://unpoly.com/targeting-fragments)
-
-| Concept | Status | Sample |
-|---|---|---|
-| `[up-target]` with a CSS selector | ✅ | — *(every link relies on `mainTargets` instead)* |
-| `mainTargets` fallback | ✅ `UnpolyOptions.MainTargets` | `Program.cs:11` · `MainTargets` |
-| The target element itself | ✅ never wrapped in chrome | `MainLayout.razor:30` · `class="content"` |
-| Target **lists** (`.a, .b`) | ✅ `UpTargets()`; checked | — |
-| Pseudo-target `:main` | ✅ whole-page; checked | — |
-| Pseudo-target `:layer` | ✅ whole-page; checked | — |
-| Pseudo-target `:none` | ✅ `WantsNothing()`; checked | — |
-| Pseudo-target `:origin` | ➖ resolved to a derived selector before the header is sent | — |
-| Modifier `:before` / `:after` | ✅ stripped by `BaseTarget()`; checked | — |
-| Modifier `:maybe` | ✅ stripped by `BaseTarget()`; checked | — |
-| Modifier `:content` | ✅ stripped by `BaseTarget()`; checked | — |
-| Server retargeting | ✅ `UpRetarget()` | — |
-| `[up-fallback]` | ➖ resolved entirely on the client | — |
-
-`BaseTarget()` exists because modifiers change **how** a match is applied, never **what** is
-matched. Comparing raw strings made `body:after` look like a fragment, which dropped the
-chrome from a request that wanted to append into `<body>`.
-
-### [/failed-responses](https://unpoly.com/failed-responses)
-
-| Concept | Status | Sample |
-|---|---|---|
-| Failure is any status **outside 2xx and 304** | ✅ so Phase B's 304 never trips a fail target | `Login.razor:83` · `Status422` |
-| `X-Up-Fail-Target` read and split | ✅ `UpFailTarget()`, `UpFailTargets()` | `Login.razor:23` · `up-fail-target` |
-| `IsUpFragment()` accounts for the failure branch | ✅ chrome kept if **either** branch is whole-page | `MainLayout.razor:10` · `UpChrome` |
-| Answering 422 so the fail target is used | ✅ | `Login.razor:83` · `Invalid()` |
-| A separate response header to retarget on failure | ➖ none exists — one `X-Up-Target` overrides both | — |
-| `[up-fail-target]` on the element | ➖ client-side | `Login.razor:23` |
 
 ---
 
 ## `up.protocol`
 
-### [/optimizing-responses](https://unpoly.com/optimizing-responses)
+### [/optimizing-responses](https://unpoly.com/optimizing-responses) — 8/8 sections
 
-| Concept | Status | Sample |
-|---|---|---|
-| Shorten the response to what matches the target | ✅ `UpChrome` | `App.razor:11` head · `MainLayout.razor:10,34` chrome |
-| `Vary` on the headers that changed the body | ✅ `UpVary()` + middleware; 3 checks | `Program.cs:36` · `UseUnpoly` |
-| Optimisation is optional; full documents stay valid | ✅ no fragment-only endpoints exist here | — |
-
-Measured on `/p/dam-4`: full page 1865 bytes, fragment 459.
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Optimizing responses | ✅ optional; full documents stay valid | — |
+| 2 | Omitting content that isn't targeted | ✅ `UpChrome` | `App.razor:11` head · `MainLayout.razor:10,34` |
+| 3 | Example | — | `/p/dam-4`: 1865 → 459 bytes |
+| 4 | Note (the `Vary` requirement) | ✅ `UpVary()` + `UseUnpoly()` | `Program.cs:36` |
+| 5 | Rendering different content for overlays | ⬜ **Phase D** — needs `X-Up-Mode` | — |
+| 6 | Rendering different content for Unpoly requests | ✅ `IsUnpoly()` | `Program.cs:28` |
+| 7 | Example | — | — |
+| 8 | Rendering content that depends on layer context | ⬜ **Phase D** — needs `X-Up-Context` | — |
 
 ### [/up.protocol.config](https://unpoly.com/up.protocol.config)
 
@@ -107,41 +120,61 @@ Measured on `/p/dam-4`: full page 1865 bytes, fragment 459.
 | `csrfToken` | ✅ from `IAntiforgery.GetAndStoreTokens` | same |
 | `csrfParam` | ➖ `EditForm` renders its own hidden input | `Login.razor:22` |
 | `methodParam` (`_method`) | ⬜ **Phase E**, with the `_up_method` cookie | — |
-| `maxHeaderSize` | ➖ observed through `:unknown` | `Login.razor:64` · `IsUpValidatingUnknown` |
+| `maxHeaderSize` | ➖ observed through `:unknown` | `Login.razor:64` |
 
-### [/conditional-requests](https://unpoly.com/conditional-requests)
+### [/conditional-requests](https://unpoly.com/conditional-requests) — 7/7 sections
 
 The URL is `/conditional-requests`; `/conditional-responses` (as `up.protocol` links it) 404s.
 
-| Concept | Status | Sample |
-|---|---|---|
-| `ETag` published by the server | ✅ `UpNotModified(etag:)` | `Shop.razor:31` · `Catalog.cs:46` |
-| `Last-Modified` published | ✅ truncated to whole seconds | `Shop.razor:31` · `Catalog.cs:44` |
-| `If-None-Match` compared (`W/`, lists, `*`) | ✅ checked | same |
-| `If-Modified-Since` compared | ✅ checked | same |
-| 304 with an empty body | ✅ on the wire: `/shop` 9194 to **0** bytes | same |
-| Serves reload, revalidation and polling alike | ✅ one code path | same |
-| Fragment-level `[up-etag]` / `[up-time]` | ➖ HTML attributes | — |
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Conditional requests | ✅ one code path serves reload, revalidation and polling | `Shop.razor:31` |
+| 2 | Content changed from a known hash | ✅ `If-None-Match`, incl. `W/`, lists, `*` | `Catalog.cs:46` · `ETag` |
+| 3 | Content newer than a known time | ✅ `If-Modified-Since`, truncated to whole seconds | `Catalog.cs:44` · `LastModified` |
+| 4 | Modification time or content hash? | — both supported; the sample sends both | `Shop.razor:31` |
+| 5 | Individual versions per fragment | ➖ `[up-etag]` / `[up-time]` attributes | — |
+| 6 | Removing versions for a fragment | ➖ attribute set to `false` | — |
+| 7 | Resources | — | — |
+
+304 with an empty body, verified on the wire: `/shop` 9194 → **0** bytes.
 
 ---
 
 ## `up.network`
 
-### [/caching](https://unpoly.com/caching)
+### [/caching](https://unpoly.com/caching) — 21/21 sections
 
-| Concept | Status | Sample |
-|---|---|---|
-| GET cached, expiring after **15 s** (`cacheExpireAge`) | ➖ client-side default | — |
-| Revalidation: render cached, refetch, render again | ⬜ **not reproduced** — needs a browser | `Program.cs:28` · request log |
-| A non-GET expires the **entire** cache automatically | ➖ Unpoly does it unprompted | — |
-| `X-Up-Expire-Cache` with a URL glob or `*` | ✅ `UpExpireCache()` | — |
-| `X-Up-Expire-Cache: false` | ✅ `UpKeepCache()` | — |
-| `X-Up-Evict-Cache` | ✅ `UpEvictCache()` | — |
-| `X-Up-Clear-Cache` | 🚫 in no current guide. Use expire or evict | — |
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Enabling caching | ➖ `cache: 'auto'` during navigation | — |
+| 2–6 | Disabling caching (globally / per route / per link / per call) | ➖ client config and `[up-cache=false]` | — |
+| 7 | **Revalidation** | ⬜ **not reproduced** — needs a browser | `Program.cs:28` · request log |
+| 8 | When nothing changed | ✅ 304 path, now proven in **both** directions — after `Catalog.Touch()` the old ETag returns 200 again | `Shop.razor` · `UpNotModified` · `Refresh()` |
+| 9 | Preventing rendering of revalidation responses | ➖ `up:fragment:loaded` | — |
+| 10 | Detecting revalidation from a compiler | ➖ Phase G | — |
+| 11–12 | Enabling / disabling revalidation | ➖ client config | — |
+| 13 | Expiration | ✅ `UpExpireCache()` | `Shop.razor` · `UpExpireCache` |
+| 14 | Expiring content after an interaction | ✅ `X-Up-Expire-Cache`, incl. `false` via `UpKeepCache()` | `Shop.razor` · `Refresh()` |
+| 15 | Eviction | ✅ `UpEvictCache()` | — |
+| 16 | Evicting content after an interaction | ✅ same header | — |
+| 17 | Capping memory usage | ➖ `cacheSize` | — |
+| 18 | **Caching optimized responses** | ✅ this is why `Vary` is mandatory | `Program.cs:36` · `UseUnpoly` |
+| 19 | Example | — | — |
+| 20 | **How cache entries are matched** | ✅ keyed by URL, then partitioned by every header named in `Vary` | same |
+| 21 | Caching after redirects | ⬜ unread detail — revisit with `X-Up-Location` in Phase E | — |
 
-Because a non-GET already clears everything, `UpExpireCache` is for the *narrower* case —
-expiring a subset, or expiring from a GET. Calling it after an ordinary POST is redundant,
-and the sample deliberately does not.
+GET responses cache for **15 s** (`cacheExpireAge`). A non-GET expires the **entire** cache
+by itself, so calling `UpExpireCache` after an ordinary POST is redundant — the sample
+deliberately does not.
+
+§18 and §20 matter more than they look. Unpoly's **own in-tab cache** partitions on `Vary`:
+
+> "By default cached responses will match all requests to the same URL. When a response has
+> a `Vary` header, matching requests must additionally have the same values for all listed
+> headers."
+
+So `Vary: X-Up-Target` is not a CDN concern. Without it, a fragment response is reused for
+a full page load *in the same tab*, seconds later.
 
 ### [/progress-bar](https://unpoly.com/progress-bar)
 
@@ -157,26 +190,49 @@ and the sample deliberately does not.
 |---|---|---|
 | Mutating `event.request.headers` before send | 🚫 **declined** — it injected the CSRF token, which `up.protocol.config` already does. Nine lines deleted | — |
 
+### /aborting-requests · /network-issues
+
+Not read. Expected to be entirely client-side; confirm before ticking.
+
 ---
 
 ## `up.form`
 
-### [/validation](https://unpoly.com/validation)
+### [/validation](https://unpoly.com/validation) — 8/8 sections
 
-| Concept | Status | Sample |
-|---|---|---|
-| `X-Up-Validate` marks a validation-only request | ✅ `IsUpValidating()` | `Login.razor:59,73,83` |
-| Fields **space** separated, batched into one request | ✅ `UpValidatingFields()`; checked | `Login.razor:66` |
-| `:unknown` — non-field origin **or** `maxHeaderSize` overflow | ✅ `IsUpValidatingUnknown()` | `Login.razor:64` |
-| The handler must not persist while validating | ✅ the guard is the whole point of the header | `Login.razor:73` · `Submit()` |
-| Server renders a fresh form state; the form group is swapped | ➖ `[up-validate]` + `[up-form-group]` | `Login.razor:26,28,32,34` |
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Validating forms | ✅ `IsUpValidating()` | `Login.razor:59,73,83` |
+| 2 | Contents | — | — |
+| 3 | Validating after submission | ⬜ not exercised — the sample only validates on change | — |
+| 4 | Signaling a failed submission | ✅ answer **422** | `Login.razor:83` · `Invalid()` |
+| 5 | Changing how validation errors are rendered | ➖ `[up-form-group]` picks the swapped region | `Login.razor:26,32` |
+| 6 | HTML5 validations | ➖ browser-native, runs before any request | — |
+| 7 | Validating after changing a field | ✅ `[up-validate]`; fields arrive **space** separated | `Login.razor:28,34` |
+| 8 | Validating while typing | ➖ `[up-watch-event=input]` | — |
 
-### [/submitting-forms](https://unpoly.com/submitting-forms)
+`X-Up-Validate` batches fields into one request. `:unknown` has two causes — a non-field
+origin, or the list exceeding `maxHeaderSize` — and both mean validate the whole form.
+The handler must not persist: that guard is the entire point of the header.
 
-| Concept | Status | Sample |
-|---|---|---|
-| Forms submit through Unpoly | ✅ `submitSelectors` | `Login.razor:22` |
-| Antiforgery on a real POST | ✅ valid token 200/422, missing token **400** | `Login.razor:22` · `FormName` |
+### [/submitting-forms](https://unpoly.com/submitting-forms) — 12/12 sections
+
+| § | Concept | Status | Sample |
+|---|---|---|---|
+| 1 | Forms that update fragments | ✅ `submitSelectors` | `Login.razor:22` |
+| 2 | Updating other fragments | ✅ `UpRetarget()` from a form handler | `Shop.razor` · `Refresh()` |
+| 3 | Handling validation errors | ✅ 422 | `Login.razor:83` |
+| 4 | Rendering error messages elsewhere | ➖ `[up-fail-target]` | `Login.razor:23` |
+| 5 | Multiple submit buttons | ➖ `[up-submit]` per button | — |
+| 6 | Per-button parameters | ➖ `[formmethod]`/`[formaction]` | — |
+| 7 | Per-button actions | ➖ | — |
+| 8 | Showing that the form is processing | ➖ `[up-disable]` | `Login.razor:23` · `app.css:274` |
+| 9 | Overriding render options | ➖ attributes | — |
+| 10 | Handling all forms automatically | ✅ `HandleAllLinksAndForms` | `Program.cs:8` |
+| 11 | Opting into a full page load | ➖ `[up-submit=false]` | — |
+| 12 | Submitting forms with JavaScript | ➖ `up.submit()` | — |
+
+Antiforgery verified on the wire: valid token 200/422, missing token **400**.
 
 ### [/disabling-forms](https://unpoly.com/disabling-forms)
 
@@ -184,60 +240,55 @@ and the sample deliberately does not.
 |---|---|---|
 | `[up-disable]` while in flight | ➖ client-side | `Login.razor:23` · `app.css:274` |
 
-### [/switching-form-state](https://unpoly.com/switching-form-state) · [/watch-options](https://unpoly.com/watch-options)
+### /switching-form-state · /watch-options · /reactive-server-forms
 
-Not read — `[up-switch]`, `[up-autosubmit]`, `[up-watch-delay]` are client-side. Nothing to
-implement; revisit only if a server-side need appears.
-
-### [/reactive-server-forms](https://unpoly.com/reactive-server-forms)
-
-Not read yet.
+Not read. `[up-switch]`, `[up-autosubmit]`, `[up-watch-delay]` are client-side;
+`/reactive-server-forms` may have a server story — read it before ticking Phase C.
 
 ---
 
 ## `up.status`
 
-### [/feedback-classes](https://unpoly.com/feedback-classes) · [/navigation-bars](https://unpoly.com/navigation-bars)
+### /feedback-classes · /navigation-bars — partial
+
+Read only far enough to style three classes early, so Unpoly's feedback is visible in the
+browser rather than only in the docs. Full coverage is **Phase F**.
 
 | Concept | Status | Sample |
 |---|---|---|
-| `[up-nav]` keeps `.up-current` in sync without swapping the nav | ➖ client-side | `MainLayout.razor:18` · `app.css:83` |
+| `[up-nav]` keeps `.up-current` in sync without swapping the nav | ➖ | `MainLayout.razor:18` · `app.css:83` |
 | `.up-active` on the link or form in flight | ➖ | `app.css:90` |
 | `.up-loading` on the fragment awaiting replacement | ➖ | `app.css:93` |
-
-Full `up.status` coverage is Phase F; these three are styled early so Unpoly's feedback is
-visible in the browser rather than only in the docs.
+| Remaining sections of both guides | ⬜ **Phase F** | — |
 
 ---
 
 ## `up.script`
 
-### [/handling-asset-changes](https://unpoly.com/handling-asset-changes)
+### [/handling-asset-changes](https://unpoly.com/handling-asset-changes) — partial
 
 | Concept | Status | Sample |
 |---|---|---|
 | Unpoly diffs scripts and stylesheets in `<head>` | 🚫 **broken here on purpose** — cutting `<head>` leaves nothing to diff | `App.razor:11` |
 | `up:assets:changed` has no default behaviour | ⬜ **Phase G** — decide whether to re-emit `[up-asset]` | — |
+| Remaining sections | ⬜ **Phase G** | — |
 
 ---
 
 ## Implemented but never exercised
 
-Covered by unit checks, never seen on the wire. Each is a gap in the *lab*, not in the
-library — and a candidate exercise when the matching sample feature is built.
+Passes unit checks, never runs in the sample. Gaps in the *lab*, not the library.
 
-| Not exercised | Where it would fit |
+| Not exercised | Where it fits |
 |---|---|
-| `UpRetarget()` | login success: retarget `.site-nav` to swap in a greeting link |
-| `UpExpireCache()` `UpEvictCache()` `UpKeepCache()` | needs a cart, so Phase D or F |
-| `WantsNothing()` / `:none` | a fire-and-forget POST such as a "recently viewed" ping |
-| Explicit `[up-target]` on a link | every link currently falls through to `mainTargets` |
-| Target lists, `:before` `:after` `:maybe` `:content` | `.tasks:after` fits an infinite-scroll list — Phase E |
+| `UpEvictCache()` `UpKeepCache()` | need a cart — Phase D or F |
+| Target lists, `:before` / `:maybe` / `:content` | infinite scroll — Phase E |
 | `InstantAllLinks` `PreloadAllLinks` | both off; turn on and watch the request log |
-| `Catalog.Touch()` | nothing mutates the catalog yet |
+| `up.network.config.fail` widening (§3 of /failed-responses) | a 401 route |
 
-That last one matters: the conditional-request path has only been proven in its *fresh*
-direction. Nothing has yet changed the data and confirmed the 304 stops.
+Closed this round: `UpRetarget`, `UpExpireCache`, `WantsNothing`/`:none`, explicit
+`[up-target]`, `[up-fallback]`, and `Catalog.Touch()` — the last of which turned the
+conditional-request path from *fresh direction only* into a two-way proof.
 
 ---
 

@@ -42,16 +42,37 @@ else
             <p><button class="btn" disabled>Thêm vào giỏ (Phase D)</button></p>
 
             <p class="meta">Bộ sưu tập: @Item.Collection</p>
+
+            @* [up-target=":none"] means the client wants no content back. The handler answers
+               204 and renders nothing. 📖 https://unpoly.com/targeting-fragments *@
+            <form method="post" @formname="ping" @onsubmit="Ping" up-target=":none">
+                <AntiforgeryToken />
+                <button class="btn-quiet" type="submit">Ghi nhận đã xem (:none)</button>
+            </form>
         </div>
     </div>
 }
 
 @code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+
     [Parameter] public string Slug { get; set; } = "";
 
     Product? Item;
 
     static string Money(decimal d) => $"{d:N0}₫";
+
+    static int viewPings;
+
+    void Ping()
+    {
+        viewPings++;
+
+        // The client asked for nothing, so send nothing. Rendering a body here would be
+        // wasted bytes the client discards.
+        if (Ctx.WantsNothing())
+            Ctx.Response.StatusCode = StatusCodes.Status204NoContent;
+    }
 
     protected override void OnParametersSet() => Item = Catalog.BySlug(Slug);
 }

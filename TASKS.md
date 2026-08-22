@@ -12,7 +12,7 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 | Phase | **A complete**; B and C code complete — browser checks still open |
 | Protocol coverage | **12 / 24** headers |
 | Build | 4 projects, 0 errors |
-| Checks | 50 passing |
+| Checks | 54 passing |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
@@ -186,13 +186,10 @@ Spec: <https://unpoly.com/up.protocol>
 `CONCEPTS.md` ends with a list of methods that pass unit checks but have never run in the
 sample. They are candidate work, not bugs — pick them up alongside the phase that fits:
 
-- `UpRetarget()` — login success could retarget `.site-nav` to swap in a greeting
-- `UpExpireCache()` `UpEvictCache()` `UpKeepCache()` — need a cart, so Phase D or F
-- `WantsNothing()` / `:none` — a fire-and-forget POST
-- Explicit `[up-target]`, target lists, `:after` — infinite scroll in Phase E
-- `Catalog.Touch()` — nothing mutates the catalog, so the conditional path has only ever
-  been proven in its *fresh* direction. Nothing has changed the data and confirmed the 304
-  stops
+- `UpEvictCache()` `UpKeepCache()` — need a cart, so Phase D or F
+- Target lists and `:after` — infinite scroll in Phase E
+- `InstantAllLinks` / `PreloadAllLinks` — both off; turn on and watch the request log
+- Widening `up.network.config.fail` (§3 of `/failed-responses`) — needs a 401 route
 
 ## Open questions
 

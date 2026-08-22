@@ -10,5 +10,5 @@
 <ProductGrid Products="Catalog.Products.Where(p => p.OnSale).Take(8)" />
 
 <p style="text-align:center;margin-top:3rem">
-    <a class="back" href="/shop">Xem tất cả sản phẩm →</a>
+    <a class="back" href="/shop" up-target=".content" up-fallback="body">Xem tất cả sản phẩm →</a>
 </p>

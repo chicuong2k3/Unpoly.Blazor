@@ -35,11 +35,15 @@ This changes the usual trade-offs:
    That file tells downstream agents which methods exist and which throw. A stale copy is
    worse than none: it makes an agent recommend a method that throws. Treat it as part of
    the API, not as documentation.
-9. **Every `CONCEPTS.md` row names where the sample exercises it** (`file:line · token`), or
+9. **A guide is only "read" when every section in its table of contents has a row in
+   `CONCEPTS.md`** — including sections with nothing to do. Summarising a guide instead of
+   enumerating it is how `/failed-responses` §3 "Customizing failure detection" went missing
+   for three phases. Fetch the page's headings; do not work from memory of it.
+10. **Every `CONCEPTS.md` row names where the sample exercises it** (`file:line · token`), or
    a dash if it does not. The dash is the useful half: it is how the "Implemented but never
    exercised" list stays honest, and that list is where the next sample feature comes from.
    Line numbers drift — the token after the dot is what to grep.
-10. **Marking something ➖ in `CONCEPTS.md` means adding it to the skill's "Reach for HTML
+11. **Marking something ➖ in `CONCEPTS.md` means adding it to the skill's "Reach for HTML
    first" table.** ➖ means *we* have nothing to write, not that a caller has nothing to
    know — it is precisely where an agent would otherwise invent a C# helper for something
    that is one attribute. The ➖ list is the most useful thing the skill carries.

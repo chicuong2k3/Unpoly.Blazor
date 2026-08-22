@@ -92,6 +92,12 @@ public static class UpResponse
     /// </summary>
     public static bool UpNotModified(this HttpContext c, string? etag = null, DateTimeOffset? lastModified = null)
     {
+        // Safe methods only. On a POST, If-None-Match means optimistic concurrency (answer
+        // 412), not caching — and answering 304 there would skip the handler entirely, so
+        // the form submission would silently do nothing.
+        if (!HttpMethods.IsGet(c.Request.Method) && !HttpMethods.IsHead(c.Request.Method))
+            return false;
+
         if (etag is not null) c.Response.Headers.ETag = etag;
 
         var truncated = lastModified?.AddTicks(-(lastModified.Value.Ticks % TimeSpan.TicksPerSecond));

@@ -93,7 +93,9 @@ Check(evict.Response.Headers["X-Up-Evict-Cache"] == "/cart", "UpEvictCache write
 
 static HttpContext Cond(string? ifNoneMatch = null, string? ifModifiedSince = null)
 {
+    // DefaultHttpContext leaves Method empty, and UpNotModified only answers safe methods.
     var c = new DefaultHttpContext();
+    c.Request.Method = "GET";
     if (ifNoneMatch is not null) c.Request.Headers.IfNoneMatch = ifNoneMatch;
     if (ifModifiedSince is not null) c.Request.Headers.IfModifiedSince = ifModifiedSince;
     return c;
@@ -158,5 +160,17 @@ Check(Val(target: ".content", failTarget: ".form").IsUpFragment(), "two fragment
 Check(!Val(target: ".content", failTarget: "body").IsUpFragment(),
       "a whole-page FAIL target forces chrome, or a 422 body swap arrives with no nav");
 Check(Val(target: ".a", failTarget: ".b, .c").UpFailTargets().Length == 2, "fail targets split on commas");
+
+// Conditional requests are for safe methods. Answering 304 to a POST would skip the
+// handler, so the submission would silently do nothing.
+var post = Cond(ifNoneMatch: "\"v1\"");
+post.Request.Method = "POST";
+Check(!post.UpNotModified("\"v1\""), "a POST is never answered 304, even with a matching ETag");
+Check(post.Response.StatusCode != 304, "and its status is left alone");
+Check(post.Response.Headers.ETag.Count == 0, "nor is a version published on a POST");
+
+var head = Cond(ifNoneMatch: "\"v1\"");
+head.Request.Method = "HEAD";
+Check(head.UpNotModified("\"v1\""), "HEAD is safe, so it still gets 304");
 
 Console.WriteLine($"OK — {passed} checks passed (Phase A + B + C)");
