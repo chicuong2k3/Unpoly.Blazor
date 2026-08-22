@@ -12,7 +12,7 @@ No Blazor internals are touched. No extra dependencies.
 ```
 src/Unpoly.Blazor      the library (Razor Class Library)
 sample/Jubin           e-commerce sample, static SSR — the lab
-tests/                 9 header tests + 41 browser tests (Playwright), one dotnet test
+tests/                 9 header tests + 49 browser tests (Playwright), one dotnet test
 ```
 
 ## Run
