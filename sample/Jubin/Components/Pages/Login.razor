@@ -10,7 +10,10 @@
 <div class="form-wrap">
     @if (Succeeded)
     {
-        <p class="notice">Đăng nhập thành công với <strong>@Model!.Email</strong>.</p>
+        <p class="notice">
+            Đăng nhập thành công với <strong>@Model!.Email</strong>.
+            @if (!string.IsNullOrEmpty(Intent)) { <text> (intent: @Intent)</text> }
+        </p>
         <p><a class="back" href="/shop">← Tiếp tục mua sắm</a></p>
     }
     else
@@ -25,7 +28,11 @@
 
             <div up-form-group>
                 <label for="email">Email</label>
-                <InputText id="email" @bind-Value="Model!.Email" up-validate />
+                @* required is an HTML5 validation: the browser blocks the submit before any
+                   request is made. [up-watch-event=input] revalidates while typing rather
+                   than on blur. \📖 https://unpoly.com/validation *@
+                <InputText id="email" @bind-Value="Model!.Email" up-validate
+                           up-watch-event="input" up-watch-delay="400" required />
                 <ValidationMessage For="() => Model!.Email" />
             </div>
 
@@ -35,7 +42,14 @@
                 <ValidationMessage For="() => Model!.Password" />
             </div>
 
-            <button class="btn" type="submit">Đăng nhập</button>
+            <div class="actions">
+                <button class="btn" type="submit">Đăng nhập</button>
+
+                @* A second submit button carrying its own parameter. Unpoly submits whichever
+                   button was pressed, so the server can branch on it.
+                   \📖 https://unpoly.com/submitting-forms *@
+                <button class="btn-quiet" type="submit" name="intent" value="guest">Vào với tư cách khách</button>
+            </div>
         </EditForm>
 
         @if (Debug is not null)
@@ -78,6 +92,10 @@
 
         Succeeded = true;
     }
+
+    // Reads the pressed button's parameter. Nothing Unpoly-specific: it arrives as ordinary
+    // form data, which is the point — multiple submit buttons need no special support.
+    string? Intent => Ctx.Request.HasFormContentType ? Ctx.Request.Form["intent"].ToString() : null;
 
     void Invalid()
     {

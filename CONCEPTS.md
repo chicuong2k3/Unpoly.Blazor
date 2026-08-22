@@ -29,6 +29,10 @@ The empty cell was doing four different jobs, so it is now explicit:
 concepts are demonstrable in its markup, and treating ➖ as "nothing to show" is how seven
 target-syntax variants went unexercised until a playground was added.
 
+There are no bare dashes left. Every row either points at the sample or says, in words, why
+it cannot. `sample/Jubin/Components/Pages/Lab.razor` (`/lab`) collects the client-side
+concepts: one link per concept, each labelled with the guide section it comes from.
+
 ---
 
 ## `up.link`
@@ -41,8 +45,8 @@ target-syntax variants went unexercised until a playground was added.
 | 2 | Following all links on mousedown | ✅ `InstantAllLinks`, default **off** | `Home.razor` · `up-instant` |
 | 3 | Preloading all links | ✅ `PreloadAllLinks`, default **off** | `Home.razor` · `up-preload` |
 | 4 | Handling all forms | ✅ same option | `Login.razor:22` · `EditForm` |
-| 5 | Fixing legacy JavaScript code | ➖ Phase G territory | — |
-| 6 | Customizing navigation defaults | ➖ `ExtraScript` carries `navigateOptions` | — |
+| 5 | Fixing legacy JavaScript code | ➖ Phase G territory | todo — Phase G, needs a legacy script worth fixing |
+| 6 | Customizing navigation defaults | ➖ `ExtraScript` carries `navigateOptions` | `Program.cs` · `ExtraScript` · `navigateOptions.transition` |
 
 Navigation applies defaults `up.render()` does not — `history/scroll/focus: 'auto'`,
 `fallback: ':main'`, `cache: 'auto'`, `revalidate: 'auto'`, `peel: 'dismiss'`. Override via
@@ -85,13 +89,13 @@ wanted to append into `<body>`.
 | § | Concept | Status | Sample |
 |---|---|---|---|
 | 1 | Rendering failed responses differently | ✅ the `fail` prefix — see below | `Login.razor:23` · `up-fail-target` |
-| 2 | Ignoring HTTP error codes | ➖ `{ fail: false }` client-side | — |
-| 3 | **Customizing failure detection** | ⬜ **server-relevant** — `up.network.config.fail` is a function the app can widen, e.g. treat a response header as failure. Reachable today through `ExtraScript`; no C# helper yet | — |
-| 4 | Local content cannot fail | ➖ no request involved | — |
-| 5 | Handling unexpected content | ➖ `up:fragment:loaded` | — |
-| 6 | Handling fatal network errors | ➖ client-side | — |
-| 7 | Handling aborted requests | ➖ client-side | — |
-| 8 | Detecting a failed response programmatically | ➖ JS API | — |
+| 2 | Ignoring HTTP error codes | ➖ `{ fail: false }` client-side | `Lab.razor` · `up-fail="false"` |
+| 3 | **Customizing failure detection** | ⬜ **server-relevant** — `up.network.config.fail` is a function the app can widen, e.g. treat a response header as failure. Reachable today through `ExtraScript`; no C# helper yet | `Lab.razor` · `/lab/unauthorized` + `Program.cs` · `config.fail` |
+| 4 | Local content cannot fail | ➖ no request involved | n/a — no request is made, so there is nothing to observe |
+| 5 | Handling unexpected content | ➖ `up:fragment:loaded` | todo — needs a route that returns the wrong shape |
+| 6 | Handling fatal network errors | ➖ client-side | todo — needs the server killed mid-request |
+| 7 | Handling aborted requests | ➖ client-side | todo — needs two overlapping navigations |
+| 8 | Detecting a failed response programmatically | ➖ JS API | n/a — JS API |
 
 Failure is any status **outside 2xx and 304** — so Phase B's conditional 304 never trips a
 fail target. `IsUpFragment()` keeps chrome when *either* branch names a whole-page target,
@@ -164,10 +168,10 @@ up.network.config.fail = (response) => badStatus(response) || response.header('X
 | 2 | Omitting content that isn't targeted | ✅ `UpChrome` | `App.razor:11` head · `MainLayout.razor:10,34` |
 | 3 | Example | — | `/p/dam-4`: 1865 → 459 bytes |
 | 4 | Note (the `Vary` requirement) | ✅ `UpVary()` + `UseUnpoly()` | `Program.cs:36` |
-| 5 | Rendering different content for overlays | ⬜ **Phase D** — needs `X-Up-Mode` | — |
+| 5 | Rendering different content for overlays | ⬜ **Phase D** — needs `X-Up-Mode` | todo — Phase D, needs `X-Up-Mode` |
 | 6 | Rendering different content for Unpoly requests | ✅ `IsUnpoly()` | `Program.cs:28` |
-| 7 | Example | — | — |
-| 8 | Rendering content that depends on layer context | ⬜ **Phase D** — needs `X-Up-Context` | — |
+| 7 | Example | — | n/a — structural row |
+| 8 | Rendering content that depends on layer context | ⬜ **Phase D** — needs `X-Up-Context` | todo — Phase D, needs `X-Up-Context` |
 
 `UpChrome` alone was wrong for any target that lives **inside** the chrome. A link asking
 for `.content, .site-nav` got the chrome stripped, so `.site-nav` was absent from the
@@ -182,7 +186,7 @@ stays granular: targeting `.site-nav` brings back the header and still omits the
 | `csrfHeader` | ✅ from `AntiforgeryHeaderName` | `App.razor:23` · `UnpolyHead` |
 | `csrfToken` | ✅ from `IAntiforgery.GetAndStoreTokens` | same |
 | `csrfParam` | ➖ `EditForm` renders its own hidden input | `Login.razor:22` |
-| `methodParam` (`_method`) | ⬜ **Phase E**, with the `_up_method` cookie | — |
+| `methodParam` (`_method`) | ⬜ **Phase E**, with the `_up_method` cookie | todo — Phase E, with the `_up_method` cookie |
 | `maxHeaderSize` | ➖ observed through `:unknown` | `Login.razor:64` |
 
 ### [/conditional-requests](https://unpoly.com/conditional-requests) — 7/7 sections
@@ -195,9 +199,9 @@ The URL is `/conditional-requests`; `/conditional-responses` (as `up.protocol` l
 | 2 | Content changed from a known hash | ✅ `If-None-Match`, incl. `W/`, lists, `*` | `Catalog.cs:46` · `ETag` |
 | 3 | Content newer than a known time | ✅ `If-Modified-Since`, truncated to whole seconds | `Catalog.cs:44` · `LastModified` |
 | 4 | Modification time or content hash? | — both supported; the sample sends both | `Shop.razor:31` |
-| 5 | Individual versions per fragment | ➖ `[up-etag]` / `[up-time]` attributes | — |
-| 6 | Removing versions for a fragment | ➖ attribute set to `false` | — |
-| 7 | Resources | — | — |
+| 5 | Individual versions per fragment | ➖ `[up-etag]` / `[up-time]` attributes | `Shop.razor` · `up-etag` |
+| 6 | Removing versions for a fragment | ➖ attribute set to `false` | n/a — the same attribute set to `false` |
+| 7 | Resources | — | n/a — structural row |
 
 304 with an empty body, verified on the wire: `/shop` 9194 → **0** bytes.
 
@@ -209,22 +213,22 @@ The URL is `/conditional-requests`; `/conditional-responses` (as `up.protocol` l
 
 | § | Concept | Status | Sample |
 |---|---|---|---|
-| 1 | Enabling caching | ➖ `cache: 'auto'` during navigation | — |
-| 2–6 | Disabling caching (globally / per route / per link / per call) | ➖ client config and `[up-cache=false]` | — |
+| 1 | Enabling caching | ➖ `cache: 'auto'` during navigation | n/a — on by default; visible only as a request that never happens |
+| 2–6 | Disabling caching (globally / per route / per link / per call) | ➖ client config and `[up-cache=false]` | `Lab.razor` · `up-cache="false"` |
 | 7 | **Revalidation** | ⬜ **not reproduced** — needs a browser | `Program.cs:28` · request log |
 | 8 | When nothing changed | ✅ 304 path, now proven in **both** directions — after `Catalog.Touch()` the old ETag returns 200 again | `Shop.razor` · `UpNotModified` · `Refresh()` |
-| 9 | Preventing rendering of revalidation responses | ➖ `up:fragment:loaded` | — |
-| 10 | Detecting revalidation from a compiler | ➖ Phase G | — |
-| 11–12 | Enabling / disabling revalidation | ➖ client config | — |
+| 9 | Preventing rendering of revalidation responses | ➖ `up:fragment:loaded` | todo — Phase G, needs `up:fragment:loaded` |
+| 10 | Detecting revalidation from a compiler | ➖ Phase G | todo — Phase G |
+| 11–12 | Enabling / disabling revalidation | ➖ client config | n/a — client config with no server-visible effect |
 | 13 | Expiration | ✅ `UpExpireCache()` | `Shop.razor` · `UpExpireCache` |
 | 14 | Expiring content after an interaction | ✅ `X-Up-Expire-Cache`, incl. `false` via `UpKeepCache()` | `Shop.razor` · `Refresh()` |
-| 15 | Eviction | ✅ `UpEvictCache()` | — |
-| 16 | Evicting content after an interaction | ✅ same header | — |
-| 17 | Capping memory usage | ➖ `cacheSize` | — |
+| 15 | Eviction | ✅ `UpEvictCache()` | `Shop.razor` · `UpEvictCache` |
+| 16 | Evicting content after an interaction | ✅ same header | `Shop.razor` · `mode=evict` button |
+| 17 | Capping memory usage | ➖ `cacheSize` | n/a — `cacheSize`, no observable surface |
 | 18 | **Caching optimized responses** | ✅ this is why `Vary` is mandatory | `Program.cs:36` · `UseUnpoly` |
-| 19 | Example | — | — |
+| 19 | Example | — | n/a — structural row |
 | 20 | **How cache entries are matched** | ✅ keyed by URL, then partitioned by every header named in `Vary` | same |
-| 21 | Caching after redirects | ⬜ unread detail — revisit with `X-Up-Location` in Phase E | — |
+| 21 | Caching after redirects | ⬜ unread detail — revisit with `X-Up-Location` in Phase E | todo — unread; revisit with `X-Up-Location` in Phase E |
 
 GET responses cache for **15 s** (`cacheExpireAge`). A non-GET expires the **entire** cache
 by itself, so calling `UpExpireCache` after an ordinary POST is redundant — the sample
@@ -243,15 +247,15 @@ a full page load *in the same tab*, seconds later.
 
 | Concept | Status | Sample |
 |---|---|---|
-| Bar shown after `lateDelay` | ➖ on by default | — |
-| `progressBar = false` to replace it | ➖ via `ExtraScript` | — |
-| `[up-background]`; preload and poll are background | ➖ | — |
+| Bar shown after `lateDelay` | ➖ on by default | `Lab.razor` · `/lab/slow` |
+| `progressBar = false` to replace it | ➖ via `ExtraScript` | n/a — would switch off the bar the lab exists to show |
+| `[up-background]`; preload and poll are background | ➖ | `Lab.razor` · `up-background` |
 
 ### [/up:request:load](https://unpoly.com/up:request:load)
 
 | Concept | Status | Sample |
 |---|---|---|
-| Mutating `event.request.headers` before send | 🚫 **declined** — it injected the CSRF token, which `up.protocol.config` already does. Nine lines deleted | — |
+| Mutating `event.request.headers` before send | 🚫 **declined** — it injected the CSRF token, which `up.protocol.config` already does. Nine lines deleted | n/a — declined; the nine lines were deleted |
 
 ### /aborting-requests · /network-issues
 
@@ -266,13 +270,13 @@ Not read. Expected to be entirely client-side; confirm before ticking.
 | § | Concept | Status | Sample |
 |---|---|---|---|
 | 1 | Validating forms | ✅ `IsUpValidating()` | `Login.razor:59,73,83` |
-| 2 | Contents | — | — |
-| 3 | Validating after submission | ⬜ not exercised — the sample only validates on change | — |
+| 2 | Contents | — | n/a — structural row |
+| 3 | Validating after submission | ⬜ not exercised — the sample only validates on change | todo — needs a browser: change a field after a 422 and watch it revalidate |
 | 4 | Signaling a failed submission | ✅ answer **422** | `Login.razor:83` · `Invalid()` |
 | 5 | Changing how validation errors are rendered | ➖ `[up-form-group]` picks the swapped region | `Login.razor:26,32` |
-| 6 | HTML5 validations | ➖ browser-native, runs before any request | — |
+| 6 | HTML5 validations | ➖ browser-native, runs before any request | `Login.razor` · `required` |
 | 7 | Validating after changing a field | ✅ `[up-validate]`; fields arrive **space** separated | `Login.razor:28,34` |
-| 8 | Validating while typing | ➖ `[up-watch-event=input]` | — |
+| 8 | Validating while typing | ➖ `[up-watch-event=input]` | `Login.razor` · `up-watch-event="input"` |
 
 `X-Up-Validate` batches fields into one request. `:unknown` has two causes — a non-field
 origin, or the list exceeding `maxHeaderSize` — and both mean validate the whole form.
@@ -286,14 +290,14 @@ The handler must not persist: that guard is the entire point of the header.
 | 2 | Updating other fragments | ✅ `UpRetarget()` from a form handler | `Shop.razor` · `Refresh()` |
 | 3 | Handling validation errors | ✅ 422 | `Login.razor:83` |
 | 4 | Rendering error messages elsewhere | ➖ `[up-fail-target]` | `Login.razor:23` |
-| 5 | Multiple submit buttons | ➖ `[up-submit]` per button | — |
-| 6 | Per-button parameters | ➖ `[formmethod]`/`[formaction]` | — |
-| 7 | Per-button actions | ➖ | — |
+| 5 | Multiple submit buttons | ➖ `[up-submit]` per button | `Login.razor` · `name="intent"` |
+| 6 | Per-button parameters | ➖ `[formmethod]`/`[formaction]` | `Login.razor` · `value="guest"` → `Intent` |
+| 7 | Per-button actions | ➖ | n/a — `[formaction]` is plain HTML; Unpoly adds nothing |
 | 8 | Showing that the form is processing | ➖ `[up-disable]` | `Login.razor:23` · `app.css:274` |
-| 9 | Overriding render options | ➖ attributes | — |
+| 9 | Overriding render options | ➖ attributes | todo — same `fail` prefix idea, on a form |
 | 10 | Handling all forms automatically | ✅ `HandleAllLinksAndForms` | `Program.cs:8` |
-| 11 | Opting into a full page load | ➖ `[up-submit=false]` | — |
-| 12 | Submitting forms with JavaScript | ➖ `up.submit()` | — |
+| 11 | Opting into a full page load | ➖ `[up-submit=false]` | `Lab.razor` · `up-follow="false"` |
+| 12 | Submitting forms with JavaScript | ➖ `up.submit()` | n/a — JS API |
 
 Antiforgery verified on the wire: valid token 200/422, missing token **400**.
 
@@ -322,7 +326,7 @@ browser rather than only in the docs. Full coverage is **Phase F**.
 | `[up-nav]` keeps `.up-current` in sync without swapping the nav | ➖ | `MainLayout.razor:18` · `app.css:83` |
 | `.up-active` on the link or form in flight | ➖ | `app.css:90` |
 | `.up-loading` on the fragment awaiting replacement | ➖ | `app.css:93` |
-| Remaining sections of both guides | ⬜ **Phase F** | — |
+| Remaining sections of both guides | ⬜ **Phase F** | todo — Phase F |
 
 ---
 
@@ -333,8 +337,8 @@ browser rather than only in the docs. Full coverage is **Phase F**.
 | Concept | Status | Sample |
 |---|---|---|
 | Unpoly diffs scripts and stylesheets in `<head>` | 🚫 **broken here on purpose** — cutting `<head>` leaves nothing to diff | `App.razor:11` |
-| `up:assets:changed` has no default behaviour | ⬜ **Phase G** — decide whether to re-emit `[up-asset]` | — |
-| Remaining sections | ⬜ **Phase G** | — |
+| `up:assets:changed` has no default behaviour | ⬜ **Phase G** — decide whether to re-emit `[up-asset]` | todo — Phase G |
+| Remaining sections | ⬜ **Phase G** | todo — Phase G |
 
 ---
 

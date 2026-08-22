@@ -1,0 +1,136 @@
+@page "/lab"
+@page "/lab/{Case}"
+
+@* ── THE LAB ─────────────────────────────────────────────────────────────
+   Every concept here is client-side: the library has no C# for it. That does
+   not make it undemonstrable, and leaving it undemonstrated is how seven
+   target-syntax variants sat unexercised for three phases.
+
+   One link per concept, labelled with the guide section it comes from.
+   Open DevTools > Network and watch the X-Up-* headers.
+   ─────────────────────────────────────────────────────────────────────── *@
+
+<PageTitle>Lab — JUBIN</PageTitle>
+
+<div class="page-head">
+    <h2>Lab</h2>
+    <p class="count">Các khái niệm client-side, quan sát trong Network tab</p>
+</div>
+
+@if (Case == "slow")
+{
+    <p class="notice">Route chậm (@DelayMs ms). Dùng để thấy progress bar.</p>
+}
+else if (Case == "unauthorized")
+{
+    <p class="notice">Route này trả 200 kèm header <code>X-Unauthorized</code>.</p>
+}
+else
+{
+    <section class="playground">
+        <h3>Fragment targeting <span class="meta">/targeting-fragments</span></h3>
+        <ul>
+            <li>
+                <a href="/shop" up-target=".content, .site-nav">Nhiều fragment</a>
+                <span class="meta">§2 — một response nuôi hai vùng. <code>.site-nav</code> nằm trong chrome nên <code>UpChrome Provides</code> phải khai báo nó</span>
+            </li>
+            <li>
+                <a href="/shop" up-target=".content, .khong-ton-tai:maybe">Target tuỳ chọn</a>
+                <span class="meta">§3 §18 — <code>:maybe</code> khiến vùng thiếu không làm hỏng swap</span>
+            </li>
+            <li>
+                <a href="/shop" up-target=":main">Main element</a>
+                <span class="meta">§4 — giải ra <code>mainTargets</code>; server coi là cả trang</span>
+            </li>
+            <li>
+                <a href="/shop" up-target=".content:content">Thay toàn bộ con</a>
+                <span class="meta">§8 — <code>:content</code> giữ lại chính phần tử</span>
+            </li>
+            <li>
+                <a href="/shop" up-target=":origin">Origin element</a>
+                <span class="meta">§14 — giải thành selector suy ra TRƯỚC khi gửi header</span>
+            </li>
+            <li>
+                <a href="/shop" up-target=".khong-ton-tai" up-fallback=":main">Target thiếu → fallback</a>
+                <span class="meta">§15 §16 §17 — không khớp thì rơi về <code>:main</code></span>
+            </li>
+        </ul>
+
+        <h3>Links <span class="meta">/handling-everything</span></h3>
+        <ul>
+            <li>
+                <a href="/shop" up-target=".content" up-instant>Instant</a>
+                <span class="meta">§2 — chạy ở mousedown, không đợi click</span>
+            </li>
+            <li>
+                <a href="/shop" up-target=".content" up-preload>Preload</a>
+                <span class="meta">§3 — prefetch khi hover; xem request xuất hiện trước khi bấm</span>
+            </li>
+            <li>
+                <a href="/shop" up-follow="false">Bỏ qua Unpoly</a>
+                <span class="meta">opt-out — full page load, không có <code>X-Up-*</code></span>
+            </li>
+            <li>
+                <a href="/shop" up-target=".content" up-confirm="Đi tiếp?">Confirm</a>
+                <span class="meta">hỏi trước khi phát request</span>
+            </li>
+        </ul>
+
+        <h3>Network <span class="meta">/caching · /progress-bar</span></h3>
+        <ul>
+            <li>
+                <a href="/shop" up-target=".content" up-cache="false">Bỏ cache</a>
+                <span class="meta">/caching §2–6 — luôn đi mạng, không dùng bản cache 15 s</span>
+            </li>
+            <li>
+                <a href="/lab/slow" up-target=".content">Route chậm (progress bar)</a>
+                <span class="meta">/progress-bar — vượt <code>lateDelay</code> nên thanh tiến trình hiện ra</span>
+            </li>
+            <li>
+                <a href="/lab/slow" up-target=".content" up-background>Route chậm, background</a>
+                <span class="meta">/progress-bar — <code>[up-background]</code> không bao giờ hiện thanh</span>
+            </li>
+        </ul>
+
+        <h3>Failed responses <span class="meta">/failed-responses</span></h3>
+        <ul>
+            <li>
+                <a href="/khong-ton-tai" up-target=".content" up-fail-target="body">404 → fail target</a>
+                <span class="meta">§1 — <code>[up-fail-target]</code>. Server thấy <code>X-Up-Fail-Target: body</code> nên giữ lại chrome</span>
+            </li>
+            <li>
+                <a href="/khong-ton-tai" up-target=".content" up-fail="false">404 nhưng bỏ qua lỗi</a>
+                <span class="meta">§2 — <code>[up-fail=false]</code> coi mọi response là thành công</span>
+            </li>
+            <li>
+                <a href="/lab/unauthorized" up-target=".content">200 + X-Unauthorized</a>
+                <span class="meta">§3 — <code>up.network.config.fail</code> đã được nới trong <code>ExtraScript</code> để coi header này là lỗi</span>
+            </li>
+        </ul>
+    </section>
+
+    <p class="meta lab-back"><a class="back" href="/lab">← Về lab</a></p>
+}
+
+@code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+
+    [Parameter] public string? Case { get; set; }
+
+    const int DelayMs = 1200;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Case == "slow")
+        {
+            // Long enough to exceed up.network.config.lateDelay so the bar appears.
+            await Task.Delay(DelayMs);
+        }
+        else if (Case == "unauthorized")
+        {
+            // A 200 the client has been configured to treat as a failure.
+            // 📖 https://unpoly.com/failed-responses (Customizing failure detection)
+            Ctx.Response.Headers["X-Unauthorized"] = "1";
+        }
+    }
+}

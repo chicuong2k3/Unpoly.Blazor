@@ -10,14 +10,19 @@
     <p class="count">@Items.Count sản phẩm</p>
 </div>
 
-<ProductGrid Products="Items" />
+@* [up-etag] gives this fragment its own version, so reloading just this region can be
+   answered 304 independently of the page. \📖 https://unpoly.com/conditional-requests *@
+<div class="listing" up-etag="@Catalog.ETag">
+    <ProductGrid Products="Items" />
+</div>
 
 @* Explicit [up-target] instead of falling through to mainTargets, plus [up-fallback] for
    when .listing is missing from either side. 📖 https://unpoly.com/targeting-fragments *@
 <form method="post" @formname="refresh" @onsubmit="Refresh"
       up-target=".content" up-fallback="body" class="refresh">
     <AntiforgeryToken />
-    <button class="btn-quiet" type="submit">Làm mới kho (đổi phiên bản)</button>
+    <button class="btn-quiet" type="submit">Làm mới kho (expire)</button>
+    <button class="btn-quiet" type="submit" name="mode" value="evict">Làm mới kho (evict)</button>
 </form>
 <p class="meta">Phiên bản: @Catalog.ETag</p>
 }
@@ -41,7 +46,13 @@
         // Redundant on its own — Unpoly expires the whole cache after any non-GET — but it
         // is the narrower form, and the only way this header gets exercised at all.
         // 📖 https://unpoly.com/X-Up-Expire-Cache
-        Ctx.UpExpireCache("/shop*");
+        // Expire keeps stale content renderable while it refetches; evict throws it away so
+        // the user waits for the network instead of seeing a stale flash. The button chooses.
+        // \📖 https://unpoly.com/caching
+        if (Ctx.Request.Form["mode"] == "evict")
+            Ctx.UpEvictCache("/shop*");
+        else
+            Ctx.UpExpireCache("/shop*");
 
         // The button sits inside .content, but say so explicitly so the swap does not depend
         // on what the client happened to ask for. 📖 https://unpoly.com/targeting-fragments

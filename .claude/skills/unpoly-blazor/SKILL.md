@@ -121,6 +121,59 @@ These have no server side at all — do not go looking for one:
 | Change navigation defaults | `o.ExtraScript = "up.fragment.config.navigateOptions.transition = 'cross-fade'"` | a C# options class |
 | Antiforgery on forms | Blazor's `EditForm` hidden input | anything extra |
 
+## Client-side attributes worth knowing
+
+None of these have a C# side, which is exactly why an agent reaches for one and invents a
+helper instead. They are what you should be writing in the markup.
+
+**Links**
+
+| | |
+|---|---|
+| `[up-instant]` | follow on mousedown instead of click |
+| `[up-preload]` | prefetch on hover |
+| `[up-follow=false]` | opt this link out; a real full page load |
+| `[up-confirm="Sure?"]` | ask before the request is made |
+| `[up-cache=false]` | skip the 15-second cache for this link |
+| `[up-background]` | never show the progress bar for this request |
+
+**Forms**
+
+| | |
+|---|---|
+| `[up-validate]` | revalidate the field's form group on blur |
+| `[up-watch-event="input"]` `[up-watch-delay=400]` | revalidate while typing, debounced |
+| `[up-disable]` | disable the form while it is in flight |
+| `[up-autosubmit]` | submit as soon as a value changes |
+| `[up-submit=false]` | opt this form out |
+| `required`, `type=email` | HTML5 validation runs *before* any request |
+| `<button name="intent" value="x">` | a second submit button; arrives as ordinary form data |
+
+**Fragments**
+
+| | |
+|---|---|
+| `[up-keep]` | survive swaps |
+| `[up-hungry]` | update from *any* response, without being targeted |
+| `[up-poll]` `[up-interval]` | reload on a timer |
+| `[up-etag]` `[up-time]` | give one fragment its own version, so it can be answered 304 alone |
+| `[up-nav]` | keep `.up-current` in sync |
+
+**CSS Unpoly sets for you** — style these and loading state costs no JavaScript:
+`.up-current`, `.up-active`, `.up-loading`.
+
+**Config, through `o.ExtraScript`** — no C# API earns its place for a config string:
+
+```csharp
+o.ExtraScript = """
+    up.fragment.config.navigateOptions.transition = 'cross-fade';
+
+    // treat a 200 carrying a header as a failure
+    let badStatus = up.network.config.fail;
+    up.network.config.fail = (r) => badStatus(r) || r.header('X-Unauthorized');
+    """;
+```
+
 ## The `fail` prefix
 
 Unpoly picks a different render option when a response fails, by prefixing it: `target` /

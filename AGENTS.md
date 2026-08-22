@@ -44,11 +44,17 @@ This changes the usual trade-offs:
    §1 was present as one cell naming `UpFailTarget()`, which hid the `fail` prefix convention
    and the reason the protocol has exactly three `X-Up-Fail-*` headers. If a section explains
    a rule, the rule goes in the file — under the table if it does not fit a cell.
-10. **Every `CONCEPTS.md` row names where the sample exercises it** (`file:line · token`), or
+10. **No bare dashes in `CONCEPTS.md`.** Every row points at the sample, or says in words
+    why it cannot: `n/a ''' + reason`, or `todo ''' + what is missing`. A dash hides four
+    different situations behind one symbol, and the ones that meant "not built yet" are the
+    ones that never got built. Client-side concepts belong in `sample/Jubin/.../Lab.razor`
+    and in the skill's attribute tables — "no C# side" is not a reason to leave them
+    undemonstrated.
+11. **Every `CONCEPTS.md` row names where the sample exercises it** (`file:line · token`), or
    a dash if it does not. The dash is the useful half: it is how the "Implemented but never
    exercised" list stays honest, and that list is where the next sample feature comes from.
    Line numbers drift — the token after the dot is what to grep.
-11. **Marking something ➖ in `CONCEPTS.md` means adding it to the skill's "Reach for HTML
+12. **Marking something ➖ in `CONCEPTS.md` means adding it to the skill's "Reach for HTML
    first" table.** ➖ means *we* have nothing to write, not that a caller has nothing to
    know — it is precisely where an agent would otherwise invent a C# helper for something
    that is one attribute. The ➖ list is the most useful thing the skill carries.

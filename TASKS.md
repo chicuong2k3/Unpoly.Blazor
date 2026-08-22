@@ -186,9 +186,11 @@ Spec: <https://unpoly.com/up.protocol>
 `CONCEPTS.md` ends with a list of methods that pass unit checks but have never run in the
 sample. They are candidate work, not bugs — pick them up alongside the phase that fits:
 
-- `UpEvictCache()` `UpKeepCache()` — need a cart, so Phase D or F
+- `UpKeepCache()` — needs a POST that changes nothing visible, so Phase D or F
 - `:before` / `:after` — infinite scroll in Phase E
-- Widening `up.network.config.fail` (§3 of `/failed-responses`) — needs a 401 route
+
+Everything else is exercised. `CONCEPTS.md` has no bare dashes left: 110 rows, 73 pointing
+at the sample, 20 marked `n/a` with a reason, 17 marked `todo` with what is missing.
 
 ## Open questions
 

@@ -326,3 +326,8 @@ form[aria-busy="true"] { opacity: .5; }
     background: rgba(0, 0, 0, .04);
     padding: .05rem .3rem;
 }
+
+.playground h3 .meta { font-family: var(--text); font-size: .7rem; margin-left: .75rem; }
+.playground h3 { margin-top: 2.5rem; }
+.actions { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+.lab-back { margin-top: 2.5rem; }
