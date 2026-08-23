@@ -24,7 +24,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="content\**\*" Exclude="content\**\bin\**;content\**\obj\**;content\**\node_modules\**" />
+    <Content Include="UnpolyBlazorApp\**\*" Exclude="**\bin\**;**\obj\**;**\node_modules\**" />
   </ItemGroup>
 
 </Project>

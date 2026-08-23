@@ -1,6 +1,7 @@
 name: Publish to NuGet
 
-# Tag-driven: `git tag v0.2.0 && git push origin v0.2.0` publishes 0.2.0.
+# Tag-driven: `git tag v0.2.0 && git push origin v0.2.0` publishes 0.2.0 --
+# both Unpoly.Blazor and Unpoly.Blazor.Templates, always at the same version.
 # The tag IS the version, so there is no second place to forget to bump.
 on:
   push:
@@ -45,6 +46,17 @@ jobs:
 
       - name: Pack
         run: dotnet pack src/Unpoly.Blazor/Unpoly.Blazor.csproj --configuration Release --no-build -p:Version=${{ steps.v.outputs.version }} --output ./artifacts
+
+      # The template generates an app that references the library, so the two ship together
+      # from one tag. Stamping the default here is what keeps `dotnet new unpoly-blazor` from
+      # pulling a library version that does not exist yet.
+      - name: Pack the template, pinned to this version
+        env:
+          TJ: templates/Unpoly.Blazor.Templates/UnpolyBlazorApp/.template.config/template.json
+        run: |
+          jq --arg v "${{ steps.v.outputs.version }}" '.symbols.unpolyVersion.defaultValue = $v' "$TJ" > "$TJ.tmp"
+          mv "$TJ.tmp" "$TJ"
+          dotnet pack templates/Unpoly.Blazor.Templates/Unpoly.Blazor.Templates.csproj --configuration Release -p:Version=${{ steps.v.outputs.version }} --output ./artifacts
 
       # --skip-duplicate so re-running a workflow on an existing version is a no-op instead
       # of a red build. NuGet versions are immutable; a republish can never overwrite.
