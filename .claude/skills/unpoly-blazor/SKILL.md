@@ -37,7 +37,7 @@ Four things, all required.
 // Program.cs
 builder.Services.AddUnpoly(o => o.MainTargets = [".content"]);
 ...
-app.UseUnpoly();        // BEFORE UseAntiforgery. Sets Vary, and empties 304 bodies.
+app.UseUnpoly();        // BEFORE UseAntiforgery. Sets Vary, and empties 204/304 bodies.
 app.UseAntiforgery();
 ```
 
@@ -482,13 +482,19 @@ client-only by design.
 
 ## Mistakes to check first when something is broken
 
-1. **A poll or a reload answers 500, and the error page cannot even render.**
-   `Writing to the response body is invalid for responses with status code 304`. The page
-   called `UpNotModified()` and then rendered anyway — in Blazor static SSR a component
-   cannot decline to render after the fact, so the guard has to be in the markup.
-   `UseUnpoly()` drops the body so this cannot crash, but the render still costs what it
-   costs: wrap the markup in `@if (!NotModified)`. **Without `UseUnpoly()` this is a hard
-   500 raised after the response has started — no error page, dead connection.**
+1. **The server log says `Writing to the response body is invalid for responses with status
+   code 204` (or 304).** The page set a bodyless status and then rendered anyway — via
+   `UpNotModified()` returning true, or by answering a `:none` target with 204. In Blazor
+   static SSR a component cannot decline to render after the fact, so the guard has to be in
+   the markup: `@if (!NotModified)`, or return before the markup runs.
+
+   `UseUnpoly()` drops the bytes so this cannot crash, but still guard where the render is
+   expensive — it saves the work, not just the bytes.
+
+   **This one is invisible from the client.** A 204 has no body to truncate and a 304 is
+   empty by definition, so the browser receives a clean, correctly-statused, empty response
+   while the server is throwing. Curl reports `status=204 size=0`, exit 0. The server log is
+   the only witness — which is why the test for it watches the log, not the response.
 
 2. **`blazor.web.js` is still in `App.razor`.** With `interactivity=None` it only adds
    enhanced navigation and enhanced forms — exactly Unpoly's job. Both present means they

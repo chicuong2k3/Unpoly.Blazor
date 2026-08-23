@@ -28,6 +28,16 @@ regions, or a region that is not where the link lives.
 | Want no content back at all | `up-target=":none"` |
 
 ```razor
+@* :none -- the handler answers 204 and the page must render nothing. Return before the
+   markup, or guard it: a component cannot decline to render after the fact, and a 204
+   carrying a body makes Kestrel throw where no client can see it. *@
+<form method="post" @formname="ping" @onsubmit="Ping" up-target=":none">
+    <AntiforgeryToken />
+    <button type="submit">Ghi nhận đã xem</button>
+</form>
+```
+
+```razor
 @* One response, two jobs: append rows, then replace the trigger. *@
 <a href="@NextUrl" up-target=".listing:after, .more">Xem thêm</a>
 
