@@ -75,14 +75,27 @@ public class FormTests(UnpolyFixture fx)
             " w.dispatchEvent(new Event('input',{bubbles:true})); })()");
         await p.Page.WaitForTimeoutAsync(1200);
 
+        // RECORD the state, do not sample for it. Polling every 50ms only sees [up-disable]
+        // if the request is still in flight at the moment of a poll, so this test failed on
+        // a fast response and passed on a slow one -- backwards, and flaky either way.
+        // A MutationObserver installed BEFORE the click cannot miss the window.
+        await p.Exec(
+            "window.__wasDisabled = false;" +
+            " const seen = () => { if (document.querySelector(" +
+            "   'form[aria-busy=true], form input:disabled, form button:disabled'))" +
+            "   window.__wasDisabled = true; };" +
+            " seen();" +
+            " new MutationObserver(seen).observe(document.body, {" +
+            "   subtree: true, childList: true, attributes: true," +
+            "   attributeFilter: ['disabled', 'aria-busy'] });");
+
         await p.Page.ClickAsync("form button[type=submit]");
-        Assert.True(await p.Poll(
-            "(() => { const f=document.querySelector('form');" +
-            " return !!f && (f.matches('[aria-busy=true]')" +
-            " || !!f.querySelector('input:disabled, button:disabled')); })()"),
+        await p.Page.WaitForTimeoutAsync(1500);
+
+        Assert.True(await p.Js<bool>("window.__wasDisabled === true"),
             "the form was never seen disabled mid-submit");
 
-        await p.Page.WaitForTimeoutAsync(1500);
+        // ...and it recovers: [up-disable] must not leave a form permanently dead.
         Assert.True(await p.Poll("!document.querySelector('form input:disabled')", timeoutMs: 2000));
     }
 
