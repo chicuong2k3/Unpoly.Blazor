@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet build --configuration Release
+
+      # The browser tests drive a real Chromium. Playwright ships its own downloader in the
+      # build output; without this every browser test fails at once rather than one at a time.
+      - name: Install Chromium
+        run: pwsh tests/Unpoly.Blazor.BrowserTests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      # The fixture starts the sample app as a child process and picks a free port, so no
+      # service container or port mapping is needed here.
+      - run: dotnet test --configuration Release --no-build --logger "trx;LogFileName=results.trx"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'

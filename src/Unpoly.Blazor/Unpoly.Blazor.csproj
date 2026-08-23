@@ -5,10 +5,37 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Unpoly.Blazor</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Unpoly.Blazor</PackageId>
+    <!-- Overridden by the release workflow from the git tag. The default keeps a local
+         `dotnet pack` working without arguments. -->
+    <Version>0.1.0</Version>
+    <Authors>chicuong2k3</Authors>
+    <Description>Server-side adapter for Unpoly 3 on Blazor static SSR: typed access to all 24 X-Up-* protocol headers, plus UpChrome for skipping page chrome on fragment requests.</Description>
+    <PackageTags>unpoly;blazor;ssr;aspnetcore;hypermedia;htmx</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/chicuong2k3/Unpoly.Blazor</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/chicuong2k3/Unpoly.Blazor</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!-- Lets a consumer step into this code from a stack trace without a local checkout. -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

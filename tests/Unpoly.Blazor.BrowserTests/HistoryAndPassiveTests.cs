@@ -111,5 +111,11 @@ public class PassiveUpdateTests(UnpolyFixture fx)
         // [up-poll] echoes the fragment's [up-etag] as If-None-Match. This is the Phase B
         // conditional-request work paying off: an unchanged poll costs an empty 304.
         Assert.Contains(304, p.StatusesFor("/p/dam-4"));
+
+        // And the 304 is EMPTY. The page renders unconditionally, so without the middleware
+        // dropping the body Kestrel throws "Writing to the response body is invalid for
+        // responses with status code 304" -- after the response has started, which means no
+        // error page and a dead connection rather than an honest 500.
+        Assert.DoesNotContain(p.StatusesFor("/p/dam-4"), s => s >= 500);
     }
 }

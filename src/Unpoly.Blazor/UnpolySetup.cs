@@ -3,6 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Unpoly.Blazor;
 
+/// <summary>
+/// Settings for the generated Unpoly config, applied by <see cref="UnpolyHead"/>.
+/// Most of Unpoly is configured in HTML attributes; only what the whole app shares lives here.
+/// </summary>
 public sealed class UnpolyOptions
 {
     /// <summary>
@@ -40,8 +44,13 @@ public sealed class UnpolyOptions
     public string? ExtraScript { get; set; }
 }
 
+/// <summary>Registration for <see cref="UnpolyOptions"/> and the antiforgery header Unpoly sends.</summary>
 public static class UnpolySetup
 {
+    /// <summary>
+    /// Registers Unpoly's options and tells ASP.NET which header carries the antiforgery
+    /// token, which it otherwise refuses to read from a header at all.
+    /// </summary>
     public static IServiceCollection AddUnpoly(this IServiceCollection services, Action<UnpolyOptions>? configure = null)
     {
         var options = new UnpolyOptions();

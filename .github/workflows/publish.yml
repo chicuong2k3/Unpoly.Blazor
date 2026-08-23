@@ -1,0 +1,58 @@
+name: Publish to NuGet
+
+# Tag-driven: `git tag v0.2.0 && git push origin v0.2.0` publishes 0.2.0.
+# The tag IS the version, so there is no second place to forget to bump.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish, e.g. 0.2.0'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # for the GitHub release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # SourceLink needs the history to map sources to commits
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Resolve version
+        id: v
+        run: |
+          VERSION="${{ inputs.version }}"
+          [ -z "$VERSION" ] && VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publishing $VERSION"
+
+      - run: dotnet build --configuration Release -p:Version=${{ steps.v.outputs.version }}
+
+      # Publishing an untested package is how a broken release reaches consumers. The header
+      # tests are cheap; the browser tests need Chromium, and they are the ones that caught
+      # the 304 body bug, so both run.
+      - name: Install Chromium
+        run: pwsh tests/Unpoly.Blazor.BrowserTests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      - run: dotnet test --configuration Release --no-build
+
+      - name: Pack
+        run: dotnet pack src/Unpoly.Blazor/Unpoly.Blazor.csproj --configuration Release --no-build -p:Version=${{ steps.v.outputs.version }} --output ./artifacts
+
+      # --skip-duplicate so re-running a workflow on an existing version is a no-op instead
+      # of a red build. NuGet versions are immutable; a republish can never overwrite.
+      - name: Push to NuGet
+        run: dotnet nuget push "./artifacts/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          generate_release_notes: true
+          files: ./artifacts/*

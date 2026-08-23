@@ -1,11 +1,15 @@
 ---
 name: unpoly-blazor
-description: Use when working in a Blazor static SSR app that has the Unpoly.Blazor package or project reference — wiring Unpoly into a Blazor Web App, adding [up-target]/[up-nav]/[up-follow] to links and forms, reading or writing X-Up-* headers from a component, or debugging why a fragment swap does nothing, why page chrome vanished, or why an interactive component went dead after a swap.
+description: Use when working in a Blazor static SSR app that has the Unpoly.Blazor package or project reference — wiring Unpoly into a Blazor Web App, adding [up-target]/[up-nav]/[up-follow] to links and forms, reading or writing X-Up-* headers from a component, or debugging why a fragment swap does nothing, why page chrome vanished, why a poll returns 500, or why an interactive component went dead after a swap.
 ---
 
 # Unpoly.Blazor
 
 Server-side adapter for [Unpoly 3](https://unpoly.com) on **Blazor static SSR**.
+
+Every API below has a runnable example. Copy the example rather than inferring the shape from
+the signature — several of these methods carry a *contract* the signature cannot express, and
+that is where the real bugs come from.
 
 ## The one idea
 
@@ -27,7 +31,7 @@ Four things, all required.
 // Program.cs
 builder.Services.AddUnpoly(o => o.MainTargets = [".content"]);
 ...
-app.UseUnpoly();        // BEFORE UseAntiforgery. Sets Vary — skipping it is a cache bug.
+app.UseUnpoly();        // BEFORE UseAntiforgery. Sets Vary, and empties 304 bodies.
 app.UseAntiforgery();
 ```
 
@@ -49,7 +53,7 @@ app.UseAntiforgery();
 
 ```razor
 @* MainLayout.razor *@
-<UpChrome><NavMenu /></UpChrome>
+<UpChrome Provides=".site-nav, .cart-badge"><NavMenu /></UpChrome>
 <main class="content">@Body</main>   @* the target itself is never wrapped *@
 <UpChrome><Footer /></UpChrome>
 ```
@@ -61,59 +65,336 @@ app.UseAntiforgery();
 }
 ```
 
-## What works today
+## Reading the request
 
-The library is built phase by phase. **Only these exist**; everything else throws
-`NotImplementedException` carrying the phase and the guide URL that explains it.
+### `IsUnpoly()` — did this come from Unpoly at all
 
-| Read the request | |
-|---|---|
-| `Ctx.IsUnpoly()` | request came from Unpoly (`X-Up-Version`) |
-| `Ctx.UpTarget()` | the raw selector, **may be a list**: `".content, .flash"` |
-| `Ctx.UpTargets()` | that list, split and trimmed |
-| `Ctx.UpFailTarget()` / `UpFailTargets()` | selector used on failure — anything outside 2xx and 304 |
-| `Ctx.IsUpValidating()` | validation-only request — **must not persist anything** |
-| `Ctx.UpValidatingFields()` | the fields, **space** separated by Unpoly, batched into one request |
-| `Ctx.IsUpValidatingUnknown()` | `:unknown` — validate the whole form |
-| `Ctx.UpMode()` / `UpFailMode()` / `UpOriginMode()` | which layer this renders into, and which one asked |
-| `Ctx.IsUpOverlay()` | true unless this is the root layer |
-| `Ctx.UpContext<T>()` / `UpFailContext<T>()` | the layer's own JSON state; malformed input returns null rather than throwing |
-| `Ctx.IsUpFragment()` | a specific fragment was asked for, so chrome can be skipped |
-| `Ctx.WantsNothing()` | target is `:none` |
+```razor
+@code {
+    protected override void OnParametersSet()
+    {
+        // False for a bookmark, a bot, or a browser with JS off. Never let a route REQUIRE
+        // this to be true -- that is exactly how a page stops working without JavaScript.
+        if (Ctx.IsUnpoly()) Ctx.UpEmit("page:viewed", new { path = Ctx.Request.Path.Value });
+    }
+}
+```
 
-| Write the response | |
-|---|---|
-| `Ctx.UpRetarget(".sidebar")` | swap something else than requested; `":none"` swaps nothing |
-| `Ctx.UpVary("X-Up-Target")` | merges into `Vary`; `UseUnpoly()` already does this |
-| `Ctx.UpExpireCache("/shop/*")` | mark cached URLs stale — still rendered, then refetched |
-| `Ctx.UpKeepCache()` | keep the cache a non-GET would otherwise clear |
-| `Ctx.UpEvictCache("/cart")` | drop outright; stale content is never shown again |
-| `Ctx.UpNotModified(etag, lastModified)` | publishes the version, returns true when the client is current (response becomes 304 — render nothing) |
-| `Ctx.UpAcceptLayer(value)` | close the overlay as a **success**, handing `value` to the opener |
-| `Ctx.UpDismissLayer(reason)` | close it because the user **backed out**; not interchangeable with accept |
-| `Ctx.UpOpenLayer(new { mode = "drawer" })` | make this response open in a new overlay, whatever the link asked for |
-| `Ctx.UpSetContext(obj)` | hand the layer a changed context |
-| `Ctx.UpTitle(t)` | set the document title (JSON-encoded, ASCII-safe, for you) |
-| `Ctx.UpLocation(url)` / `UpMethod(m)` | what Unpoly should record for this location |
-| `Ctx.UpMethodCookie()` | mark a full page load as produced by a non-GET |
-| `Ctx.UpEmit("cart:changed", new { count })` | emit a client event; repeated calls accumulate |
+### `UpTarget()` / `UpTargets()` — what the client asked for
 
-| Components | |
-|---|---|
-| `<UnpolyHead />` | assets, config, CSRF wiring. Once, in `<head>` |
-| `<UpChrome Provides=".nav">…</UpChrome>` | content rendered only on full-page requests. **`Provides` is required** if anything inside can be targeted from outside |
-| `Ctx.UpWantsAny(".nav")` | did either branch ask for one of these selectors |
+```csharp
+Ctx.UpTarget();    // ".content, .flash"  -- RAW, and often a LIST
+Ctx.UpTargets();   // [".content", ".flash"]
+```
 
-**Never existed, do not reach for them:** `UpClearCache` (in no current guide) and
-`UpReloadFromTime` (deprecated by Unpoly — use `Last-Modified` through `UpNotModified`).
+Comparing the raw string is the classic bug: `UpTarget() == ".content"` is false when the
+client sent `".content, .flash"`. Use `UpTargets()` or `UpWantsAny()`.
+
+### `UpWantsAny(selectors)` — did either branch ask for one of these
+
+```razor
+@* Build the expensive sidebar only when someone actually wants it. *@
+@if (!Ctx.IsUpFragment() || Ctx.UpWantsAny(".sidebar, .filters"))
+{
+    <Sidebar Facets="Search.Facets()" />
+}
+```
+
+### `IsUpFragment()` — is this a partial request
+
+True only when a *specific* fragment was asked for. A target of `body`, `html`, `:main` or
+`:layer` is a whole-page request and returns false. `UpChrome` uses it; you rarely call it.
+
+### `WantsNothing()` — target is `:none`
+
+```razor
+@code {
+    async Task Ping()
+    {
+        await Analytics.RecordAsync();
+
+        // The client wants no content back. Answer 204 and render nothing.
+        if (Ctx.WantsNothing()) Ctx.Response.StatusCode = StatusCodes.Status204NoContent;
+    }
+}
+```
+
+### `UpFailTarget()` / `UpFailTargets()` — where a failure will land
+
+Failure is any status **outside 2xx and 304**. Read it when you need to know where an error
+will be rendered; usually you just answer 422 and let Unpoly do the routing.
+
+### `IsUpValidating()` / `UpValidatingFields()` / `IsUpValidatingUnknown()`
+
+**The contract: a validating request must not persist anything.** It asks "what would this
+form look like if I submitted it", nothing more.
+
+```razor
+@code {
+    async Task Submit()
+    {
+        Errors = Validate(Model);
+
+        // MUST come before any write. Unpoly fires this on blur and while typing; without
+        // the guard, every keystroke would create an order.
+        if (Ctx.IsUpValidating())
+        {
+            // SPACE separated, and batched: one request may carry several fields.
+            // [":unknown"] means "validate the whole form".
+            var fields = Ctx.UpValidatingFields();
+            if (!Ctx.IsUpValidatingUnknown())
+                Errors = Errors.Where(e => fields.Contains(e.Field)).ToList();
+            return;
+        }
+
+        if (Errors.Count > 0)
+        {
+            // 422, not 200. A 200 makes Unpoly treat the invalid form as a success and swap
+            // the ordinary target.
+            Ctx.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+            return;
+        }
+
+        await Orders.PlaceAsync(Model);
+    }
+}
+```
+
+### `UpMode()` / `UpFailMode()` / `UpOriginMode()` / `IsUpOverlay()`
+
+```razor
+@* One route, two presentations. Bookmarking /size-guide still gives a full page. *@
+@if (!Ctx.IsUpOverlay())
+{
+    <h1>Size guide</h1>
+    <BackLink />
+}
+<table class="size-table">...</table>
+
+@code {
+    // UpMode()       -> "modal" | "drawer" | "popup" | "cover" | "root"
+    // UpOriginMode() -> the layer that ASKED, which may differ from the one being rendered
+}
+```
+
+### `UpContext<T>()` / `UpFailContext<T>()` — the layer's own JSON state
+
+```razor
+@code {
+    record LayerCtx(string From, int? ProductId);
+
+    protected override void OnParametersSet()
+    {
+        // Malformed JSON returns null instead of throwing -- the context is client-supplied.
+        var layer = Ctx.UpContext<LayerCtx>();
+        ShowBuyButton = layer?.From != "admin";
+    }
+}
+```
+
+Set it from HTML with `up-context='{ "from": "product" }'`, change it from the server with
+`UpSetContext`. **If a response depends on context it must be in `Vary`** — `UseUnpoly()`
+already lists `X-Up-Context`.
+
+## Writing the response
+
+### `UpRetarget(selector)` — swap something other than what was asked for
+
+```razor
+@code {
+    async Task AddToCart()
+    {
+        if (!await Stock.ReserveAsync(Id))
+        {
+            // The link wanted .cart-badge; it gets the error banner instead.
+            Ctx.UpRetarget(".flash");
+            Flash = "Hết hàng";
+        }
+    }
+}
+```
+
+`Ctx.UpRetarget(":none")` swaps nothing at all.
+
+### `UpNotModified(etag, lastModified)` — conditional requests
+
+**The contract, and the one that bites hardest:** it returns true when the client is already
+current, sets the status to 304, and a 304 **must carry no body**.
+
+```razor
+@* Guard the whole markup. Not for the bytes -- UseUnpoly() drops those for you -- but to
+   skip the render and the queries behind it. *@
+@if (!NotModified)
+{
+    <ul class="listing">
+        @foreach (var p in Items) { <ProductCard Item="p" /> }
+    </ul>
+}
+
+@code {
+    bool NotModified;
+
+    protected override void OnParametersSet()
+    {
+        // Publishes ETag / Last-Modified, and reports whether the client already has it.
+        NotModified = Ctx.UpNotModified(Catalog.ETag, Catalog.LastModified);
+        if (NotModified) return;      // <- skip the expensive part
+
+        Items = Catalog.Query(Category);
+    }
+}
+```
+
+Pair it with `[up-etag]` on the fragment so a poll costs an empty 304 instead of a render:
+
+```razor
+<p class="stock" up-poll up-interval="4000" up-etag="@Cart.ETag">@Cart.Count món</p>
+```
+
+Only GET and HEAD are ever answered 304. On a POST, `If-None-Match` means optimistic
+concurrency rather than caching, so the method returns false and leaves the status alone —
+otherwise the form submission would silently do nothing.
+
+### `UpExpireCache` / `UpEvictCache` / `UpKeepCache` — the client-side cache
+
+```csharp
+// EXPIRE: cached copies are still shown, then refetched behind the user's back.
+Ctx.UpExpireCache("/shop/*");
+
+// EVICT: dropped outright. Stale content is never shown again -- for when showing the old
+// value would be wrong, not merely old (a price, a permission, a balance).
+Ctx.UpEvictCache("/cart");
+
+// KEEP: Unpoly clears the WHOLE cache after any non-GET by itself. This opts out.
+Ctx.UpKeepCache();
+```
+
+The argument is a [URL pattern](https://unpoly.com/url-patterns), not a glob: `"/shop/*"`
+any segment, `"/orders/$id"` a capture, `"/a /b"` alternatives, `"-/admin/*"` an exclusion.
+Calling `UpExpireCache()` after a POST is usually redundant — Unpoly already cleared
+everything.
+
+### `UpTitle(title)` — the document title on a fragment response
+
+```csharp
+Ctx.UpTitle($"{product.Name} — JUBIN");   // quoting and escaping are handled for you
+```
+
+Usually unnecessary: keep `<HeadOutlet />` outside `<UpChrome>` and `<PageTitle>` keeps
+working on fragment responses by itself.
+
+### `UpLocation(url)` / `UpMethod(m)` / `UpMethodCookie()`
+
+```razor
+@code {
+    void Search()
+    {
+        // What Unpoly should record in the address bar, when it differs from the real URL.
+        Ctx.UpLocation($"/shop?q={Uri.EscapeDataString(Query)}");
+    }
+
+    async Task Checkout()
+    {
+        await Orders.PlaceAsync();
+
+        // A full page load produced by a non-GET. Without it, Unpoly records the wrong
+        // method for the history entry and Back re-issues it as a GET.
+        Ctx.UpMethodCookie();
+        Nav.NavigateTo("/receipt");
+    }
+}
+```
+
+### `UpEmit(type, props)` — raise a client-side event from the server
+
+```csharp
+Ctx.UpEmit("cart:changed", new { count = Cart.Count });
+Ctx.UpEmit("flash:show",   new { text = "Đã thêm vào giỏ" });   // accumulates; both fire
+```
+
+```js
+up.on('cart:changed', (event) => {
+  document.querySelector('.cart-badge').textContent = event.count
+})
+```
+
+### Layers: `UpOpenLayer` / `UpAcceptLayer` / `UpDismissLayer` / `UpSetContext`
+
+```razor
+@code {
+    void Pick(string size)
+    {
+        // ACCEPT: the sub-task finished. The opener's [up-on-accepted] receives this as `value`.
+        Ctx.UpAcceptLayer(new { size, label = $"Size {size}" });
+    }
+
+    void Cancel()
+    {
+        // DISMISS: the user backed out. NOT interchangeable with accept -- the opener has
+        // two separate callbacks, and backing out must not look like a result.
+        Ctx.UpDismissLayer("changed mind");
+    }
+
+    protected override void OnParametersSet()
+    {
+        // The SERVER decides this response opens in an overlay, even though the link asked
+        // for an ordinary swap.
+        if (Ctx.Request.Query.ContainsKey("serverOpens"))
+            Ctx.UpOpenLayer(new { mode = "drawer", size = "large" });
+
+        // Hand the layer a changed context, readable by later requests from that layer.
+        Ctx.UpSetContext(new { from = "product", productId = Id });
+    }
+}
+```
+
+The opening side needs no C# at all:
+
+```html
+<a href="/products/5/size" up-layer="new modal" up-size="small"
+   up-context='{ "from": "product" }'
+   up-on-accepted="onChosen(value)"
+   up-on-dismissed="console.log('backed out')">Choose size</a>
+```
+
+The point of an overlay is what stays *behind* it: the opener keeps its scroll, its state and
+its unfinished input. Render a real route into it, and it stays bookmarkable when opened
+directly — use `IsUpOverlay()` to drop chrome the modal frame already provides.
+
+### `UpVary(...)` — declare what the response depends on
+
+`UseUnpoly()` already sets `X-Up-Target, X-Up-Version, X-Up-Mode, X-Up-Context` on every
+response. Call it directly only for a header of your own:
+
+```csharp
+Ctx.UpVary("X-Tenant");   // merges into Vary, never overwrites it
+```
+
+## Components
+
+### `<UpChrome>` — content rendered only on full-page requests
+
+```razor
+<UpChrome Provides=".site-nav, .cart-badge">
+    <nav class="site-nav">...<span class="cart-badge">@Cart.Count</span></nav>
+</UpChrome>
+```
+
+`ChildContent` is never *invoked* on a fragment request, so queries inside it never run —
+that, not the byte count, is where the saving comes from.
+
+**`Provides` is required if anything inside can be targeted from outside.** Without it a link
+that targets `.cart-badge` gets a response the chrome was stripped from, the selector is
+absent, and the swap silently does nothing.
+
+### `<UnpolyHead />` — assets, config, CSRF
+
+Once, inside `<head>`, inside `<UpChrome>`.
 
 ## Reach for HTML first
 
 **Most of Unpoly needs no server code.** Before writing C#, ask whether the server has to
-*decide* anything. If not, the answer is an attribute or a config line, and adding a C#
-helper for it is pure overhead.
-
-These have no server side at all — do not go looking for one:
+*decide* anything. If not, the answer is an attribute or a config line.
 
 | Want | Use | Not |
 |---|---|---|
@@ -129,51 +410,45 @@ These have no server side at all — do not go looking for one:
 | Update a region from *any* response | `[up-hungry]` | targeting it everywhere |
 | Keep an element across swaps | `[up-keep]` | re-rendering it |
 | Confirm before following | `[up-confirm="Sure?"]` | a server round-trip |
-| Change navigation defaults | `o.ExtraScript = "up.fragment.config.navigateOptions.transition = 'cross-fade'"` | a C# options class |
-| Antiforgery on forms | Blazor's `EditForm` hidden input | anything extra |
+| Antiforgery on forms | Blazor's `<AntiforgeryToken />` | anything extra |
 
-## Client-side attributes worth knowing
+### Attributes with no C# side — which is exactly why an agent invents a helper for them
 
-None of these have a C# side, which is exactly why an agent reaches for one and invents a
-helper instead. They are what you should be writing in the markup.
+**Links:** `[up-instant]` follow on mousedown · `[up-preload]` prefetch on hover ·
+`[up-follow=false]` opt out · `[up-confirm]` · `[up-cache=false]` skip the 15-second cache ·
+`[up-background]` no progress bar.
 
-**Links**
+**Forms:** `[up-validate]` revalidate on blur · `[up-watch-event="input"]`
+`[up-watch-delay=400]` revalidate while typing, debounced · `[up-disable]` disable in flight ·
+`[up-autosubmit]` submit on change · `[up-submit=false]` opt out · `required` and `type=email`
+run *before* any request · `<button name="intent" value="x">` arrives as ordinary form data.
 
-| | |
-|---|---|
-| `[up-instant]` | follow on mousedown instead of click |
-| `[up-preload]` | prefetch on hover |
-| `[up-follow=false]` | opt this link out; a real full page load |
-| `[up-confirm="Sure?"]` | ask before the request is made |
-| `[up-cache=false]` | skip the 15-second cache for this link |
-| `[up-background]` | never show the progress bar for this request |
+**Fragments:** `[up-keep]` · `[up-hungry]` · `[up-poll]` `[up-interval]` · `[up-etag]`
+`[up-time]` · `[up-nav]` · `[up-source]` · `[up-flashes]`.
 
-**Forms**
+**CSS Unpoly sets for you:** `.up-current`, `.up-active`, `.up-loading`.
 
-| | |
-|---|---|
-| `[up-validate]` | revalidate the field's form group on blur |
-| `[up-watch-event="input"]` `[up-watch-delay=400]` | revalidate while typing, debounced |
-| `[up-disable]` | disable the form while it is in flight |
-| `[up-autosubmit]` | submit as soon as a value changes |
-| `[up-submit=false]` | opt this form out |
-| `required`, `type=email` | HTML5 validation runs *before* any request |
-| `<button name="intent" value="x">` | a second submit button; arrives as ordinary form data |
+### Compilers — the replacement for `DOMContentLoaded`
 
-**Fragments**
+Unpoly inserts DOM that no `DOMContentLoaded` will ever see. **Return a destructor** for
+anything global, or every swap leaks another instance and nothing visible tells you.
 
-| | |
-|---|---|
-| `[up-keep]` | survive swaps |
-| `[up-hungry]` | update from *any* response, without being targeted |
-| `[up-poll]` `[up-interval]` | reload on a timer |
-| `[up-etag]` `[up-time]` | give one fragment its own version, so it can be answered 304 alone |
-| `[up-nav]` | keep `.up-current` in sync |
+```js
+up.compiler('[data-gallery]', (element, data, meta) => {
+  const timer = setInterval(() => advance(element), data.interval ?? 1500)
 
-**CSS Unpoly sets for you** — style these and loading state costs no JavaScript:
-`.up-current`, `.up-active`, `.up-loading`.
+  // meta describes the render pass: meta.layer, meta.revalidating, meta.response
+  element.dataset.layerMode = meta.layer.mode
 
-**Config, through `o.ExtraScript`** — no C# API earns its place for a config string:
+  return () => clearInterval(timer)     // <- without this, one timer per swap, forever
+})
+```
+
+```html
+<div data-gallery up-data='{ "interval": 900 }'>...</div>
+```
+
+### Config, through `o.ExtraScript`
 
 ```csharp
 o.ExtraScript = """
@@ -185,34 +460,6 @@ o.ExtraScript = """
     """;
 ```
 
-## Layers
-
-An overlay is any layer that is not the root. Most of it needs no C#:
-
-```html
-<a href="/products/5/size" up-layer="new modal" up-size="small"
-   up-context='{ "from": "product" }'
-   up-on-accepted="onChosen(value)">Choose size</a>
-```
-
-Server-side, the two halves that matter:
-
-```csharp
-Ctx.UpAcceptLayer(new { size });   // success: the opener continues with this value
-Ctx.UpDismissLayer("changed mind"); // the user backed out; a reason, not a result
-```
-
-**Accept and dismiss are not interchangeable.** Accept means the sub-task finished and the
-parent interaction should carry on with the result. Dismiss means it did not.
-
-The point of an overlay is what stays *behind* it: the opener keeps its scroll, its state
-and its unfinished input. Render a real route into it rather than a fragment, and it stays
-bookmarkable when opened directly — check `IsUpOverlay()` to drop chrome the modal frame
-already provides.
-
-**Cache trap:** if a response depends on `X-Up-Context` or `X-Up-Mode`, those must be in
-`Vary` or two layers share one entry. `UseUnpoly()` already lists them.
-
 ## The `fail` prefix
 
 Unpoly picks a different render option when a response fails, by prefixing it: `target` /
@@ -223,95 +470,74 @@ Options consumed **before** the request (`url`, `method`, `confirm`) have no twi
 knows yet that it will fail. Options used for both (`history`, `fallback`) take an optional
 override such as `{ history: true, failHistory: false }`.
 
-**Only three of them reach the server**, so do not go hunting for a C# helper for the rest:
-
-| Client option | Header | Available here |
-|---|---|---|
-| `failTarget` | `X-Up-Fail-Target` | `Ctx.UpFailTarget()` / `UpFailTargets()` |
-| `failLayer` / `failMode` | `X-Up-Fail-Mode` | not yet |
-| `failContext` | `X-Up-Fail-Context` | not yet |
-| everything else | — | client-only, by design |
-
-Failure is any status **outside 2xx and 304**. Answer **422** for an invalid form so the
-fail target is used.
-
-## Typed helpers that do not exist yet
-
-These are **not capability gaps** — the feature works today, the library just has no typed
-wrapper. Calling the method throws; the HTML does the job now, and raw header access always
-works via `Ctx.Request.Headers["X-Up-…"]`.
-
-| Feature | Throws | Do this instead, today |
-|---|---|---|
-| Form validation round-trip | `IsUpValidating` `UpValidatingField` | `[up-validate]` on the field. Server-side, read `X-Up-Validate` yourself and **do not persist** when it is present |
-| Autosubmitting filters | — | `[up-autosubmit]` + `[up-watch-delay=300]` |
-| Disable a form while in flight | — | `[up-disable]` |
-| Document title on a fragment-only response | `UpTitle` | keep `<HeadOutlet />` outside `<UpChrome>` and `<PageTitle>` keeps working |
-| Server-emitted events | `UpEmit` | write `X-Up-Events` directly if needed; the value is a JSON array of objects keyed by `"type"` |
-
-If a task genuinely needs the server to decide — close this overlay, retarget that
-response, emit this event — say the typed helper is not implemented yet rather than
-inventing one.
+Only three reach the server: `X-Up-Fail-Target` (`UpFailTarget()`), `X-Up-Fail-Mode`
+(`UpFailMode()`) and `X-Up-Fail-Context` (`UpFailContext<T>()`). Everything else is
+client-only by design.
 
 ## Mistakes to check first when something is broken
 
-1. **`blazor.web.js` is still in `App.razor`.** With `interactivity=None` it only adds
+1. **A poll or a reload answers 500, and the error page cannot even render.**
+   `Writing to the response body is invalid for responses with status code 304`. The page
+   called `UpNotModified()` and then rendered anyway — in Blazor static SSR a component
+   cannot decline to render after the fact, so the guard has to be in the markup.
+   `UseUnpoly()` drops the body so this cannot crash, but the render still costs what it
+   costs: wrap the markup in `@if (!NotModified)`. **Without `UseUnpoly()` this is a hard
+   500 raised after the response has started — no error page, dead connection.**
+
+2. **`blazor.web.js` is still in `App.razor`.** With `interactivity=None` it only adds
    enhanced navigation and enhanced forms — exactly Unpoly's job. Both present means they
    fight over clicks and submits. Remove the script tag.
 
-2. **A swap did nothing.** The selector must exist in **both** the response and the current
+3. **A swap did nothing.** The selector must exist in **both** the response and the current
    page. Unpoly resolves it on both sides; that is by design, not a bug.
 
-3. **Nav or footer vanished from a normal page load.** Something treated the request as a
+4. **A swap targeting the nav, a cart badge, or anything else inside the chrome does
+   nothing.** `UpChrome` stripped it from the response. Declare it:
+   `<UpChrome Provides=".site-nav, .cart-badge">`.
+
+5. **Nav or footer vanished from a normal page load.** Something treated the request as a
    fragment. `X-Up-Target` is a *list*: `"body, .flash"` is still a whole-page request.
 
-4. **An interactive component went silent after a swap.** A region rendered with
+6. **An interactive component went silent after a swap.** A region rendered with
    `@rendermode InteractiveServer` or `WebAssembly` must never be inside a swapped fragment.
    Its Blazor markers only activate through Blazor's own updater, so Unpoly swapping it
-   produces dead DOM with no error and no console message. Keep such regions outside the
-   target, or mark them `[up-keep]`.
+   produces dead DOM with no error and no console message. Keep it outside the target, or
+   mark it `[up-keep]`.
 
-5. **`<PageTitle>` stopped updating.** `<HeadOutlet />` was moved inside `<UpChrome>`.
+7. **`<PageTitle>` stopped updating.** `<HeadOutlet />` was moved inside `<UpChrome>`.
 
-6. **The `.content` element is missing from a fragment response.** The target itself was
+8. **The `.content` element is missing from a fragment response.** The target itself was
    wrapped in `<UpChrome>`. Wrap the chrome around it, never the target.
+
+9. **An invalid form submission looks like a success.** The handler answered 200. Answer
+   **422**. And guard the handler with `IsUpValidating()` before any write.
 
 10. **An `[up-on-accepted]` callback runs but nothing changes.** These attributes are
     evaluated as **one expression**. A multi-line body of statements silently does nothing:
     the overlay closes, the value arrives, no DOM changes, no console error. Put the body in
     a named function and keep the attribute to one call.
 
-11. **An `[up-hungry]` region never updates, or updates with a stale value.** Three separate
-    causes, all silent: it is inside `<UpChrome>` (Unpoly does not add hungry selectors to
-    `X-Up-Target`, so `Provides` never fires); it has only a class and no `[id]`, so Unpoly
-    cannot derive a selector for it; or it lives in the layout and reflects something a page
-    handler just did — in Blazor SSR the layout renders **before** the page's handler, so
-    it swaps correctly and shows the previous value. The last one needs POST-redirect-GET.
+11. **An `[up-hungry]` region never updates, or shows a stale value.** Three silent causes:
+    it sits inside `<UpChrome>` without `Provides`; Unpoly cannot derive a selector for it;
+    or it lives in the layout and reflects something a page handler just did — in Blazor SSR
+    **the layout renders before the page's handler**, so it swaps correctly and shows the
+    previous value. Markup position does not help; that one needs POST-redirect-GET.
 
-12. **A third-party widget dies after a swap, or the page slows down over time.** Unpoly
-    inserts fresh DOM that no `DOMContentLoaded` will ever see. Use `up.compiler`, and
-    **return a destructor** for anything global — a timer, a document listener, a resize
-    observer. Without one each swap leaks another instance, and nothing visible tells you.
-    Application scripts also belong in `<head defer>`: a `<script>` in the body re-executes
-    every time that region is swapped.
+12. **A third-party widget dies after a swap, or the page slows down over time.** Use
+    `up.compiler` and return a destructor. Application scripts belong in `<head defer>`:
+    a `<script>` in the body re-executes every time that region is swapped.
 
-13. **A swap that targets the nav, a cart badge, or anything else inside the chrome does
-    nothing.** `UpChrome` stripped it from the response, so the selector is absent and the
-    swap finds nothing — no error, no console message. Declare it:
-    `<UpChrome Provides=".site-nav, .cart-badge">`.
+13. **A handler appears to run twice.** Unpoly caches GET responses for 15 seconds and
+    revalidates: it renders the cached copy, then refetches and renders again. Keep GET
+    handlers idempotent.
 
-9. **An invalid form submission looks like a success.** The handler answered 200. Unpoly
-   treats anything outside 2xx and 304 as failure — answer **422** so the fail target is
-   used. And guard the handler with `IsUpValidating()`: a validation request asks for a
-   fresh form state, not for the action to happen.
+14. **An `[up-accept]` attribute is silently ignored.** It holds
+    [relaxed JSON](https://unpoly.com/relaxed-json), and a hand-built string breaks on the
+    first apostrophe in the data. Serialize it:
+    `up-accept="@JsonSerializer.Serialize(new { slug, name })"`.
 
-7. **A handler appears to run twice.** Unpoly caches GET responses for 15 seconds
-   (`cacheExpireAge`) and revalidates: it renders the cached copy, then refetches and
-   renders again. Keep GET handlers idempotent.
-
-8. **Someone called `UpExpireCache` after a POST.** Usually redundant — Unpoly clears the
-   entire cache after any non-GET by itself. The header is for expiring a *subset*, or from
-   a GET. To stop the automatic clearing, use `UpKeepCache()`.
+15. **`up.emit()` fired but the overlay did not close.** Close conditions listen on the
+    *layer*; `up.emit()` lands on `document`. Use `up.layer.emit()`.
 
 ## CSRF
 
@@ -340,5 +566,7 @@ Opt a single element out with `[up-follow=false]`, `[up-instant=false]`,
 ## Where to look things up
 
 Unpoly's own docs are the reference; this library only covers the server half.
-Start at <https://unpoly.com/up.protocol> for headers, <https://unpoly.com/targeting-fragments>
-for selectors, <https://unpoly.com/handling-everything> for the config knobs above.
+<https://unpoly.com/up.protocol> for headers, <https://unpoly.com/targeting-fragments> for
+selectors, <https://unpoly.com/handling-everything> for the config knobs above.
+`CONCEPTS.md` in this repo maps every section of every Unpoly guide to the place in the
+sample that exercises it.
