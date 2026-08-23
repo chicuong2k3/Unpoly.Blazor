@@ -82,10 +82,24 @@ up.compiler('[data-gallery]', function (element, data, meta) {
 up.on('up:assets:changed', function (event) {
     window.__assetsChanged = (window.__assetsChanged ?? 0) + 1;
 
+    // Notify ONCE, not once per render pass.
+    //
+    // up:assets:changed fires on EVERY pass whose <head> assets differ from the current
+    // page's. This sample switches versions with ?v=, so /lab/script?v=2 -> anywhere else
+    // flips it straight back to v1, which is another genuine change. Navigating around
+    // therefore fired it again and again, and an unconditional appendChild stacked one
+    // identical message per navigation.
+    //
+    // A real app has the same shape: a deploy mid-session makes every subsequent response
+    // carry the new assets, so the event keeps arriving. What the user needs to know is
+    // "there is a newer version", once -- not how many times you noticed.
+    const flashes = document.querySelector('[up-flashes]');
+    if (!flashes || flashes.querySelector('.assets-changed')) return;
+
     const bar = document.createElement('p');
     bar.className = 'flash assets-changed';
     bar.textContent = 'Có phiên bản mới — tải lại khi thuận tiện.';
-    document.querySelector('[up-flashes]')?.appendChild(bar);
+    flashes.appendChild(bar);
 
     // "Reloading at the next opportunity" is deliberately NOT wired up automatically here.
     // Hijacking the next up:link:follow turns every subsequent navigation into a full page

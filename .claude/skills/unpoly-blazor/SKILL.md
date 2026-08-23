@@ -11,6 +11,12 @@ Every API below has a runnable example. Copy the example rather than inferring t
 the signature — several of these methods carry a *contract* the signature cannot express, and
 that is where the real bugs come from.
 
+> **Writing markup? Read `ATTRIBUTES.md` next to this file.** It goes concept by concept —
+> targeting, link behaviour, forms, feedback, caching, passive updates, overlays, history,
+> animation, compilers, asset changes — saying *when* you reach for each Unpoly attribute,
+> which one, a Razor snippet, and what goes wrong. This file is the C# API and its
+> contracts; that file is the markup half, and most of Unpoly lives there.
+
 ## The one idea
 
 Unpoly requests **full pages** and extracts the target fragment **on the client**. It does
@@ -569,4 +575,4 @@ Unpoly's own docs are the reference; this library only covers the server half.
 <https://unpoly.com/up.protocol> for headers, <https://unpoly.com/targeting-fragments> for
 selectors, <https://unpoly.com/handling-everything> for the config knobs above.
 `CONCEPTS.md` in this repo maps every section of every Unpoly guide to the place in the
-sample that exercises it.
+sample that exercises it, and `ATTRIBUTES.md` next to this file maps concepts to attributes.
