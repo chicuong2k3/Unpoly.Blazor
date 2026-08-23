@@ -68,7 +68,7 @@ an agent will confidently suggest `UpAcceptLayer` and hand you a `NotImplemented
 
 ## Status
 
-**Phases A–D of 7 · 20 of 24 protocol headers.** Unimplemented methods throw
+**All 7 phases complete · 24/24 protocol headers · every documented concept demonstrated · 77 tests.** Unimplemented methods throw
 `NotImplementedException` carrying their phase and the guide URL that explains them.
 
 - [`TASKS.md`](TASKS.md) — the phase-by-phase plan and what to do next
