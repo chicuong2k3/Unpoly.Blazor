@@ -39,7 +39,10 @@ This changes the usual trade-offs:
    That file tells downstream agents which methods exist and which throw. A stale copy is
    worse than none: it makes an agent recommend a method that throws. Treat it as part of
    the API, not as documentation.
-9. **A guide is only "read" when every section in its table of contents has a row in
+9. **No module is skipped.** All 17 are enumerated, including the five that have no server
+   side. "No C# to write" is not "nothing to demonstrate", and `up.util` in particular
+   documents the relaxed-JSON and URL-pattern formats this library writes.
+10. **A guide is only "read" when every section in its table of contents has a row in
    `CONCEPTS.md`** — including sections with nothing to do. Summarising a guide instead of
    enumerating it is how `/failed-responses` §3 "Customizing failure detection" went missing
    for three phases. Fetch the page's headings; do not work from memory of it.

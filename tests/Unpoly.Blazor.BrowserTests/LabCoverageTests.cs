@@ -80,7 +80,7 @@ public class SubinteractionTests(UnpolyFixture fx)
         await p.Click("up-modal button[up-accept]", settleMs: 1600);
 
         Assert.False(await p.Exists("up-modal"));
-        Assert.Empty(p.Since(mark).Where(r => r.Method == "POST"));
+        Assert.DoesNotContain(p.Since(mark), r => r.Method == "POST");
 
         // The accepted value became a selected <option> on the opener.
         Assert.True(await p.Js<bool>(
@@ -223,7 +223,7 @@ public class FragmentLifecycleTests(UnpolyFixture fx)
         Assert.Contains("clone từ template", await p.Text(".result-box") ?? "");
 
         // Neither touched the network.
-        Assert.Empty(p.Since(mark).Where(r => r.Url.Contains("/lab/fragment/")));
+        Assert.DoesNotContain(p.Since(mark), r => r.Url.Contains("/lab/fragment/"));
     }
 }
 

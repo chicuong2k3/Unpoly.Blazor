@@ -124,7 +124,7 @@ public class WithoutJavaScriptTests(UnpolyFixture fx)
     [MemberData(nameof(Routes))]
     public async Task Every_route_renders_without_JavaScript(string path, string marker)
     {
-        var res = await fx.Http.GetAsync(UnpolyFixture.BaseUrl + path);
+        var res = await fx.Http.GetAsync(fx.BaseUrl + path);
         Assert.True(res.IsSuccessStatusCode, $"{path} answered {(int)res.StatusCode}");
         Assert.Contains(marker, await res.Content.ReadAsStringAsync());
     }

@@ -891,11 +891,17 @@ undocumented — the same mistake that hid seven target-syntax variants for thre
 
 ## `up.element`
 
-No guides — reference only. Low-level DOM helpers.
+No guides — reference only. Low-level DOM helpers, and two of them are load-bearing here.
 
 | Feature | Status | Sample |
 |---|---|---|
-| `affix()` `attr()` `createFromHTML()` `hide()`/`show()` `setAttrs()` `style()` | ➖ | n/a — nothing here needs raw DOM utilities |
+| `createFromHTML()` | ➖ builds an Element from a string | `LabFragment.razor` · rendering an Element · `app.js` · optimistic row |
+| `affix()` | ➖ create and attach in one call | `LabLayers.razor` · `up.layer.get(0).affix(...)` |
+| `attr()` `hide()`/`show()` `setAttrs()` `style()` | ➖ | n/a — ordinary DOM does these; Unpoly's versions add nothing this sample needs |
+
+Marking the whole module `n/a` was wrong: `createFromHTML` is what the optimistic-rendering
+preview clones a template with, and `affix` is how the layer-reference demo touches another
+layer. Both were already in the sample when the row said nothing used them.
 
 ---
 
@@ -945,13 +951,26 @@ The playground paid for itself immediately: its `.content, .site-nav` link expos
 
 ---
 
-## Not opened, by decision
+## Coverage
 
+**17 / 17 modules · 52 guides · 305 concept rows · 0 open.**
 
-**Every one of Unpoly's 17 modules now has a section.** The five once listed as "skipped"
-— `up.motion`, `up.element`, `up.util`, `up.log`, `up.framework` — are documented above.
-Dropping `up.util` in particular was a mistake: two of its guides describe formats this
-library writes.
+Every row points at where the sample exercises it, or says in words why it cannot. Nothing
+is skipped.
 
-The *Features* tier remains a dictionary rather than reading material. Look things up in it
-**before** writing glue; the CSRF listener is what happens otherwise.
+Five modules were once listed as "skip entirely" because they have no server side:
+`up.motion`, `up.element`, `up.util`, `up.log`, `up.framework`. That call was wrong on both
+counts.
+
+`up.util` was the expensive one. Its `/relaxed-json` and `/url-patterns` guides describe
+formats **this library writes** — `UpExpireCache` takes a URL pattern rather than a glob,
+and several headers are specified as relaxed JSON. Skipping it left the methods undocumented
+and a JSON5 writer looking necessary when it never was.
+
+The rest was the older mistake in a new place: "no C# to write" is not "nothing to
+demonstrate". `up.motion` is four links; `up.log` and `up.framework` are a button each.
+
+The **Features** tier stays a dictionary, not reading material — but it is enumerated for
+the four modules with no guides (`up.element`, `up.event`, `up.framework`, `up.log`). Look
+things up in it **before** writing glue: the deleted CSRF listener was nine lines
+reimplementing `up.protocol.config`.

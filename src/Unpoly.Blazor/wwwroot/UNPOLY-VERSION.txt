@@ -1,0 +1,10 @@
+unpoly 3.14.3
+MIT — https://github.com/unpoly/unpoly/blob/master/LICENSE
+
+Vendored from https://cdn.jsdelivr.net/npm/unpoly@3/unpoly.min.js and unpoly.min.css.
+Read back from the bundle itself (up.version), not from the download URL, which floats.
+
+Bumping it: replace both files, update this line, and run `dotnet test`. The browser suite
+asserts on behaviour the bundle defines -- preloadDelay 90ms, cacheExpireAge 15s, the target
+derivation order -- so a version change that alters any of those will show up as a failure
+rather than as silence.

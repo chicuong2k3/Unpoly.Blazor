@@ -13,16 +13,19 @@ dotnet test
 
 ## Browser tests
 
-Playwright for .NET. `UnpolyFixture` starts the sample app as a child process on port 5288
-and launches Chromium once for the whole run; every test gets its own page and its own
-record of the traffic.
+Playwright for .NET. `UnpolyFixture` starts the sample app as a child process on a **free
+port chosen at startup** and launches Chromium once for the whole run; every test gets its
+own page and its own record of the traffic.
 
-First run on a new machine needs the browser:
+**First run on a new machine needs the browser downloaded:**
 
 ```bash
 dotnet build
 pwsh tests/Unpoly.Blazor.BrowserTests/bin/Debug/net10.0/playwright.ps1 install chromium
 ```
+
+Without it every browser test fails at once. The fixture says so explicitly rather than
+letting sixty-odd tests time out one by one.
 
 Watch it happen with `HEADED=1 dotnet test`.
 
@@ -42,6 +45,11 @@ press lands on nothing.
 - **Statements vs expressions.** `Probe.Js` evaluates one expression; `Probe.Exec` runs a
   block. Passing two statements to `Js` is a syntax error that surfaces as "the listener
   never fired", not as a script error.
+- **A fixed port.** The fixture now picks a free one. A hardcoded port fails on any machine
+  where something else holds it, or where a previous run has not finished dying — which
+  reads as "a pile of tests failed", not as a port conflict.
+- **A child that exits during startup.** Its output is captured and included in the error, so
+  a sample that fails to boot says why instead of timing out.
 - **States that only exist in flight.** `Probe.Poll` samples over time. A settled page never
   shows `up-progress-bar` or a disabled form, so a single assertion afterwards would pass for
   the wrong reason.

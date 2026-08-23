@@ -197,7 +197,7 @@ Grep `NotImplementedException` in `src/` for the live list.
 `Last-Modified` `X-Up-Open-Layer` `X-Up-Accept-Layer` `X-Up-Dismiss-Layer` `X-Up-Context`
 ⬜ `X-Up-Title` `X-Up-Location` `X-Up-Method` `X-Up-Events` + cookie `_up_method`
 
-The four left are Phase E (history, `_up_method`) and Phase F (`X-Up-Events`).
+All 24 are implemented; nothing in the library throws.
 
 **Dropped from the target (was 26):** `X-Up-Clear-Cache` appears in no current guide, and
 `X-Up-Reload-From-Time` is deprecated in favour of `Last-Modified`. Implementing either
@@ -209,37 +209,54 @@ Spec: <https://unpoly.com/up.protocol>
 
 ## Exercise gaps
 
-`CONCEPTS.md` ends with a list of methods that pass unit checks but have never run in the
-sample. They are candidate work, not bugs — pick them up alongside the phase that fits:
+One method is covered by a unit test but has never run in the sample:
 
-- `UpKeepCache()` — needs a POST that changes nothing visible, so Phase D or F
-- `:before` / `:after` — infinite scroll in Phase E
+- `UpKeepCache()` — needs a POST that changes nothing the user can see, such as recording
+  a "recently viewed" ping. Everything else in the library runs in the sample.
 
-Everything else is exercised. `CONCEPTS.md` has no bare dashes left: 110 rows, 73 pointing
-at the sample, 20 marked `n/a` with a reason, 17 marked `todo` with what is missing.
+`CONCEPTS.md` has **305 rows and none open**: every one points at the sample or says in
+words why it cannot.
 
 ## Open questions
 
-- ~~`<AntiforgeryToken />` outside a `<form>`~~ — **resolved.** Unpoly ships CSRF support
+- **`GetAndStoreTokens` vs streaming rendering** — the antiforgery token is minted while
+  `<head>` renders, which is safe today. Re-verify if streaming rendering is ever enabled.
+- **reCAPTCHA on the login form** — needs a real site key. The mechanism it would exercise
+  is already covered by the stand-in widget: a third-party `init`/`destroy` API,
+  re-initialised by a compiler, cleaned up by a destructor.
+
+Resolved, kept here because the reasoning outlived the question:
+
+- ~~`<AntiforgeryToken />` outside a `<form>`~~ — Unpoly ships CSRF support
   (`up.protocol.config.csrfHeader` / `csrfToken`), so the hand-rolled `up:request:load`
-  listener and the hidden token div are gone. `UnpolyHead` now feeds the ASP.NET token
-  straight into `up.protocol.config.csrfToken`. 📖 https://unpoly.com/up.protocol.config
-- **`GetAndStoreTokens` vs streaming rendering** — the token is minted while `<head>` renders,
-  which is safe today. Re-verify if streaming rendering is ever enabled.
-- ~~`X-Up-Clear-Cache`~~ — **resolved:** in no current guide. Stub deleted.
-- **Asset tracking is now impossible on fragment responses** — cutting `<head>` means no
-  scripts or stylesheets are present to diff, so `up:assets:changed` can never fire for a
-  fragment. Decide in Phase G whether to re-emit `[up-asset]` elements into fragment
-  responses. 📖 https://unpoly.com/handling-asset-changes
-- **Vendored Unpoly version** — pinned by download, not by a version file. Consider
-  recording the exact version so `/handling-asset-changes` in Phase G has something to test.
+  listener and the hidden token div are gone.
+- ~~`X-Up-Clear-Cache`~~ — in no current guide. Stub deleted, and the protocol target
+  dropped from 26 headers to 24.
+- ~~Asset tracking is impossible on fragment responses~~ — it is not. Assets are only
+  tracked in `<head>`, so one `meta[up-asset]` placed **outside** `UpChrome` restores
+  detection for about a hundred bytes. This was carried as a trade-off for five phases and
+  was avoidable the whole time.
+- ~~The vendored Unpoly version is not recorded~~ — `wwwroot/UNPOLY-VERSION.txt` names it
+  (3.14.3, read from `up.version` rather than the floating CDN URL) and says what to re-run
+  when it changes.
 
 ---
 
-## Reading budget
+## Reading
 
-~60 guide pages total across 17 modules. At 6–8 min each that is ~7 hours.
-Skip entirely: `up.motion`, `up.element`, `up.util`, `up.log`, `up.framework`,
-and the whole **Features** tier (reference, not prose).
+**All 17 modules and 52 guides are read and enumerated in `CONCEPTS.md`**, with 305 concept
+rows and none left open.
+
+An earlier version of this file told you to skip five modules — `up.motion`, `up.element`,
+`up.util`, `up.log`, `up.framework` — on the grounds that they have no server side. That was
+wrong twice over. `up.util` documents **relaxed JSON** and **URL patterns**, which are the
+formats this library writes: `UpExpireCache` takes a URL pattern, and several headers are
+specified as relaxed JSON. And "no C# to write" never meant "nothing to demonstrate" —
+`up.motion` is now four links in the lab.
+
+The **Features** tier is still a dictionary rather than reading material, but it is
+enumerated for the four modules that have no guides at all (`up.element`, `up.event`,
+`up.framework`, `up.log`). Look things up in it **before** writing glue: the CSRF listener
+that got deleted was nine lines reimplementing `up.protocol.config`.
 
 If only three pages ever get read: `/render-lifecycle`, `/caching`, `/subinteractions`.

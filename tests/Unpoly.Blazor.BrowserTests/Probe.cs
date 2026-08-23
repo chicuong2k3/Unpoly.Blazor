@@ -20,20 +20,22 @@ public sealed class Probe : IAsyncDisposable
     private readonly List<Sent> requests = [];
     private readonly List<(string Url, int Status)> responses = [];
 
-    private Probe(IBrowserContext context, IPage page)
+    private Probe(IBrowserContext context, IPage page, string baseUrl)
     {
         Context = context;
         Page = page;
+        BaseUrl = baseUrl;
     }
 
     public IBrowserContext Context { get; }
+    public string BaseUrl { get; }
     public IPage Page { get; }
 
     public static async Task<Probe> Create(UnpolyFixture fx)
     {
         var context = await fx.Browser.NewContextAsync(new() { ViewportSize = new() { Width = 1360, Height = 900 } });
         var page = await context.NewPageAsync();
-        var probe = new Probe(context, page);
+        var probe = new Probe(context, page, fx.BaseUrl);
 
         page.Request += (_, r) => probe.requests.Add(new Sent(r.Method, r.Url, r.Headers));
         page.Response += (_, r) => probe.responses.Add((r.Url, r.Status));
@@ -45,7 +47,7 @@ public sealed class Probe : IAsyncDisposable
 
     public async Task Goto(string path)
     {
-        await Page.GotoAsync(UnpolyFixture.BaseUrl + path);
+        await Page.GotoAsync(BaseUrl + path);
         await Page.WaitForTimeoutAsync(600);
     }
 
@@ -127,7 +129,7 @@ public sealed class Probe : IAsyncDisposable
 
     public IReadOnlyList<Sent> Since(int mark, string? contains = null, string? exactPath = null) =>
         requests.Skip(mark)
-                .Where(r => exactPath is null || r.Url == UnpolyFixture.BaseUrl + exactPath)
+                .Where(r => exactPath is null || r.Url == BaseUrl + exactPath)
                 .Where(r => contains is null || r.Url.Contains(contains, StringComparison.Ordinal))
                 .ToList();
 
