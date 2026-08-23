@@ -1,0 +1,140 @@
+@page "/lab/fragment"
+@page "/lab/fragment/{Case}"
+
+@* ── RENDER LIFECYCLE, KEEP, TEMPLATES ────────────────────────────────────
+   📖 https://unpoly.com/render-lifecycle · /preserving-elements · /templates
+      · /skipping-rendering · /providing-html
+   ─────────────────────────────────────────────────────────────────────── *@
+
+<PageTitle>Fragment — JUBIN</PageTitle>
+
+<div class="page-head">
+    <h2>Render lifecycle</h2>
+    <p class="count">@(Case ?? "chưa chọn")</p>
+</div>
+
+<section class="playground">
+    <h3>Controlling the pass <span class="meta">/render-lifecycle</span></h3>
+    <ul>
+        <li>
+            <a href="/lab/fragment/refused" up-target=".content">Server bảo đừng render</a>
+            <span class="meta">
+                §12 — response mang <code>X-Lab-Refuse</code>; listener
+                <code>up:fragment:loaded</code> gọi <code>preventDefault()</code>, trang không đổi
+            </span>
+        </li>
+        <li>
+            <a href="/lab/fragment/ok" up-target=".content"
+               up-on-rendered="window.__rendered = (window.__rendered ?? 0) + 1"
+               up-on-finished="console.log('postprocessing xong')">Chạy code sau khi render</a>
+            <span class="meta">
+                §3 §4 — <code>[up-on-rendered]</code> chạy ngay, <code>[up-on-finished]</code>
+                đợi cả animation và revalidation
+            </span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.render({ target: '.result-box', url: '/lab/fragment/ok' }).then(r => alert('render result: ' + r.target + ' — ' + (r.none ? 'không đổi gì' : 'đã đổi')))">
+                Kiểm tra render result
+            </button>
+            <span class="meta">§6 — <code>up.render()</code> trả về đối tượng mô tả lần render</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.on('up:fragment:loaded', { once: true }, e => e.renderOptions.target = '.result-box'); up.follow(document.querySelector('.lifecycle-link'))">
+                Đổi option trước khi render
+            </button>
+            <span class="meta">§13 — sửa <code>renderOptions</code> ngay trước lượt render</span>
+        </li>
+        <li>
+            <a class="lifecycle-link" href="/lab/fragment/ok" up-target=".content" up-follow="false">(link dùng cho nút trên)</a>
+        </li>
+        <li>
+            <a href="/lab/fragment/boom" up-target=".content" up-fail-target=".result-box">Lỗi server (500)</a>
+            <span class="meta">§8–§11 — response hỏng đi vào fail target, không làm vỡ trang</span>
+        </li>
+    </ul>
+
+    <div class="result-box kept-box"><span class="meta">vùng đích phụ</span></div>
+
+    <h3>Preserving elements <span class="meta">/preserving-elements</span></h3>
+    <ul>
+        <li>
+            @* The classic use case: something with live state that must not be recreated. *@
+            <div class="kept-box">
+                <input class="kept-input" up-keep placeholder="gõ gì đó rồi swap" />
+                <span class="meta">§1 §2 — <code>[up-keep]</code>: phần tử ở nguyên, giá trị không mất</span>
+            </div>
+        </li>
+        <li>
+            <div class="kept-box">
+                <span class="kept-html" up-keep>HTML cố định</span>
+                <span class="kept-data" up-keep up-data="{ v: @(Case == "ok" ? 2 : 1) }">giữ tới khi data đổi</span>
+                <span class="meta">
+                    §4 §5 — giữ tới khi <em>HTML</em> đổi, hoặc tới khi <code>[up-data]</code> đổi
+                </span>
+            </div>
+        </li>
+        <li>
+            <a href="/lab/fragment/ok" up-target=".content">Swap (thử giữ)</a>
+            <span class="meta">§8 — data của phần tử được giữ cũng được cập nhật theo response</span>
+        </li>
+        <li>
+            <a href="/lab/fragment/ok" up-target=".content" up-use-keep="false">Swap, bỏ qua keep</a>
+            <span class="meta">§7 — ép cập nhật, không giữ gì cả</span>
+        </li>
+    </ul>
+
+    <h3>Providing HTML <span class="meta">/providing-html · /templates</span></h3>
+    <ul>
+        <li>
+            <a href="#" up-target=".result-box" up-content="&lt;span class='meta'&gt;nội dung tại chỗ&lt;/span&gt;">
+                [up-content]
+            </a>
+            <span class="meta">/providing-html §5 — thay phần con, không phát request</span>
+        </li>
+        <li>
+            <a href="#" up-target=".result-box" up-document="#lab-template">
+                Clone từ &lt;template&gt;
+            </a>
+            <span class="meta">/templates §1 §2 — nhân bản fragment ngay trên client</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.render({ target: '.result-box', content: up.element.createFromHTML('&lt;div class=\\'result-box kept-box\\'&gt;&lt;span class=\\'meta\\'&gt;từ Element&lt;/span&gt;&lt;/div&gt;') })">
+                Render một Element
+            </button>
+            <span class="meta">/providing-html §11 — truyền thẳng Element, không phải chuỗi</span>
+        </li>
+        <li>
+            <span class="meta">
+                /providing-html §8 — nội dung do người dùng nhập phải được làm sạch
+                <strong>trước</strong> khi render; Unpoly không tự escape
+            </span>
+        </li>
+    </ul>
+
+    <template id="lab-template">
+        <div class="result-box kept-box"><span class="meta">clone từ template lúc @DateTime.Now.ToString("HH:mm:ss")</span></div>
+    </template>
+</section>
+
+@code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+
+    [Parameter] public string? Case { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Case == "refused")
+        {
+            // The client is configured to drop any response carrying this header.
+            // 📖 https://unpoly.com/skipping-rendering (Preventing rendering of loaded responses)
+            Ctx.Response.Headers["X-Lab-Refuse"] = "1";
+        }
+        else if (Case == "boom")
+        {
+            Ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        }
+    }
+}

@@ -1,0 +1,123 @@
+@page "/lab/layers"
+@page "/lab/layers/{Depth:int}"
+
+@* ── THE LAYER MATRIX ─────────────────────────────────────────────────────
+   Every [up-layer] value means something different only once there is a stack
+   to point at. This page opens itself, so any depth is reachable, and each
+   control below names the /layer-option section it comes from.
+   📖 https://unpoly.com/layer-option
+   ─────────────────────────────────────────────────────────────────────── *@
+
+<PageTitle>Layers — depth @Level</PageTitle>
+
+@if (Ctx.IsUpOverlay())
+{
+    <h3 class="overlay-title">Layer @Level</h3>
+}
+else
+{
+    <div class="page-head">
+        <h2>Layer matrix</h2>
+        <p class="count">Layer gốc — mở thêm để các giá trị [up-layer] có nghĩa</p>
+    </div>
+}
+
+<p class="meta">
+    mode <code>@(Ctx.UpMode() ?? "root")</code> ·
+    origin <code>@(Ctx.UpOriginMode() ?? "-")</code> ·
+    context <code>@(Ctx.UpContext<Dictionary<string, object>>() is { Count: > 0 } ? "có" : "{}")</code>
+</p>
+
+<p>
+    @* Close conditions, all four kinds /closing-overlays lists:
+       a location pattern, an event, a fragment appearing, and the usual dismiss controls.
+       📖 https://unpoly.com/closing-overlays *@
+    <a class="btn-quiet open-deeper" href="/lab/layers/@(Level + 1)" up-layer="new modal" up-size="medium"
+       up-context="{ depth: @(Level + 1) }"
+       up-accept-location="/shop/$slug"
+       up-accept-event="lab:done"
+       up-dismiss-event="lab:cancelled"
+       up-animation="move-from-top" up-close-animation="move-to-top"
+       up-dismissable="key button outside"
+       up-on-accepted="console.log('accepted', value)">Mở layer @(Level + 1)</a>
+</p>
+
+@if (Ctx.IsUpOverlay())
+{
+    <ul class="layer-targets">
+        <li>
+            <a href="/shop" up-layer="0" up-target=".content">index 0</a>
+            <span class="meta">§8 — layer theo chỉ số; 0 là gốc</span>
+        </li>
+        <li>
+            <a href="/lab/layers" up-layer="closest" up-target=".content">closest</a>
+            <span class="meta">§6 — layer này hoặc tổ tiên gần nhất có khớp</span>
+        </li>
+        <li>
+            <a href="/lab/layers" up-layer="ancestor" up-target=".content">ancestor</a>
+            <span class="meta">§6 — bất kỳ tổ tiên nào, không tính chính nó</span>
+        </li>
+        <li>
+            <a href="/lab/layers" up-layer="subtree" up-target=".content">subtree</a>
+            <span class="meta">§6 — chính nó và các layer con</span>
+        </li>
+        <li>
+            <a href="/shop" up-layer="root, front" up-target=".content">nhiều layer</a>
+            <span class="meta">§10 — danh sách; thử lần lượt tới khi khớp</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.layer.get(0).affix('p.meta').textContent = 'chạm vào layer bằng tham chiếu'">
+                layer reference
+            </button>
+            <span class="meta">§9 — <code>up.layer.get(0)</code> trả về đối tượng layer</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="alert('layer của phần tử này: ' + up.layer.get(document.querySelector('.overlay-title')).index)">
+                layer của một phần tử
+            </button>
+            <span class="meta">§7 — <code>up.layer.get(element)</code></span>
+        </li>
+    </ul>
+
+    <h4 class="overlay-title">Đóng layer</h4>
+    <ul class="layer-targets">
+        <li>
+            <button class="btn-quiet" type="button" onclick="up.layer.accept({ picked: 'js' })">accept từ JS</button>
+            <span class="meta">/closing-overlays §6 — <code>up.layer.accept(value)</code></span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button" onclick="up.layer.dismiss('js')">dismiss từ JS</button>
+            <span class="meta">/closing-overlays §6</span>
+        </li>
+        <li>
+            <a href="/shop" up-target=".content" up-layer="root">theo link (peel)</a>
+            <span class="meta">/closing-overlays §8 §10 — đi tới layer nền sẽ đóng lớp trên</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.layer.emit('lab:done', { detail: 1 })">phát sự kiện đóng</button>
+            <span class="meta">
+                /closing-overlays §4 — layer mở kèm <code>[up-accept-event=lab:done]</code>.
+                Phải là <code>up.layer.emit</code>: <code>up.emit</code> bắn vào
+                <code>document</code>, đúng khác biệt mà <code>{ layer: 'current' }</code>
+                của <code>X-Up-Events</code> nói tới
+            </span>
+        </li>
+    </ul>
+
+    @* Opening an overlay from a FORM, not a link. Same attribute, different element. *@
+    <form method="get" action="/lab/layers/@(Level + 1)" up-layer="new drawer" up-size="small"
+          class="refresh">
+        <button class="btn-quiet" type="submit">Mở drawer từ FORM (§3)</button>
+    </form>
+}
+
+@code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+
+    [Parameter] public int? Depth { get; set; }
+
+    int Level => Depth ?? 0;
+}

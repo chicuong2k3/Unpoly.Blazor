@@ -1,0 +1,91 @@
+@page "/lab/sub"
+@page "/lab/sub/pick"
+
+@* ── SUBINTERACTION PATTERNS ──────────────────────────────────────────────
+   The four acceptance callbacks /subinteractions names, side by side:
+   reload on acceptance, add an option to an existing select, navigate away,
+   and await the result from JavaScript.
+   📖 https://unpoly.com/subinteractions
+   ─────────────────────────────────────────────────────────────────────── *@
+
+<PageTitle>Subinteractions — JUBIN</PageTitle>
+
+@if (IsPicker)
+{
+    <h3 class="overlay-title">Chọn bộ sưu tập</h3>
+    <ul class="layer-targets">
+        @foreach (var (slug, name) in Catalog.Collections)
+        {
+            @* [up-accept] closes the layer with a value, no server round-trip at all.
+               SERIALIZED, not hand-built: the collection name contains an apostrophe, which
+               broke the single-quoted relaxed JSON and made the attribute silently invalid.
+               📖 https://unpoly.com/relaxed-json *@
+            <li>
+                <button class="btn-quiet" type="button"
+                        up-accept="@System.Text.Json.JsonSerializer.Serialize(new { slug, name })">@name</button>
+            </li>
+        }
+        <li><button class="btn-quiet" type="button" up-dismiss>Huỷ</button></li>
+    </ul>
+}
+else
+{
+    <div class="page-head">
+        <h2>Subinteractions</h2>
+        <p class="count">Bốn kiểu callback khi overlay được accept</p>
+    </div>
+
+    <ul class="layer-targets">
+        <li>
+            @* §4 Reloading on acceptance: the opener refetches instead of patching itself. *@
+            <a href="/lab/sub/pick" up-layer="new modal" up-size="small"
+               up-on-accepted="up.reload('.picked-list')">reload on acceptance</a>
+            <span class="meta">§4 — opener gọi <code>up.reload</code>, không tự vá DOM</span>
+        </li>
+        <li>
+            @* §5 Adding an option to an existing select, the classic "create it inline" flow. *@
+            <a href="/lab/sub/pick" up-layer="new modal" up-size="small"
+               up-on-accepted="addCollectionOption(value)">thêm option vào select</a>
+            <span class="meta">§5 — giá trị trả về thành <code>&lt;option&gt;</code> mới, và được chọn luôn</span>
+        </li>
+        <li>
+            @* §6 Navigating away once the sub-task is done. *@
+            <a href="/lab/sub/pick" up-layer="new modal" up-size="small"
+               up-on-accepted="up.navigate({ url: '/shop?collection=' + value.slug })">navigate away</a>
+            <span class="meta">§6 — accept xong thì đi tiếp, không quay lại opener</span>
+        </li>
+        <li>
+            @* §8 Awaiting the result as a promise. *@
+            <button class="btn-quiet" type="button"
+                    onclick="up.layer.ask({ url: '/lab/sub/pick', size: 'small' }).then(v => alert('await: ' + v.name), () => alert('bị huỷ'))">
+                await từ JavaScript
+            </button>
+            <span class="meta">§8 · /closing-overlays §13 — <code>up.layer.ask()</code> trả về Promise</span>
+        </li>
+    </ul>
+
+    <p class="meta">Bộ sưu tập đã chọn:</p>
+    <select class="collection-select" name="collection">
+        <option value="">— chưa chọn —</option>
+    </select>
+
+    @* Optimistic rendering lives here because .picked-list is here: the preview clones the
+       template into it at once, and the server response replaces the row.
+       📖 https://unpoly.com/optimistic-rendering *@
+    <p>
+        <a class="btn-quiet" href="/lab/slow?case=optimistic" up-target=".picked-list"
+           up-preview="lab-optimistic">Optimistic rendering</a>
+    </p>
+
+    <template id="optimistic-row"><li class="meta">dòng lạc quan — chờ server xác nhận</li></template>
+
+    <ul class="picked-list">
+        <li class="meta">@Catalog.Products.Count(p => p.OnSale) sản phẩm đang giảm giá</li>
+    </ul>
+}
+
+@code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+
+    bool IsPicker => Ctx.Request.Path.Value?.EndsWith("/pick") == true;
+}

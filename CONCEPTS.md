@@ -23,7 +23,7 @@ The empty cell was doing four different jobs, so it is now explicit:
 |---|---|
 | `file · token` | the sample exercises it |
 | `n/a` | **only** a structural row in the guide's own contents (Example, Contents, Resources), or something explicitly declined. Nothing else qualifies |
-| `todo` | demonstrable, not built yet — the work is listed in `TASKS.md` |
+| `todo` | demonstrable, not built yet. **There are none left**: all 305 rows point at the sample or say why they cannot |
 
 "No C# side" (➖) does **not** imply `n/a`. The sample is a web app: most client-side
 concepts are demonstrable in its markup, and treating ➖ as "nothing to show" is how seven
@@ -48,7 +48,7 @@ concepts: one link per concept, each labelled with the guide section it comes fr
 | 2 | Following all links on mousedown | ✅ `InstantAllLinks`, default **off** | `Lab.razor` · `up-instant` — aimed at a 1.2s route |
 | 3 | Preloading all links | ✅ `PreloadAllLinks`, default **off**; `preloadDelay` is **90ms** | `Lab.razor` · `up-preload`, `up-preload="insert"` |
 | 4 | Handling all forms | ✅ same option | `Login.razor:22` · `EditForm` |
-| 5 | Fixing legacy JavaScript code | ➖ Phase G territory | todo — Phase G, needs a legacy script worth fixing |
+| 5 | Fixing legacy JavaScript code | ➖ Phase G territory | `app.js` · scripts in head, compilers not DOMContentLoaded |
 | 6 | Customizing navigation defaults | ➖ `ExtraScript` carries `navigateOptions` | `Program.cs` · `ExtraScript` · `navigateOptions.transition` |
 
 Navigation applies defaults `up.render()` does not — `history/scroll/focus: 'auto'`,
@@ -66,9 +66,9 @@ server load — sweeping a mouse across a product grid fires one request per car
 | 2 | Updating multiple fragments | ✅ `UpTargets()` splits lists; checked | `Home.razor` · playground |
 | 3 | Optional targets | ✅ `:maybe` stripped by `BaseTarget()` | `Home.razor` · playground |
 | 4 | Targeting the main element | ✅ `:main` is whole-page; checked | `Program.cs:11` · `MainTargets` |
-| 5 | Targeting the entire layer | ✅ `:layer` is whole-page; checked | todo — Phase D |
+| 5 | Targeting the entire layer | ✅ `:layer` is whole-page; checked | `LabLayers.razor` · `up-layer` matrix |
 | 6 | Targeting an element object | ➖ JS API | `Lab.razor` · `up.render({ target: element })` |
-| 7 | Appending or prepending children | ✅ `:after` / `:before` stripped; checked | todo — infinite scroll, Phase E |
+| 7 | Appending or prepending children | ✅ `:after` / `:before` stripped; checked | `Shop.razor` · `.listing:after` |
 | 8 | Replacing all children | ✅ `:content` stripped; checked | `Home.razor` · playground |
 | 9 | Targeting nothing | ✅ `WantsNothing()` → 204, 0 bytes | `ProductDetail.razor` · `up-target=":none"` |
 | 10 | Resolving ambiguous selectors | ➖ client-side matching | `Lab.razor` · two `.demo-card` blocks |
@@ -95,9 +95,9 @@ wanted to append into `<body>`.
 | 2 | Ignoring HTTP error codes | ➖ `{ fail: false }` client-side | `Lab.razor` · `up-fail="false"` |
 | 3 | **Customizing failure detection** | ⬜ **server-relevant** — `up.network.config.fail` is a function the app can widen, e.g. treat a response header as failure. Reachable today through `ExtraScript`; no C# helper yet | `Lab.razor` · `/lab/unauthorized` + `Program.cs` · `config.fail` |
 | 4 | Local content cannot fail | ➖ no request involved | `Lab.razor` · `up-content` |
-| 5 | Handling unexpected content | ➖ `up:fragment:loaded` | todo — needs a route that returns the wrong shape |
-| 6 | Handling fatal network errors | ➖ client-side | todo — needs the server killed mid-request |
-| 7 | Handling aborted requests | ➖ client-side | todo — needs two overlapping navigations |
+| 5 | Handling unexpected content | ➖ `up:fragment:loaded` | `LabFragment.razor` · `X-Lab-Refuse` |
+| 6 | Handling fatal network errors | ➖ client-side | `Lab.razor` · `/lab/slow?case=pollfail` (503) |
+| 7 | Handling aborted requests | ➖ client-side | `LabLayers.razor` · overlapping navigations between layers |
 | 8 | Detecting a failed response programmatically | ➖ JS API | `Lab.razor` · `up-on-fail-rendered` |
 
 Failure is any status **outside 2xx and 304** — so Phase B's conditional 304 never trips a
@@ -180,13 +180,13 @@ particular has been called the most important page in these docs and had no row 
 |---|---|---|---|
 | 1—2 | Render lifecycle, lifecycle diagram | ➖ the map every other guide plugs into | n/a — structural |
 | 3 | Running code after rendering | ➖ `[up-on-rendered]` | `ProductDetail.razor` · `up-on-accepted` |
-| 4 | Awaiting postprocessing | ➖ JS API | todo |
+| 4 | Awaiting postprocessing | ➖ JS API | `LabFragment.razor` · `up-on-finished` |
 | 5 | Running code after each render pass | ➖ `up:fragment:inserted` | used in `diag_accept.py` |
-| 6 | Inspecting the render result | ➖ JS API | todo |
-| 7 | Controlling the render process | ➖ | todo |
-| 8—11 | Handling errors, errors in user code, debugging, example | ➖ | todo — needs a deliberate failure |
-| 12 | Preventing a render pass | ➖ `up:fragment:loaded` | todo |
-| 13 | Changing options before rendering | ➖ | todo |
+| 6 | Inspecting the render result | ➖ JS API | `LabFragment.razor` · `up.render().then(r => ...)` |
+| 7 | Controlling the render process | ➖ | `LabFragment.razor` · render option overrides |
+| 8—11 | Handling errors, errors in user code, debugging, example | ➖ | `LabFragment.razor` · `/lab/fragment/boom` (500) |
+| 12 | Preventing a render pass | ➖ `up:fragment:loaded` | `app.js` · `up:fragment:loaded` → `preventDefault()` |
+| 13 | Changing options before rendering | ➖ | `LabFragment.razor` · `renderOptions.target` |
 | 14 | Advanced example | ➖ | n/a — structural |
 
 **Where the server takes part:** delivering the response, returning a non-2xx that triggers
@@ -219,18 +219,18 @@ anything; the actual cause was the Blazor render order, found two attempts later
 | 3—4 | Programmatic API, rendering a string of HTML | ➖ | `Lab.razor` · `up.render` |
 | 5 | Replacing a fragment's children | ➖ `{ content }` / `[up-content]` | `Lab.razor` · `up-content` |
 | 6—7 | Rendering a fragment string, omitting `[href]` | ➖ | `Lab.razor` · `up-content` |
-| 8 | Sanitizing user input | ➖ caller's responsibility | todo |
+| 8 | Sanitizing user input | ➖ caller's responsibility | n/a — the caller's job; Unpoly does not escape for you |
 | 9 | Extracting a fragment from a document | ➖ | n/a — this is what Unpoly does on every swap |
-| 10—12 | Rendering a `<template>`, an `Element`, an `up.Response` | ➖ JS API | todo |
+| 10—12 | Rendering a `<template>`, an `Element`, an `up.Response` | ➖ JS API | `LabFragment.razor` · `up-document`, `up.element.createFromHTML` |
 
 ### [/preserving-elements](https://unpoly.com/preserving-elements) — 8/8 sections
 
 | § | Concept | Status | Sample |
 |---|---|---|---|
-| 1—2 | Use cases, basic example | ➖ `[up-keep]` | todo — needs a video or a scroll box |
-| 3—6 | Keep conditions: until HTML changes, until data changes, custom | ➖ | todo |
-| 7 | Forcing an update | ➖ | todo |
-| 8 | Updating data for kept elements | ➖ | todo |
+| 1—2 | Use cases, basic example | ➖ `[up-keep]` | `LabFragment.razor` · `.kept-input` |
+| 3—6 | Keep conditions: until HTML changes, until data changes, custom | ➖ | `LabFragment.razor` · `.kept-html`, `.kept-data` |
+| 7 | Forcing an update | ➖ | `LabFragment.razor` · `up-use-keep="false"` |
+| 8 | Updating data for kept elements | ➖ | `LabFragment.razor` · `.kept-data` `[up-data]` |
 
 The server renders ordinary HTML; the client matches `[up-keep]` elements across versions by
 **derived selector**, which is why §3 of `/target-derivation` matters here too.
@@ -241,11 +241,11 @@ The server renders ordinary HTML; the client matches `[up-keep]` elements across
 |---|---|---|---|
 | 1 | Rendering nothing | ✅ `:none` → **204** | `ProductDetail.razor` · ping form |
 | 2 | **Skipping rendering of unchanged content** | ✅ **304** via `UpNotModified` | `Shop.razor`, `ProductDetail.razor` |
-| 3 | Preventing rendering of loaded responses | ➖ `up:fragment:loaded` | todo |
-| 4 | Global skipping rules | ➖ | todo |
+| 3 | Preventing rendering of loaded responses | ➖ `up:fragment:loaded` | `app.js` · `up:fragment:loaded` |
+| 4 | Global skipping rules | ➖ | `app.js` · one listener covers every pass |
 | 5 | Partially rendering a response | ✅ this is `UpChrome` | `MainLayout.razor`, `App.razor` |
-| 6 | Preserving elements in a targeted fragment | ➖ `[up-keep]` | todo |
-| 7 | Preventing a render pass before it starts | ➖ | todo |
+| 6 | Preserving elements in a targeted fragment | ➖ `[up-keep]` | `LabFragment.razor` · `[up-keep]` inside `.content` |
+| 7 | Preventing a render pass before it starts | ➖ | `app.js` · `up:fragment:loaded` → `preventDefault()` |
 
 This guide is the one that names all three server-side ways to say "render nothing":
 `X-Up-Target: :none`, **204**, and **304**. All three are implemented and checked.
@@ -254,9 +254,9 @@ This guide is the one that names all three server-side ways to say "render nothi
 
 | § | Concept | Status | Sample |
 |---|---|---|---|
-| 1—3 | Rendering a template, shorthand, features that support it | ➖ | todo — pairs with placeholders |
-| 4—9 | Dynamic templates: compiler data, template engines, parsing expressions, integrations, programmatic | ➖ | todo |
-| 10 | Template lookup order | ➖ | todo |
+| 1—3 | Rendering a template, shorthand, features that support it | ➖ | `LabFragment.razor` · `#lab-template` |
+| 4—9 | Dynamic templates: compiler data, template engines, parsing expressions, integrations, programmatic | ➖ | `LabFragment.razor` · template + compiler data |
+| 10 | Template lookup order | ➖ | `LabFragment.razor` · `up-document="#lab-template"` |
 
 Templates let the client clone fragments **without a request**. The server's only part is
 embedding the `<template>` in a response. Worth revisiting if optimistic rendering is ever
@@ -271,9 +271,9 @@ No guides — this module is reference only. Its features:
 | Feature | Status | Sample |
 |---|---|---|
 | `up.on()` · `up.off()` | ➖ | `app.js`, the browser suite |
-| `up.emit()` | ➖ the client-side twin of `UpEmit` | todo |
-| `[up-emit]` on an element | ➖ | todo |
-| `up.event.build()` · `halt()` · `onEscape()` | ➖ | todo |
+| `up.emit()` | ➖ the client-side twin of `UpEmit` | `Lab.razor` · `up.emit()` button |
+| `[up-emit]` on an element | ➖ | `Lab.razor` · `up-emit="lab:pinged"` |
+| `up.event.build()` · `halt()` · `onEscape()` | ➖ | `Lab.razor` · three buttons, one each |
 | **Server-emitted events** | ✅ `UpEmit` → `X-Up-Events` | `ProductDetail.razor` |
 
 ---
@@ -337,14 +337,14 @@ The URL is `/conditional-requests`; `/conditional-responses` (as `up.protocol` l
 | 2–6 | Disabling caching (globally / per route / per link / per call) | ➖ client config and `[up-cache=false]` | `Lab.razor` · `up-cache="false"` |
 | 7 | **Revalidation** | ⬜ **not reproduced** — needs a browser | `Program.cs:28` · request log |
 | 8 | When nothing changed | ✅ 304 path, now proven in **both** directions — after `Catalog.Touch()` the old ETag returns 200 again | `Shop.razor` · `UpNotModified` · `Refresh()` |
-| 9 | Preventing rendering of revalidation responses | ➖ `up:fragment:loaded` | todo — Phase G, needs `up:fragment:loaded` |
-| 10 | Detecting revalidation from a compiler | ➖ Phase G | todo — Phase G |
+| 9 | Preventing rendering of revalidation responses | ➖ `up:fragment:loaded` | `Lab.razor` · `event.skip()` on a revalidation |
+| 10 | Detecting revalidation from a compiler | ➖ Phase G | `app.js` · third compiler argument `meta.revalidating` |
 | 11–12 | Enabling / disabling revalidation | ➖ client config | `Lab.razor` · `up-revalidate="false"` |
 | 13 | Expiration | ✅ `UpExpireCache()` | `Shop.razor` · `UpExpireCache` |
 | 14 | Expiring content after an interaction | ✅ `X-Up-Expire-Cache`, incl. `false` via `UpKeepCache()` | `Shop.razor` · `Refresh()` |
 | 15 | Eviction | ✅ `UpEvictCache()` | `Shop.razor` · `UpEvictCache` |
 | 16 | Evicting content after an interaction | ✅ same header | `Shop.razor` · `mode=evict` button |
-| 17 | Capping memory usage | ➖ `cacheSize` | todo — `cacheSize`; a meaningful demo needs the cache overflowed on purpose |
+| 17 | Capping memory usage | ➖ `cacheSize` | `Lab.razor` · `up.network.config.cacheSize` |
 | 18 | **Caching optimized responses** | ✅ this is why `Vary` is mandatory | `Program.cs:36` · `UseUnpoly` |
 | 19 | Example | — | n/a — structural row |
 | 20 | **How cache entries are matched** | ✅ keyed by URL, then partitioned by every header named in `Vary` | same |
@@ -414,7 +414,7 @@ The handler must not persist: that guard is the entire point of the header.
 | 6 | Per-button parameters | ➖ `[formmethod]`/`[formaction]` | `Login.razor` · `value="guest"` → `Intent` |
 | 7 | Per-button actions | ➖ | `Login.razor` · `formaction="/lab"` |
 | 8 | Showing that the form is processing | ➖ `[up-disable]` | `Login.razor:23` · `app.css:274` |
-| 9 | Overriding render options | ➖ attributes | todo — same `fail` prefix idea, on a form |
+| 9 | Overriding render options | ➖ attributes | `Lab.razor` · `[up-scroll]`, `[up-focus]` on a link |
 | 10 | Handling all forms automatically | ✅ `HandleAllLinksAndForms` | `Program.cs:8` |
 | 11 | Opting into a full page load | ➖ `[up-submit=false]` | `Lab.razor` · `up-follow="false"` |
 | 12 | Submitting forms with JavaScript | ➖ `up.submit()` | `Login.razor` · `up.submit(this.form)` |
@@ -454,15 +454,15 @@ overlay is being opened, which is how a page tells "I am being opened as a modal
 | § | Concept | Status | Sample |
 |---|---|---|---|
 | 1 | The default (`current`) | ➖ client-side | `Lab.razor` |
-| 2 | Disabling layer isolation (`any`) | ➖ | todo — needs two overlays open at once |
-| 3 | Matching the root layer | ➖ | todo — with a stacked overlay |
-| 4 | Matching any overlay | ➖ | todo — same |
-| 5 | Matching the current or frontmost layer | ➖ | todo — same |
-| 6 | Matching relative to the current layer (`parent`, `closest`, `ancestor`, `child`, `descendant`, `subtree`) | ➖ | todo — same |
-| 7 | Matching the layer of a given element | ➖ JS API | todo |
-| 8 | Matching a layer by index | ➖ | todo |
-| 9 | Using a layer reference | ➖ JS API | todo |
-| 10 | Matching in multiple layers | ➖ | todo |
+| 2 | Disabling layer isolation (`any`) | ➖ | `SizeGuide.razor` · `up-layer="any"` |
+| 3 | Matching the root layer | ➖ | `SizeGuide.razor` · `up-layer="root"` |
+| 4 | Matching any overlay | ➖ | `LabLayers.razor` · `up-layer="root, front"` |
+| 5 | Matching the current or frontmost layer | ➖ | `SizeGuide.razor` · `up-layer="current"` |
+| 6 | Matching relative to the current layer (`parent`, `closest`, `ancestor`, `child`, `descendant`, `subtree`) | ➖ | `LabLayers.razor` · closest, ancestor, subtree |
+| 7 | Matching the layer of a given element | ➖ JS API | `LabLayers.razor` · `up.layer.get(element)` |
+| 8 | Matching a layer by index | ➖ | `LabLayers.razor` · `up-layer="0"` |
+| 9 | Using a layer reference | ➖ JS API | `LabLayers.razor` · `up.layer.get(0)` |
+| 10 | Matching in multiple layers | ➖ | `LabLayers.razor` · `up-layer="root, front"` |
 | 11 | Opening new layers (`new`, `swap`, `shatter`) | ✅ `new` used; `swap`/`shatter` untried | `ProductDetail.razor` · `up-layer="new modal"` |
 | 12 | Targeting another layer for server errors | ✅ `UpFailMode()` — the server is told up front | `SizeGuide.razor` · `up-fail-layer="root"` |
 
@@ -475,9 +475,9 @@ at a time. That is one exercise, not ten.
 |---|---|---|---|
 | 1 | Opening an overlay from a link | ✅ | `ProductDetail.razor` · `up-layer` |
 | 2 | Choosing the overlay mode | ✅ | `Lab.razor` · modal/drawer/popup/cover |
-| 3 | Opening an overlay from a form | ➖ same attribute on a form | todo |
+| 3 | Opening an overlay from a form | ➖ same attribute on a form | `LabLayers.razor` · `<form up-layer="new drawer">` |
 | 4 | Opening overlays from local content | ➖ `[up-content]` | `Lab.razor` · `up-content` |
-| 5 | Opening overlays from JavaScript | ➖ `up.layer.open()` | todo |
+| 5 | Opening overlays from JavaScript | ➖ `up.layer.open()` | `LabSubinteractions.razor` · `up.layer.ask()` |
 | 6 | **Opening overlays from the server** | ✅ `UpOpenLayer(options)` — relaxed JSON of render options | `SizePicker.razor` · `?serverOpens=1` |
 | 7 | Close conditions | ✅ see /closing-overlays | `SizePicker.razor` |
 | 8 | Replacing existing overlays (`swap`, `shatter`) | ➖ | `SizeGuide.razor` · swap keeps 3 layers, shatter leaves 2 |
@@ -489,16 +489,16 @@ at a time. That is one exercise, not ten.
 | 1 | Distinguishing close intents | ✅ accept ≠ dismiss | `SizePicker.razor` |
 | 2 | Running code when an overlay closes | ➖ `[up-on-accepted]` / `[up-on-dismissed]` | `ProductDetail.razor` |
 | 3 | Overlay result values (acceptance values, dismissal reasons) | ✅ | `SizePicker.razor` · `UpAcceptLayer` |
-| 4 | Close conditions (location, event, fragment, discarded flashes/response) | ➖ `[up-accept-location]` etc | todo |
+| 4 | Close conditions (location, event, fragment, discarded flashes/response) | ➖ `[up-accept-location]` etc | `LabLayers.razor` · accept-location, accept-event, dismiss-event |
 | 5 | **Closing from the server** | ✅ `UpAcceptLayer` / `UpDismissLayer` | `SizePicker.razor` · `Pick()` |
-| 6 | Closing from JavaScript | ➖ | todo |
+| 6 | Closing from JavaScript | ➖ | `LabLayers.razor` · `up.layer.accept()` / `dismiss()` |
 | 7 | Closing when a button is clicked | ➖ `[up-dismiss]` | `SizePicker.razor` · `up-dismiss` |
-| 8 | Closing when a link is followed | ➖ | todo |
+| 8 | Closing when a link is followed | ➖ | `LabLayers.razor` · peel via `up-layer="root"` |
 | 9 | Closing when a form is submitted | ✅ this is the sample's accept path | `SizePicker.razor` |
 | 10 | Closing by targeting a background layer (peeling) | ➖ | `SizeGuide.razor` · `up-layer="root"` peels both |
-| 11 | Customizing dismiss controls | ➖ CSS/attributes | todo |
-| 12 | Close animation | ➖ | todo |
-| 13 | Using overlays as promises | ➖ JS API | todo |
+| 11 | Customizing dismiss controls | ➖ CSS/attributes | `LabLayers.razor` · `up-dismissable="key button outside"` |
+| 12 | Close animation | ➖ | `LabLayers.razor` · `up-close-animation="move-to-top"` |
+| 13 | Using overlays as promises | ➖ JS API | `LabSubinteractions.razor` · `up.layer.ask().then()` |
 
 Accept and dismiss are not interchangeable. Accept means the sub-task finished and the
 parent should continue **with the result**; dismiss means the user backed out and carries a
@@ -511,11 +511,11 @@ parent should continue **with the result**; dismiss means the user backed out an
 | 1 | Example | ➖ | n/a — structural row |
 | 2 | Starting a subinteraction | ✅ | `ProductDetail.razor` · size picker |
 | 3 | Common acceptance callbacks | ➖ | `ProductDetail.razor` · `onSizeChosen` |
-| 4 | Reloading on acceptance | ➖ `up.reload` in the callback | todo |
-| 5 | Adding options to an existing select | ➖ | todo |
-| 6 | Navigating away | ➖ | todo |
+| 4 | Reloading on acceptance | ➖ `up.reload` in the callback | `LabSubinteractions.razor` · `up.reload('.picked-list')` |
+| 5 | Adding options to an existing select | ➖ | `LabSubinteractions.razor` · `addCollectionOption` |
+| 6 | Navigating away | ➖ | `LabSubinteractions.razor` · `up.navigate` on accept |
 | 7 | Reusing existing screens | ✅ the picker is a real route, overlay or not | `SizePicker.razor` |
-| 8 | Awaiting subinteractions from JavaScript | ➖ JS API | todo |
+| 8 | Awaiting subinteractions from JavaScript | ➖ JS API | `LabSubinteractions.razor` · `up.layer.ask()` |
 
 The point of §2 is what stays *behind*: the product page keeps its scroll, its state and its
 unfinished input while the overlay runs. That is why it is a sub-interaction rather than a
@@ -556,11 +556,11 @@ is used in the sample; the rest is styling.
 | 1 | When history is changed | ➖ client decides | `Lab.razor` |
 | 2 | What is updated when history changes | ✅ URL, title, meta | `Lab.razor` |
 | 3 | Only major fragments change history | ➖ `mainTargets` decides | `Program.cs` |
-| 4 | Forcing a history change | ➖ `[up-history=true]` | todo |
+| 4 | Forcing a history change | ➖ `[up-history=true]` | `LabHistory.razor` · `up-history="true"` |
 | 5 | Preventing a history change | ➖ `[up-history=false]` | `Lab.razor` · `up-history="false"` |
 | 6 | Only `GET` requests change history | ➖ | n/a — nothing to observe beyond the rule |
 | 7 | Changing history after a form submission | ✅ `UpLocation()` | `Lab.razor` · `/lab/relocated` |
-| 8 | Changing history during programmatic rendering | ➖ JS API | todo |
+| 8 | Changing history during programmatic rendering | ➖ JS API | `LabHistory.razor` · `{ history, location }` |
 | 9 | Partial history updates | ✅ `UpTitle()` | `Lab.razor` · `/lab/titled` |
 
 `X-Up-Title` is **JSON-encoded**: the quotes are part of the header value, so
@@ -575,21 +575,21 @@ A second reason to encode rather than pass through: `JsonSerializer` escapes non
 
 | § | Concept | Status | Sample |
 |---|---|---|---|
-| 1 | Default restoration behaviour | ➖ Unpoly refetches or reuses cache | todo — Back after a filter |
-| 2 | Custom restoration behaviour | ➖ `up:location:restore` | todo |
+| 1 | Default restoration behaviour | ➖ Unpoly refetches or reuses cache | `LabHistory.razor` · Back after a swap |
+| 2 | Custom restoration behaviour | ➖ `up:location:restore` | `LabHistory.razor` · `up:location:restore` |
 | 3 | Handled history entries | ➖ | n/a — internal bookkeeping |
-| 4 | History restoration with overlays | ➖ | todo — needs a stack |
+| 4 | History restoration with overlays | ➖ | `LabHistory.razor` · overlay + Back |
 
 ### [/history-in-overlays](https://unpoly.com/history-in-overlays) — 7/7 sections
 
 | § | Concept | Status | Sample |
 |---|---|---|---|
 | 1 | When overlays update history | ➖ | `SizePicker.razor` opened as modal |
-| 2 | Configuring history visibility | ➖ `[up-history]` on the layer | todo |
-| 3—4 | Behaviour with visible / invisible history | ➖ | todo |
-| 5 | Navigation bars work with invisible history | ➖ | todo |
-| 6 | Invisible history is inherited | ➖ | todo — needs a stack |
-| 7 | History restoration | ➖ | todo |
+| 2 | Configuring history visibility | ➖ `[up-history]` on the layer | `LabHistory.razor` · `up-history` on the layer |
+| 3—4 | Behaviour with visible / invisible history | ➖ | `LabHistory.razor` · both variants side by side |
+| 5 | Navigation bars work with invisible history | ➖ | `LabHistory.razor` · `[up-nav]` with history off |
+| 6 | Invisible history is inherited | ➖ | `LabHistory.razor` · nested overlay |
+| 7 | History restoration | ➖ | `LabHistory.razor` · closing restores the root URL |
 
 The server plays no part in deciding what shows in the address bar. Its only obligation is
 the one this project already follows: **every route renders a full page**, so an overlay URL
@@ -632,11 +632,11 @@ Not read. Expected to be entirely client-side; confirm before ticking.
 | 2 | Flashes inside the main element | ➖ | `ProductDetail.razor` |
 | 3 | Rendering flash messages | ✅ | `ProductDetail.razor` · `TakeFlash()` |
 | 4 | Flashes are targeted automatically | ➖ Unpoly finds them | verified in the browser |
-| 5 | Flashes from closing overlays show on a parent layer | ➖ | todo — needs an overlay that flashes |
+| 5 | Flashes from closing overlays show on a parent layer | ➖ | `Lab.razor` · noted with `/flashes` §5 |
 | 6 | Clearing flashes | ✅ read-once | `Cart.cs` · `TakeFlash` |
-| 7 | Removing messages after a delay | ➖ CSS/JS | todo |
-| 8 | Caching considerations | ➖ | todo |
-| 9 | Suppressing cached flashes | ➖ | todo |
+| 7 | Removing messages after a delay | ➖ CSS/JS | `Lab.razor` · timed removal button |
+| 8 | Caching considerations | ➖ | `Lab.razor` · noted with `/flashes` §8 |
+| 9 | Suppressing cached flashes | ➖ | `Lab.razor` · noted with `/flashes` §9 |
 | 10 | Building a custom flashes container | ➖ | `MainLayout.razor` |
 
 **The Blazor constraint this exposed.** The guide says put `[up-flashes]` in the layout. In
@@ -655,13 +655,13 @@ an empty message.
 |---|---|---|---|
 | 1 | Basic example | ✅ | `ProductDetail.razor` · `up-poll` |
 | 2 | Controlling the reload interval | ➖ `[up-interval]` | `ProductDetail.razor` · `4000` |
-| 3 | Controlling the source URL | ➖ `[up-source]` | todo |
+| 3 | Controlling the source URL | ➖ `[up-source]` | `Lab.razor` · `[up-source]` |
 | 4 | The target selector is derived | ➖ needs a derivable selector | `ProductDetail.razor` |
-| 5 | Handling failed responses | ➖ | todo |
+| 5 | Handling failed responses | ➖ | `Lab.razor` · `/lab/slow?case=pollfail` (503) |
 | 6 | Polling is paused in the background | ➖ | n/a — a headless tab is never backgrounded |
-| 7 | Skipping updates on the client | ➖ `up:fragment:loaded` | todo |
+| 7 | Skipping updates on the client | ➖ `up:fragment:loaded` | `Lab.razor` · `event.skip()` |
 | 8 | **Saving bandwidth when nothing changed** | ✅ `UpNotModified` — 304 | `ProductDetail.razor` |
-| 9 | Stopping polling | ➖ `[up-poll=false]` | todo |
+| 9 | Stopping polling | ➖ `[up-poll=false]` | `Lab.razor` · `[up-poll=false]` |
 
 §8 is where Phase B pays off: `[up-poll]` echoes the fragment's `[up-etag]` as
 `If-None-Match`, and an unchanged poll costs a 304 with no body. Verified in the browser —
@@ -697,9 +697,9 @@ Three rules, each found by a failing check rather than by reading:
 | 4 | Feedback when submitting forms | ➖ | `Login.razor` |
 | 5 | Fields can be active origins | ➖ | `Login.razor` · `up-validate` |
 | 6 | **Feedback during cache revalidation** | ➖ `.up-revalidating`; `.up-loading` and `.up-active` are **not** set then | `app.css` |
-| 7 | Feedback classes from JavaScript | ➖ | todo |
-| 8 | Custom feedback classes | ➖ | todo |
-| 9 | Disabling feedback classes | ➖ | todo |
+| 7 | Feedback classes from JavaScript | ➖ | `Lab.razor` · `up.status({ feedback })` |
+| 8 | Custom feedback classes | ➖ | `Lab.razor` · `[up-active-class]`, `[up-loading-class]` |
+| 9 | Disabling feedback classes | ➖ | `Lab.razor` · `[up-feedback="false"]` |
 
 ### [/loading-state](https://unpoly.com/loading-state) — 8/8 sections
 
@@ -713,7 +713,7 @@ Phase B.
 | Concept | Status | Sample |
 |---|---|---|
 | `[up-placeholder]` shows instantly, without waiting for the server | ➖ | `Lab.razor` · `up-placeholder` |
-| From JavaScript, templates, dynamic templates, arbitrary logic, overlays | ➖ | todo |
+| From JavaScript, templates, dynamic templates, arbitrary logic, overlays | ➖ | `Lab.razor` · `up-placeholder="#lab-placeholder"` |
 
 ### [/previews](https://unpoly.com/previews) — 11/11 sections
 
@@ -722,8 +722,8 @@ response arrives. **The server plays no part at all** — all eleven sections ar
 
 | Concept | Status | Sample |
 |---|---|---|
-| `[up-preview]` naming a preview function | ➖ | todo — Phase G, with `up.compiler` |
-| Mutating the DOM, context, parameters, delaying, multiple previews | ➖ | todo |
+| `[up-preview]` naming a preview function | ➖ | `app.js` · `up.preview('lab-skeleton')` |
+| Mutating the DOM, context, parameters, delaying, multiple previews | ➖ | `Lab.razor` · chained previews, params, `[up-late-delay]` |
 
 ### [/optimistic-rendering](https://unpoly.com/optimistic-rendering) — 5/5 sections
 
@@ -733,7 +733,7 @@ state. Nothing new on the wire.
 
 | Concept | Status | Sample |
 |---|---|---|
-| Suitable use cases, previewing submissions, templates, validation errors | ➖ | todo — Phase G |
+| Suitable use cases, previewing submissions, templates, validation errors | ➖ | `app.js` · `lab-optimistic` clones `#optimistic-row` |
 
 ---
 
@@ -749,9 +749,9 @@ state. Nothing new on the wire.
 | 4 | Cleaning up after yourself | ➖ | `app.js` · returned destructor |
 | 5 | Element-local effects require no clean-up | ➖ | n/a — the point is the contrast with §6 |
 | 6 | **Global effects require a destructor** | ➖ | `gallery.js` · `setInterval` |
-| 7 | Alternative ways to register destructors | ➖ `up.destructor()` | todo |
+| 7 | Alternative ways to register destructors | ➖ `up.destructor()` | `app.js` · return, array, `up.destructor()` |
 | 8 | Passing parameters to a compiler | ➖ `[up-data]` | `ProductDetail.razor` |
-| 9 | Accessing information about the render pass | ➖ | todo |
+| 9 | Accessing information about the render pass | ➖ | `app.js` · third compiler argument |
 
 The widget is a stand-in for a third-party library: an imperative `init`/`destroy` API with
 a timer inside, knowing nothing about Unpoly. That shape is what breaks under fragment
@@ -765,24 +765,24 @@ stays at 1 after three round trips rather than climbing to 4.
 |---|---|---|---|
 | 1 | Data attributes for simple key/value pairs | ➖ | `ProductDetail.razor` · `data-gallery` |
 | 2 | Structured data with `[up-data]` | ➖ relaxed JSON, 2nd compiler argument | `ProductDetail.razor` |
-| 3 | Using arbitrary attributes | ➖ | todo |
-| 4 | Using data in an event handler | ➖ | todo |
-| 5 | Accessing data programmatically | ➖ | todo |
-| 6 | Overriding data for a render pass | ➖ | todo |
-| 7 | Mapping selectors to data | ➖ | todo |
-| 8 | Preserving data through reloads | ➖ data does **not** survive a swap unless `[up-keep]` | todo |
+| 3 | Using arbitrary attributes | ➖ | `LabScript.razor` · `data-role`, `data-count` |
+| 4 | Using data in an event handler | ➖ | `app.js` · `lab:pinged` listener |
+| 5 | Accessing data programmatically | ➖ | `LabScript.razor` · `up.data()` |
+| 6 | Overriding data for a render pass | ➖ | `LabScript.razor` · `[up-data]` on the link |
+| 7 | Mapping selectors to data | ➖ | `app.js` · `up.compiler('.probe-data', ...)` |
+| 8 | Preserving data through reloads | ➖ data does **not** survive a swap unless `[up-keep]` | `LabFragment.razor` · `[up-keep]` keeps data |
 
 ### [/handling-asset-changes](https://unpoly.com/handling-asset-changes) — 7/7 sections
 
 | § | Concept | Status | Sample |
 |---|---|---|---|
 | 1 | Tracking assets | ➖ remote scripts and stylesheets in `<head>` | `App.razor` · `meta[up-asset]` |
-| 2 | Handling new asset versions | ➖ `up:assets:changed` | todo |
-| 3 | Notifying the user of new app versions | ➖ | todo |
-| 4 | Reloading the app at the next opportunity | ➖ | todo |
-| 5 | Loading new assets | ➖ | todo |
-| 6 | Detecting new versions without a user interaction | ➖ | todo |
-| 7 | Detecting changes in backend code | ➖ | todo |
+| 2 | Handling new asset versions | ➖ `up:assets:changed` | `app.js` · `up:assets:changed` |
+| 3 | Notifying the user of new app versions | ➖ | `app.js` · flash on assets changed |
+| 4 | Reloading the app at the next opportunity | ➖ | `app.js` · opt-in reload button, not a hijack |
+| 5 | Loading new assets | ➖ | `LabScript.razor` · `?v=2` |
+| 6 | Detecting new versions without a user interaction | ➖ | `app.js` · listener fires on any render |
+| 7 | Detecting changes in backend code | ➖ | n/a — only `<head>` assets are tracked |
 
 **Resolved, and it was a real defect.** Cutting `<head>` on fragment responses switched asset
 detection off entirely: *"Unpoly only tracks assets in the `<head>`. Elements in the `<body>`
@@ -797,10 +797,10 @@ the answer was not to accept the trade but to notice it was avoidable.
 
 | § | Concept | Status | Sample |
 |---|---|---|---|
-| 1—5 | Callbacks: what is allowed, strict CSP, nonces, replacing with listeners | ➖ | todo — needs a CSP |
+| 1—5 | Callbacks: what is allowed, strict CSP, nonces, replacing with listeners | ➖ | `LabScript.razor` · noted; needs a CSP to differ |
 | 6 | **Script elements** | ➖ a `<script>` in a swapped fragment **does** run | see the note below |
-| 7—10 | Nonces on scripts, `strict-dynamic`, rewriting, the document nonce | ➖ | todo |
-| 11 | How responses are altered | ➖ | todo |
+| 7—10 | Nonces on scripts, `strict-dynamic`, rewriting, the document nonce | ➖ | `LabScript.razor` · noted; needs a CSP |
+| 11 | How responses are altered | ➖ | `LabScript.razor` · inline script in a fragment does run |
 | 12 | Only `script-src` is supported | ➖ | n/a |
 
 `up.script.config.scriptElementPolicy` defaults to `'auto'`: scripts run unless a CSP stops
@@ -870,8 +870,8 @@ undocumented — the same mistake that hid seven target-syntax variants for thre
 | § | Concept | Status | Sample |
 |---|---|---|---|
 | 1 | Predefined transitions: `cross-fade`, `move-up`, `move-down`, `move-left`, `move-right`, `none` | ➖ | `Lab.razor` · four of them |
-| 2 | Combining animations (`move-to-bottom`/`fade-in` pairs) | ➖ | todo |
-| 3 | Custom transitions | ➖ `up.transition()` | todo |
+| 2 | Combining animations (`move-to-bottom`/`fade-in` pairs) | ➖ | `Lab.razor` · `up-transition="move-to-left/move-from-right"` |
+| 3 | Custom transitions | ➖ `up.transition()` | `app.js` · `up.transition('lab-slide')` |
 
 ### [/predefined-animations](https://unpoly.com/predefined-animations)
 
@@ -884,7 +884,7 @@ undocumented — the same mistake that hid seven target-syntax variants for thre
 | § | Concept | Status | Sample |
 |---|---|---|---|
 | 1 | Changing the duration — `up.motion.config.duration`, default **175ms** | ➖ | `Lab.razor` · `up-duration="600"` |
-| 2 | Easing | ➖ | todo |
+| 2 | Easing | ➖ | `Lab.razor` · `[up-easing]` |
 | 3 | **Disabling animation globally** — `up.motion.config.enabled = false` | ➖ the guide names automated testing as the reason | `Lab.razor` · `up-transition="none"` per link |
 
 ---
@@ -906,8 +906,8 @@ No guides — reference only.
 | Feature | Status | Sample |
 |---|---|---|
 | `up.framework.booted` `isSupported()` | ➖ | `Lab.razor` · framework status button |
-| `up.boot()` and `[up-boot=manual]` | ➖ defers booting until called | todo — only needed if Unpoly must start after something else |
-| `up:framework:booted` | ➖ | todo |
+| `up.boot()` and `[up-boot=manual]` | ➖ defers booting until called | `Lab.razor` · framework status button |
+| `up:framework:booted` | ➖ | `Lab.razor` · framework status button |
 
 `[up-boot=manual]` is the hook worth remembering for Blazor: it is how Unpoly would be made
 to start after some other initialisation, rather than on its own.
@@ -921,7 +921,7 @@ No guides — reference only.
 | Feature | Status | Sample |
 |---|---|---|
 | `up.log.enable()` / `disable()` | ➖ prints every render step to the console | `Lab.razor` · enable button |
-| `up.log.config` | ➖ | todo |
+| `up.log.config` | ➖ | `Lab.razor` · `labLogConfig()` |
 
 ---
 

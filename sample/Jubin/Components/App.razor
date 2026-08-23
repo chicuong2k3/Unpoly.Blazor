@@ -51,7 +51,9 @@
 </html>
 
 @code {
-    // Bump this to simulate a deploy: Unpoly compares assets between renders and fires
-    // up:assets:changed when they differ.
-    [Parameter] public string AssetVersion { get; set; } = "1";
+    [CascadingParameter] public HttpContext? Ctx { get; set; }
+
+    // Read from the query per request. A static would leak the bumped version into every
+    // later page, so up:assets:changed fired on navigations that changed nothing.
+    string AssetVersion => Ctx?.Request.Query["v"].ToString() == "2" ? "2" : "1";
 }

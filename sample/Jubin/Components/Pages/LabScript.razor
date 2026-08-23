@@ -1,0 +1,112 @@
+@page "/lab/script"
+
+@* ── COMPILERS, DATA, ASSETS, CSP ─────────────────────────────────────────
+   Everything up.script covers that the gallery widget does not already show.
+   📖 https://unpoly.com/enhancing-elements · /data · /handling-asset-changes
+   ─────────────────────────────────────────────────────────────────────── *@
+
+<PageTitle>Script — JUBIN</PageTitle>
+
+<div class="page-head">
+    <h2>Compilers &amp; data</h2>
+    <p class="count">Mở Console trước khi bấm</p>
+</div>
+
+<section class="playground">
+    <h3>Destructors <span class="meta">/enhancing-elements §7</span></h3>
+    <ul>
+        <li>
+            <span class="probe-destructor" data-kind="return">trả về hàm</span>
+            <span class="meta">§4 — compiler <code>return</code> một hàm dọn dẹp</span>
+        </li>
+        <li>
+            <span class="probe-destructor" data-kind="array">trả về mảng hàm</span>
+            <span class="meta">§7 — trả về nhiều hàm cùng lúc</span>
+        </li>
+        <li>
+            <span class="probe-destructor" data-kind="register">up.destructor()</span>
+            <span class="meta">§7 — đăng ký rời, không cần return</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="document.querySelectorAll('.probe-destructor').forEach(e => up.destroy(e)); alert('đã huỷ: ' + JSON.stringify(window.__destroyed))">
+                Huỷ cả ba
+            </button>
+            <span class="meta">cả ba kiểu đều phải chạy khi phần tử bị destroy</span>
+        </li>
+    </ul>
+
+    <h3>Data <span class="meta">/data</span></h3>
+    <ul>
+        @* §1 plain data-* attributes; §3 arbitrary attributes read off the element. *@
+        <li>
+            <span class="probe-data" data-role="badge" data-count="7" up-data="{ tone: 'warm' }">phần tử</span>
+            <span class="meta">
+                §1 §2 §3 — <code>data-*</code>, <code>[up-data]</code> và attribute bất kỳ
+                đều tới compiler; xem Console
+            </span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="alert(JSON.stringify(up.data('.probe-data')))">up.data() (§5)</button>
+            <span class="meta">§5 — đọc data của một phần tử từ bên ngoài compiler</span>
+        </li>
+        <li>
+            <a href="/lab/script" up-target=".probe-data" up-data="{ tone: 'cool' }">ghi đè data (§6)</a>
+            <span class="meta">§6 — <code>[up-data]</code> trên LINK ghi đè data cho lần render này</span>
+        </li>
+        <li>
+            <a href="/lab/script" up-target=".probe-data">reload (§8)</a>
+            <span class="meta">
+                §8 — data <strong>không</strong> tự sống sót qua swap; muốn giữ thì
+                <code>[up-keep]</code> hoặc truyền lại
+            </span>
+        </li>
+    </ul>
+
+    <h3>Assets <span class="meta">/handling-asset-changes</span></h3>
+    <ul>
+        <li>
+            <a href="/lab/script?v=2" up-target=".content">Đổi phiên bản asset</a>
+            <span class="meta">
+                §2–§6 — response mang <code>meta[up-asset]</code> khác, Unpoly phát
+                <code>up:assets:changed</code>; listener trong <code>app.js</code> hiện thông báo
+            </span>
+        </li>
+        <li>
+            <span class="meta">
+                §7 — đổi code backend không tự phát hiện được: chỉ asset trong
+                <code>&lt;head&gt;</code> mới được theo dõi
+            </span>
+        </li>
+    </ul>
+
+    <h3>Script security <span class="meta">/script-security</span></h3>
+    <ul>
+        <li>
+            <a href="/lab/script" up-target=".probe-inline">Nạp fragment có &lt;script&gt;</a>
+            <span class="meta">
+                §6 — script trong fragment mới <strong>có</strong> chạy
+                (<code>scriptElementPolicy: 'auto'</code>)
+            </span>
+        </li>
+        <li>
+            <span class="probe-inline">
+                <span class="meta">chưa chạy</span>
+                <script>document.currentScript.previousElementSibling.textContent = 'script trong fragment đã chạy';</script>
+            </span>
+        </li>
+        <li>
+            <span class="meta">
+                §1–§5 §7–§11 — nonce và <code>strict-dynamic</code> chỉ có nghĩa khi bật CSP;
+                sample này cố ý không bật để phần còn lại quan sát được
+            </span>
+        </li>
+    </ul>
+</section>
+
+@code {
+    // The version lives in the query and is read by App.razor per request, so bumping it
+    // here cannot leak into any other page.
+    [SupplyParameterFromQuery] public int? V { get; set; }
+}

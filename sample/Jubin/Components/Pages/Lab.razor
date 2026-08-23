@@ -175,6 +175,20 @@ else
                 </span>
             </li>
             <li>
+                <button class="btn-quiet" type="button"
+                        onclick="up.on('up:fragment:loaded', { once: true }, e => { if (e.revalidating) { e.skip(); alert('bỏ qua bản revalidate') } }); up.reload('.content')">
+                    Chặn render bản revalidate
+                </button>
+                <span class="meta">/caching §9 — giữ nội dung cũ dù bản mới đã về</span>
+            </li>
+            <li>
+                <button class="btn-quiet" type="button"
+                        onclick="alert('cacheSize = ' + up.network.config.cacheSize + ' — đặt nhỏ rồi bấm nhiều link để thấy mục cũ bị đẩy ra')">
+                    Giới hạn bộ nhớ cache
+                </button>
+                <span class="meta">/caching §17 — <code>up.network.config.cacheSize</code></span>
+            </li>
+            <li>
                 <a href="/shop" up-target=".content" up-revalidate="false">Không revalidate</a>
                 <span class="meta">
                     /caching §11–§12 — render bản cache rồi <em>dừng</em>, không fetch lại.
@@ -218,11 +232,66 @@ else
             </span>
         </li>
         <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.status({ feedback: true, origin: document.querySelector('.btn-quiet') }, () => up.render({ target: '.content', url: '/shop' }))">
+                Feedback từ JavaScript
+            </button>
+            <span class="meta">/feedback-classes §7 — bật feedback cho một lần render cụ thể</span>
+        </li>
+        <li>
+            <a href="/lab/slow?case=custom" up-target=".content" up-active-class="is-working"
+               up-loading-class="is-swapping">Class feedback tuỳ chỉnh</a>
+            <span class="meta">/feedback-classes §8 — đổi tên class thay vì dùng mặc định</span>
+        </li>
+        <li>
+            <a href="/lab/slow?case=nofeedback" up-target=".content" up-feedback="false">Tắt feedback</a>
+            <span class="meta">/feedback-classes §9 — không gắn class nào</span>
+        </li>
+        <li>
             <a href="/lab/slow?case=revalidate" up-target=".content">Feedback classes</a>
             <span class="meta">
                 /feedback-classes — <code>.up-active</code> trên link, <code>.up-loading</code>
                 trên fragment. Lúc revalidate thì là <code>.up-revalidating</code>, và hai class
                 kia <strong>không</strong> được set
+            </span>
+        </li>
+        <li>
+            <a href="/shop" up-target=".content" up-poll up-interval="5000" up-source="/shop?page=1">
+                Poll từ URL khác
+            </a>
+            <span class="meta">/polling §3 — <code>[up-source]</code> tách nơi lấy dữ liệu khỏi URL hiện tại</span>
+        </li>
+        <li>
+            <a href="/lab/slow?case=pollfail" up-target=".content" up-poll up-interval="3000">
+                Poll gặp lỗi
+            </a>
+            <span class="meta">/polling §5 — response hỏng thì Unpoly dừng poll, không lặp vô hạn</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.on('up:fragment:loaded', { once: true }, e => { e.skip(); alert('bỏ qua một lượt cập nhật') })">
+                Bỏ qua một lượt poll
+            </button>
+            <span class="meta">/polling §7 — <code>event.skip()</code> giữ nội dung cũ</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="document.querySelectorAll('[up-poll]').forEach(e => e.setAttribute('up-poll', 'false')); alert('đã dừng poll')">
+                Dừng poll
+            </button>
+            <span class="meta">/polling §9 — <code>[up-poll=false]</code></span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="document.querySelectorAll('[up-flashes] .flash').forEach(f => setTimeout(() => f.remove(), 1500)); alert('flash sẽ tự biến mất sau 1.5s')">
+                Tự xoá flash sau một lúc
+            </button>
+            <span class="meta">/flashes §7 — Unpoly không tự xoá; app tự quyết định</span>
+        </li>
+        <li>
+            <span class="meta">
+                /flashes §5 §8 §9 — flash của overlay đang đóng được chuyển lên layer cha;
+                và flash trong response đã cache phải được bỏ đi để không hiện lại
             </span>
         </li>
         <li>
@@ -236,6 +305,13 @@ else
 
     <h3>History <span class="meta">/updating-history</span></h3>
     <ul>
+        <li>
+            <a href="/lab/history" up-target=".content">History đầy đủ</a>
+            <span class="meta">
+                /updating-history · /restoring-history · /history-in-overlays · /analytics —
+                ép và chặn đổi URL, tự xử lý khôi phục, overlay có và không có history
+            </span>
+        </li>
         <li>
             <a href="/lab/titled" up-target=".content">Server đặt tiêu đề</a>
             <span class="meta">
@@ -258,6 +334,20 @@ else
 
     <h3>Layers <span class="meta">/layer-option · /closing-overlays</span></h3>
     <ul>
+        <li>
+            <a href="/lab/layers" up-target=".content">Ma trận layer</a>
+            <span class="meta">
+                /layer-option — mọi giá trị <code>[up-layer]</code>: index, closest, ancestor,
+                subtree, danh sách, tham chiếu, layer của một phần tử. Mở chồng nhiều lớp
+            </span>
+        </li>
+        <li>
+            <a href="/lab/sub" up-target=".content">Subinteractions</a>
+            <span class="meta">
+                /subinteractions — reload khi accept, thêm option vào select, đi tiếp,
+                và <code>up.layer.ask()</code> trả Promise
+            </span>
+        </li>
         <li>
             <a href="/p/dam-4/size" up-layer="new modal" up-size="small"
                up-on-accepted="alert('accepted: ' + JSON.stringify(value))"
@@ -318,6 +408,25 @@ else
             <span class="meta">/motion-tuning — <code>up.motion.config.duration</code> mặc định 175ms</span>
         </li>
         <li>
+            <a href="/shop" up-target=".content" up-transition="move-to-left/move-from-right">
+                ghép hai animation
+            </a>
+            <span class="meta">
+                /predefined-transitions §2 — <code>cũ/mới</code>: phần tử cũ đi ra, phần tử mới đi vào
+            </span>
+        </li>
+        <li>
+            <a href="/shop" up-target=".content" up-transition="lab-slide" up-duration="500">
+                transition tự viết
+            </a>
+            <span class="meta">/predefined-transitions §3 — <code>up.transition()</code> trong app.js</span>
+        </li>
+        <li>
+            <a href="/shop" up-target=".content" up-transition="cross-fade"
+               up-duration="800" up-easing="ease-in-out">easing</a>
+            <span class="meta">/motion-tuning §2 — <code>[up-easing]</code>, mặc định <code>ease</code></span>
+        </li>
+        <li>
             <a href="/shop" up-target=".content" up-transition="none">none</a>
             <span class="meta">/motion-tuning — tắt cho riêng link này; toàn cục là <code>up.motion.config.enabled = false</code></span>
         </li>
@@ -363,6 +472,20 @@ else
     <h3>Compilers <span class="meta">/enhancing-elements · /data</span></h3>
     <ul>
         <li>
+            <a href="/lab/script" up-target=".content">Compilers, data, assets, CSP</a>
+            <span class="meta">
+                /enhancing-elements · /data · /handling-asset-changes · /script-security —
+                ba kiểu destructor, mọi dạng data, phát hiện phiên bản asset mới
+            </span>
+        </li>
+        <li>
+            <a href="/lab/fragment" up-target=".content">Render lifecycle, keep, templates</a>
+            <span class="meta">
+                /render-lifecycle · /preserving-elements · /templates — chặn render,
+                giữ phần tử qua swap, clone từ <code>&lt;template&gt;</code>
+            </span>
+        </li>
+        <li>
             <a href="/p/dam-4" up-target=".content">Trang sản phẩm (có widget)</a>
             <span class="meta">
                 Widget bên thứ ba với API init/destroy và một <code>setInterval</code> bên trong.
@@ -375,6 +498,95 @@ else
             <span class="meta">
                 /enhancing-elements — destructor chạy khi fragment bị thay, dừng timer.
                 Đây là thứ <code>DOMContentLoaded</code> không bao giờ làm được
+            </span>
+        </li>
+    </ul>
+
+    <h3>Previews &amp; optimistic rendering <span class="meta">/previews · /optimistic-rendering</span></h3>
+    <ul>
+        <li>
+            <a href="/lab/slow?case=preview" up-target=".content" up-preview="lab-skeleton">Preview</a>
+            <span class="meta">
+                /previews §1 §2 §5 — đổi DOM <strong>trước</strong> khi server trả lời,
+                Unpoly tự hoàn tác. Ưu tiên thay đổi kiểu thêm vào
+            </span>
+        </li>
+        <li>
+            <a href="/lab/slow?case=preview2" up-target=".content"
+               up-preview="lab-skeleton, lab-dim { amount: 0.2 }">Nhiều preview + tham số</a>
+            <span class="meta">/previews §6 §11 — nối nhiều preview, mỗi cái nhận tham số riêng</span>
+        </li>
+        <li>
+            <a href="/lab/slow?case=preview3" up-target=".content"
+               up-preview="lab-skeleton" up-late-delay="400">Preview có độ trễ</a>
+            <span class="meta">/previews §10 — hoãn preview để request nhanh không nhấp nháy</span>
+        </li>
+        <li>
+            <a href="/lab/slow?case=ph" up-target=".content"
+               up-placeholder="#lab-placeholder">Placeholder từ template</a>
+            <span class="meta">/placeholders §4 §5 — nội dung tạm lấy từ một <code>&lt;template&gt;</code></span>
+        </li>
+    </ul>
+
+    <template id="lab-placeholder"><p class="meta">đang tải từ template…</p></template>
+
+    <h3>Events <span class="meta">up.event</span></h3>
+    <ul>
+        <li>
+            <button class="btn-quiet" type="button" up-emit="lab:pinged" up-emit-props="{ from: 'button' }">
+                [up-emit]
+            </button>
+            <span class="meta">
+                up.event — phát sự kiện ngay từ HTML. Đây là bản client của
+                <code>UpEmit</code> phía server
+            </span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.emit('lab:pinged', { from: 'js' })">up.emit()</button>
+            <span class="meta">up.event — <code>up.on</code> trong app.js đang lắng nghe</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="alert('build + emit: ' + labBuildEvent())">up.event.build()</button>
+            <span class="meta">up.event — tạo event rồi mới phát, tách hai bước</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.emit('lab:halt-me'); alert('halt: ' + !!window.__halted)">up.event.halt()</button>
+            <span class="meta">up.event — chặn event lại, không cho lan tiếp</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="alert('booted: ' + up.framework.booted + ' · sự kiện đã bắt: ' + !!window.__booted)">
+                up:framework:booted
+            </button>
+            <span class="meta">up.framework — sự kiện bắn một lần sau khi Unpoly khởi động</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button" onclick="alert('up.log.config = ' + labLogConfig())">
+                up.log.config
+            </button>
+            <span class="meta">up.log — bật log và xem cấu hình hiện tại</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.event.onEscape(() => alert('Escape')); alert('bấm Escape đi')">
+                onEscape()
+            </button>
+            <span class="meta">up.event — tiện ích cho phím Escape</span>
+        </li>
+    </ul>
+
+    <h3>Forms <span class="meta">/submitting-forms</span></h3>
+    <ul>
+        <li>
+            <a href="/login" up-target=".content" up-scroll="top" up-focus="target">
+                Ghi đè render option
+            </a>
+            <span class="meta">
+                /submitting-forms §9 — <code>[up-scroll]</code>, <code>[up-focus]</code> và các
+                option render khác đặt được ngay trên phần tử
             </span>
         </li>
     </ul>
@@ -413,6 +625,13 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        // pollfail exists to show that a failed poll stops rather than looping.
+        if (Case == "slow" && Which == "pollfail")
+        {
+            Ctx.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            return;
+        }
+
         if (Case == "slow")
         {
             // Long enough to exceed up.network.config.lateDelay so the bar appears.

@@ -12,14 +12,14 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 | Phase | **all 7 complete** |
 | Protocol coverage | **24 / 24** — complete |
 | Build | 4 projects, 0 errors |
-| Checks | 58 tests under one `dotnet test` |
+| Checks | 77 tests under one `dotnet test` |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
 
 ```bash
 dotnet build                                       # expect 0 errors
-dotnet test                                       # 58 tests: 9 header + 49 browser
+dotnet test                                       # 77 tests: 9 header + 68 browser
 dotnet run --project sample/Jubin                  # then the curl proof below
 ```
 

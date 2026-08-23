@@ -1,0 +1,122 @@
+@page "/lab/history"
+@page "/lab/history/deep"
+
+@* ── HISTORY, INCLUDING INSIDE OVERLAYS ───────────────────────────────────
+   📖 https://unpoly.com/updating-history · /restoring-history · /history-in-overlays
+   ─────────────────────────────────────────────────────────────────────── *@
+
+<PageTitle>History — JUBIN</PageTitle>
+
+@if (Ctx.IsUpOverlay())
+{
+    <h3 class="overlay-title">Trong overlay</h3>
+    <p class="meta">
+        Overlay này mở với <code>[up-history]</code> do link quyết định. Nhìn thanh địa chỉ:
+        có hiện <code>/lab/history/deep</code> hay không.
+    </p>
+}
+else
+{
+    <div class="page-head">
+        <h2>History</h2>
+        <p class="count">Nhìn thanh địa chỉ khi bấm</p>
+    </div>
+}
+
+<section class="playground">
+    <h3>Updating <span class="meta">/updating-history</span></h3>
+    <ul>
+        <li>
+            <a href="/shop" up-target=".result-box" up-history="true">Ép đổi history</a>
+            <span class="meta">
+                §4 — vùng đích không phải main nên mặc định <strong>không</strong> đổi URL;
+                <code>[up-history=true]</code> ép đổi
+            </span>
+        </li>
+        <li>
+            <a href="/shop" up-target=".content" up-history="false">Chặn đổi history</a>
+            <span class="meta">§5 — swap main mà URL đứng yên</span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.render({ target: '.result-box', url: '/shop', history: true, location: '/shop?from=js' })">
+                Đổi history khi render bằng JS
+            </button>
+            <span class="meta">§8 — <code>{ history, location }</code> trong lời gọi</span>
+        </li>
+    </ul>
+
+    <h3>Restoring <span class="meta">/restoring-history</span></h3>
+    <ul>
+        <li>
+            <a href="/shop" up-target=".content">Đi tới /shop rồi bấm Back</a>
+            <span class="meta">
+                §1 — Unpoly render lại <code>restoreTargets</code> (mặc định <code>["body"]</code>)
+                từ cache hoặc từ mạng
+            </span>
+        </li>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.on('up:location:restore', { once: true }, e => { e.preventDefault(); alert('tự xử lý khôi phục: ' + e.location) }); history.back()">
+                Tự xử lý khôi phục
+            </button>
+            <span class="meta">
+                §2 — chặn <code>up:location:restore</code> rồi tự quyết định; server không tham gia
+            </span>
+        </li>
+        <li>
+            <a href="/shop" up-target=".content" up-scroll="restore">Khôi phục vị trí cuộn</a>
+            <span class="meta">
+                /scrolling §15 — <strong>phải khai báo</strong>; mặc định Unpoly không khôi phục cuộn
+            </span>
+        </li>
+    </ul>
+
+    <h3>History in overlays <span class="meta">/history-in-overlays</span></h3>
+    <ul>
+        <li>
+            <a href="/lab/history/deep" up-layer="new modal" up-history="true">Overlay có history</a>
+            <span class="meta">§2 §3 — URL và title của overlay hiện ra thanh địa chỉ</span>
+        </li>
+        <li>
+            <a href="/lab/history/deep" up-layer="new modal" up-history="false">Overlay không history</a>
+            <span class="meta">
+                §2 §4 — overlay vẫn theo dõi vị trí của nó, nhưng thanh địa chỉ giữ URL layer gốc
+            </span>
+        </li>
+        <li>
+            <a href="/lab/history/deep" up-layer="new drawer" up-history="false"
+               up-on-accepted="alert('đóng rồi — URL gốc được trả lại')">
+                Đóng để trả URL về
+            </a>
+            <span class="meta">
+                §7 — đóng overlay thì URL, title và meta của layer gốc được khôi phục
+            </span>
+        </li>
+        <li>
+            <span class="meta">
+                §5 §6 — <code>[up-nav]</code> vẫn tô đúng khi history ẩn, và trạng thái ẩn
+                được kế thừa xuống các overlay con
+            </span>
+        </li>
+    </ul>
+
+    <h3>Analytics <span class="meta">/analytics</span></h3>
+    <ul>
+        <li>
+            <button class="btn-quiet" type="button"
+                    onclick="up.on('up:location:changed', e => { window.__views = (window.__views ?? 0) + 1; console.log('pageview', e.location) }); alert('đang theo dõi — bấm vài link rồi xem Console')">
+                Theo dõi pageview
+            </button>
+            <span class="meta">
+                §1–§3 — <code>up:location:changed</code> là điểm móc; server không tham gia
+            </span>
+        </li>
+    </ul>
+
+    <div class="result-box kept-box"><span class="meta">vùng đích phụ</span></div>
+</section>
+
+@code {
+    [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
+}

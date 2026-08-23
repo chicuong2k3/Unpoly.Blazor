@@ -451,3 +451,26 @@ form[aria-busy="true"] { opacity: .5; }
 .layer-targets li { padding: .45rem 0; border-bottom: 1px dotted var(--line); }
 .layer-targets a, .layer-targets button { display: inline-block; min-width: 6rem; }
 .strength { margin-top: -.75rem; }
+
+.collection-select {
+    display: block;
+    margin: .5rem 0 1.5rem;
+    padding: .5rem .6rem;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-family: var(--text);
+}
+.picked-list { list-style: none; padding: 0; }
+h4.overlay-title { margin-top: 2rem; font-size: 1.05rem; }
+
+.probe-destructor, .probe-data, .probe-inline { display: inline-block; min-width: 8rem; }
+.assets-changed { background: var(--sale); }
+.kept-box { border: 1px solid var(--line); padding: .75rem 1rem; margin: .5rem 0; }
+
+/* Custom feedback class names, for the [up-active-class] demo. */
+.is-working { opacity: .45; }
+.content.is-swapping { opacity: .6; }
+
+.lab-skeleton { opacity: .6; }
+.is-previewing { outline: 1px dashed var(--line); }
+.is-optimistic { opacity: .55; font-style: italic; }
