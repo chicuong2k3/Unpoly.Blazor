@@ -1,0 +1,26 @@
+/* Plain CSS on purpose: `dotnet run` stays the whole workflow.
+   Create with --tailwind if you want Tailwind v4 and an npm build step instead. */
+:root { color-scheme: light dark; --ink: #16161a; --muted: #6b6b76; --line: #e4e4e9; }
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font: 400 16px/1.6 system-ui, sans-serif;
+    color: var(--ink);
+}
+
+.site-header, .content, .site-footer { max-width: 48rem; margin-inline: auto; padding: 1.5rem; }
+
+.site-header { display: flex; gap: 1.5rem; align-items: baseline; border-bottom: 1px solid var(--line); }
+.brand { font-weight: 500; text-decoration: none; color: inherit; }
+.site-nav { display: flex; gap: 1rem; }
+.site-nav a { color: var(--muted); text-decoration: none; }
+
+/* Unpoly sets these for you. 📖 https://unpoly.com/navigation-bars */
+.site-nav a.up-current { color: var(--ink); text-decoration: underline; }
+.up-active { opacity: .6; }
+.up-loading { opacity: .4; }
+
+.site-footer { color: var(--muted); font-size: .875rem; border-top: 1px solid var(--line); }
+.flashes:empty { display: none; }

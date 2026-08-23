@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json.schemastore.org/dotnetcli.host",
+  "symbolInfo": {
+    "tailwind": { "longName": "tailwind", "shortName": "tw" },
+    "unpolyVersion": { "longName": "unpoly-version", "shortName": "" },
+    "skipRestore": { "longName": "no-restore", "shortName": "" }
+  }
+}

@@ -78,6 +78,8 @@ src/Unpoly.Blazor      RCL. UpRequest.cs (read X-Up-*), UpResponse.cs (write X-U
                        config script), UpChrome.razor (skip chrome on fragment requests).
                        wwwroot/unpoly.min.{js,css} → served as _content/Unpoly.Blazor/...
 sample/Jubin           Blazor Web App, interactivity=None. The lab.
+templates/             `dotnet new unpoly-blazor` starter (content-only NuGet package).
+                       Optional --tailwind adds package.json + an MSBuild npm step.
 tests/                 Console app. `dotnet run` → OK or throw.
 ```
 

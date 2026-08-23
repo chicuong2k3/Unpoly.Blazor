@@ -2,6 +2,9 @@
   <Folder Name="/sample/">
     <Project Path="sample/Jubin/Jubin.csproj" />
   </Folder>
+  <Folder Name="/templates/">
+    <Project Path="templates/Unpoly.Blazor.Templates/Unpoly.Blazor.Templates.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Unpoly.Blazor/Unpoly.Blazor.csproj" />
   </Folder>

@@ -59,11 +59,24 @@ public class FragmentTests(UnpolyFixture fx)
         await using var p = await Probe.Create(fx);
         await p.Goto("/p/dam-4");
 
+        // Watch the SERVER log, not the response. The page renders regardless of
+        // WantsNothing(), so without the middleware dropping the body Kestrel throws
+        // "Writing to the response body is invalid for responses with status code 204" --
+        // and the client still gets a clean, empty, correctly-statused 204, because a 204 has
+        // no body to truncate and the connection ending is what it does anyway. Verified by
+        // hand with curl: status=204 size=0, exit 0, while the server was logging the
+        // exception. Nothing observable from the browser distinguishes the two.
+        var mark = fx.LogMark;
+
         // By attribute: the product page grew a second form, and form[method=post] silently
         // started matching the wrong one.
         await p.Click("form[up-target=':none'] button[type=submit]");
 
         Assert.Contains(204, p.StatusesFor("/p/dam-4"));
         Assert.True(await p.Exists(".detail"));
+
+        await p.Page.WaitForTimeoutAsync(600);
+        Assert.DoesNotContain("nhandled exception", fx.ServerLogSince(mark));
     }
+
 }

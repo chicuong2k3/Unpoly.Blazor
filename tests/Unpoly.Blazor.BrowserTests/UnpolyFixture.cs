@@ -16,6 +16,7 @@ public sealed class UnpolyFixture : IAsyncLifetime
 {
     private Process? app;
     private IPlaywright? playwright;
+    private readonly System.Text.StringBuilder log = new();
 
     /// <summary>
     /// A free port chosen at startup. A fixed port fails on any machine where something else
@@ -44,13 +45,12 @@ public sealed class UnpolyFixture : IAsyncLifetime
         // Drain both pipes. Redirecting without reading fills the OS buffer and blocks the
         // child: the sample logs a line per request, so it froze a few dozen requests in and
         // every later navigation timed out.
-        var log = new System.Text.StringBuilder();
-        app.OutputDataReceived += (_, e) => { if (e.Data is not null) log.AppendLine(e.Data); };
-        app.ErrorDataReceived += (_, e) => { if (e.Data is not null) log.AppendLine(e.Data); };
+        app.OutputDataReceived += (_, e) => Capture(e.Data);
+        app.ErrorDataReceived += (_, e) => Capture(e.Data);
         app.BeginOutputReadLine();
         app.BeginErrorReadLine();
 
-        await WaitForApp(log);
+        await WaitForApp();
 
         try
         {
@@ -71,6 +71,27 @@ public sealed class UnpolyFixture : IAsyncLifetime
         }
     }
 
+    private void Capture(string? line)
+    {
+        if (line is null) return;
+        lock (log) log.AppendLine(line);
+    }
+
+    /// <summary>
+    /// Position in the server log, for <see cref="ServerLogSince"/>.
+    ///
+    /// Some failures are invisible from the browser. A page that renders into a 204 or a 304
+    /// makes Kestrel throw, but the client still receives a clean, empty, correctly-statused
+    /// response -- the connection simply ends, which is what it does anyway. Measured from
+    /// the outside the bug does not exist; the server log is the only witness.
+    /// </summary>
+    public int LogMark { get { lock (log) return log.Length; } }
+
+    public string ServerLogSince(int mark)
+    {
+        lock (log) return mark <= log.Length ? log.ToString()[mark..] : log.ToString();
+    }
+
     private static int FreePort()
     {
         using var listener = new TcpListener(System.Net.IPAddress.Loopback, 0);
@@ -80,7 +101,7 @@ public sealed class UnpolyFixture : IAsyncLifetime
         return port;
     }
 
-    private async Task WaitForApp(System.Text.StringBuilder log)
+    private async Task WaitForApp()
     {
         for (var i = 0; i < 90; i++)
         {

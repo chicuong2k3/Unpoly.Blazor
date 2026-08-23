@@ -1,0 +1,20 @@
+/* Input for the Tailwind CLI. Built to wwwroot/app.css on every `dotnet build`. */
+@import "tailwindcss";
+
+/* The layout uses semantic class names so the markup is identical with or without Tailwind. */
+@layer components {
+    .site-header { @apply mx-auto flex max-w-3xl items-baseline gap-6 border-b border-neutral-200 p-6; }
+    .brand       { @apply font-medium no-underline; }
+    .site-nav    { @apply flex gap-4; }
+    .site-nav a  { @apply text-neutral-500 no-underline; }
+
+    /* Unpoly sets these for you. 📖 https://unpoly.com/navigation-bars */
+    .site-nav a.up-current { @apply text-neutral-900 underline; }
+    .up-active   { @apply opacity-60; }
+    .up-loading  { @apply opacity-40; }
+
+    .content     { @apply mx-auto max-w-3xl p-6; }
+    .site-footer { @apply mx-auto max-w-3xl border-t border-neutral-200 p-6 text-sm text-neutral-500; }
+}
+
+.flashes:empty { display: none; }

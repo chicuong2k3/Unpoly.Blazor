@@ -1,0 +1,28 @@
+@inherits LayoutComponentBase
+
+@* Chrome is not rendered at all on a fragment request. `Provides` lists the selectors inside
+   it that a link may still target — without it such a swap silently does nothing.
+   📖 https://unpoly.com/optimizing-responses *@
+<UpChrome Provides=".site-nav">
+    <header class="site-header">
+        <a class="brand" href="/">UnpolyBlazorApp</a>
+
+        @* [up-nav] keeps .up-current in sync with the URL. 📖 https://unpoly.com/navigation-bars *@
+        <nav class="site-nav" up-nav>
+            <a href="/">Home</a>
+            <a href="/about">About</a>
+        </nav>
+    </header>
+</UpChrome>
+
+@* The target itself is never wrapped. *@
+<main class="content">
+    @Body
+</main>
+
+@* 📖 https://unpoly.com/flashes *@
+<div class="flashes" up-flashes></div>
+
+<UpChrome>
+    <footer class="site-footer">Chrome above and below disappears from fragment responses.</footer>
+</UpChrome>

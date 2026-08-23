@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Unpoly.Blazor.Templates</PackageId>
+    <PackageType>Template</PackageType>
+    <!-- Overridden from the git tag at release time, like the library. -->
+    <Version>0.1.0</Version>
+    <Authors>chicuong2k3</Authors>
+    <Description>`dotnet new unpoly-blazor`: a Blazor static SSR app wired for Unpoly 3, optionally with Tailwind CSS.</Description>
+    <PackageTags>dotnet-new;templates;unpoly;blazor;ssr</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/chicuong2k3/Unpoly.Blazor</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/chicuong2k3/Unpoly.Blazor</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <TargetFramework>net10.0</TargetFramework>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <!-- Content-only package: no lib/ folder, and nothing here is compiled. -->
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="content\**\*" Exclude="content\**\bin\**;content\**\obj\**;content\**\node_modules\**" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    @* On a fragment request Unpoly is already running in the page, so the assets are pure
+       waste. <HeadOutlet /> stays outside so <PageTitle> keeps working. *@
+    <UpChrome>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <base href="/" />
+        <link rel="stylesheet" href="@Assets["app.css"]" />
+
+        @* Application scripts belong in <head defer>. In <body> they re-execute on every
+           swap of that region. 📖 https://unpoly.com/legacy-scripts *@
+        <script src="@Assets["js/app.js"]" defer></script>
+
+        <UnpolyHead />
+    </UpChrome>
+
+    <HeadOutlet />
+</head>
+
+<body>
+    <Routes />
+
+    @* blazor.web.js is omitted on purpose. With interactivity=None it only adds enhanced
+       navigation and enhanced forms — exactly Unpoly's job. Both present means they fight
+       over clicks and submits. *@
+</body>
+
+</html>

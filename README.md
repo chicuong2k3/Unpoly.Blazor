@@ -12,6 +12,7 @@ No Blazor internals are touched. No extra dependencies.
 ```
 src/Unpoly.Blazor      the library (Razor Class Library)
 sample/Jubin           e-commerce sample, static SSR — the lab
+templates/             `dotnet new unpoly-blazor` — starter app, optional Tailwind
 tests/                 9 header tests + 68 browser tests (Playwright), one dotnet test
 ```
 
@@ -47,6 +48,18 @@ builder.Services.AddUnpoly(o => o.MainTargets = [".content"]);
     [CascadingParameter] public HttpContext Ctx { get; set; } = default!;
 }
 ```
+
+## Start a new app
+
+```bash
+dotnet new install Unpoly.Blazor.Templates
+dotnet new unpoly-blazor -o My.App              # plain CSS
+dotnet new unpoly-blazor -o My.App --tailwind   # Tailwind CSS v4 via npm
+```
+
+NuGet packages restore on creation. With `--tailwind`, `dotnet build` runs `npm install`
+on the first build and regenerates `wwwroot/app.css` from `Styles/app.css` on every build,
+so `dotnet run` stays the whole workflow. Source: [`templates/`](templates/).
 
 ## For AI agents using this library
 

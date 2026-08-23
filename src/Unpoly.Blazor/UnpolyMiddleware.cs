@@ -32,7 +32,7 @@ public static class UnpolyMiddleware
             });
 
             var body = ctx.Response.Body;
-            ctx.Response.Body = new BodylessWhenNotModified(ctx.Response, body);
+            ctx.Response.Body = new BodylessStatusStream(ctx.Response, body);
             try
             {
                 await next();
@@ -45,24 +45,27 @@ public static class UnpolyMiddleware
 }
 
 /// <summary>
-/// Discards writes once the status is 304.
+/// Discards writes once the status is one HTTP forbids a body on: 1xx, 204 and 304.
 ///
-/// <see cref="UpResponse.UpNotModified"/> sets the status and its documentation says the
-/// caller must then render nothing — but in Blazor static SSR a component cannot decline to
-/// render after the fact. OnParametersSet runs, the page renders, and unless every single
-/// route wraps its entire markup in a guard, Kestrel throws
-/// "Writing to the response body is invalid for responses with status code 304". That
-/// surfaces as an unhandled exception after the response has started, so the developer
-/// exception page cannot even run — it looks nothing like a caching problem.
+/// Two methods here set such a status and then expect the caller to render nothing:
+/// <see cref="UpResponse.UpNotModified"/> (304) and answering a <c>:none</c> target with 204
+/// after <see cref="UpRequest.WantsNothing"/>. In Blazor static SSR a component cannot
+/// decline to render after the fact — OnParametersSet has already run and the page renders
+/// anyway unless every such route wraps its entire markup in a guard. Miss one and Kestrel
+/// throws "Writing to the response body is invalid for responses with status code 204/304",
+/// raised after the response has started, so the developer exception page cannot run either:
+/// it surfaces as a dead connection rather than an honest 500.
 ///
-/// A 304 carries no body by definition (RFC 9110 §15.4.5), so dropping the bytes is what the
-/// protocol already requires, and doing it once here covers every route instead of trusting
-/// each page to remember. Guarding the markup as well is still worth it where the render is
-/// expensive — it saves the work, not just the bytes.
+/// These statuses carry no body by definition (RFC 9110 §15.4.5, §15.3.5, §15.2), so dropping
+/// the bytes is what the protocol already requires, and doing it once here covers every route
+/// instead of trusting each page to remember. Guarding the markup is still worth it where the
+/// render is expensive — it saves the work, not just the bytes.
 /// </summary>
-internal sealed class BodylessWhenNotModified(HttpResponse response, Stream inner) : Stream
+internal sealed class BodylessStatusStream(HttpResponse response, Stream inner) : Stream
 {
-    private bool Drop => response.StatusCode == StatusCodes.Status304NotModified;
+    // The first version checked only 304, which is how the 204 path stayed broken: the
+    // rule is about statuses that carry no body, not about caching.
+    private bool Drop => response.StatusCode is 204 or 304 or (>= 100 and < 200);
 
     public override void Write(byte[] buffer, int offset, int count)
     {

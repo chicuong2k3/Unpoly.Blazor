@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Unpoly owns navigation, so NavigateTo() must not throw on a static SSR page. -->
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Unpoly.Blazor" Version="UNPOLY_VERSION" />
+  </ItemGroup>
+<!--#if (tailwind) -->
+  <!-- Tailwind v4 through its npm CLI. `dotnet build` is still the only command you run:
+       the first build installs the npm packages, every build regenerates wwwroot/app.css
+       before Blazor collects static assets. -->
+  <Target Name="NpmInstall" BeforeTargets="Tailwind" Condition="!Exists('node_modules')">
+    <Exec Command="npm install" />
+  </Target>
+
+  <!-- ponytail: rebuilds the CSS on every build (~100ms). Add Inputs/Outputs if that ever shows. -->
+  <Target Name="Tailwind" BeforeTargets="ResolveStaticWebAssetsInputs">
+    <Exec Command="npm run css" />
+  </Target>
+<!--#endif -->
+
+</Project>

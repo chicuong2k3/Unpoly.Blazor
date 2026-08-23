@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "chicuong2k3",
+  "classifications": [ "Web", "Blazor", "Unpoly", "SSR" ],
+  "identity": "Unpoly.Blazor.App.CSharp",
+  "groupIdentity": "Unpoly.Blazor.App",
+  "name": "Blazor static SSR app with Unpoly",
+  "description": "A Blazor Web App (interactivity=None) wired for Unpoly 3: UpChrome, UnpolyHead, no blazor.web.js. Optionally with Tailwind CSS v4.",
+  "shortName": "unpoly-blazor",
+  "tags": { "language": "C#", "type": "project" },
+  "sourceName": "UnpolyBlazorApp",
+  "preferNameDirectory": true,
+  "symbols": {
+    "tailwind": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Use Tailwind CSS v4 (adds package.json; npm install and the CSS build run on first `dotnet build`)."
+    },
+    "unpolyVersion": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "0.1.*",
+      "replaces": "UNPOLY_VERSION",
+      "description": "Version of the Unpoly.Blazor package to reference."
+    },
+    "skipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Skip the automatic `dotnet restore` after creation."
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!tailwind)",
+          "exclude": [ "package.json", "Styles/**" ]
+        },
+        {
+          "condition": "(tailwind)",
+          "exclude": [ "wwwroot/app.css" ]
+        }
+      ]
+    }
+  ],
+  "postActions": [
+    {
+      "id": "restore",
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages",
+      "manualInstructions": [ { "text": "Run 'dotnet restore'" } ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}
