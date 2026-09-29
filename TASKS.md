@@ -12,14 +12,14 @@ Read `AGENTS.md` first for the rules, then start at **Next action** below.
 | Phase | **all 7 complete** |
 | Protocol coverage | **24 / 24** — complete |
 | Build | 4 projects, 0 errors |
-| Checks | 77 tests under one `dotnet test` |
+| Checks | 89 tests under one `dotnet test` |
 | Unpoly version vendored | 3.x (`src/Unpoly.Blazor/wwwroot/unpoly.min.js`) |
 
 ## Verify current state
 
 ```bash
 dotnet build                                       # expect 0 errors
-dotnet test                                       # 77 tests: 9 header + 68 browser
+dotnet test                                       # 89 tests: 17 unit + 72 browser
 dotnet run --project sample/Jubin                  # then the curl proof below
 ```
 
@@ -37,7 +37,7 @@ If the build fails with a file lock, a previous `dotnet run` is still alive: `ta
 
 ## Next action
 
-**Everything is closed.** 24/24 protocol headers, 97 unit checks, 68 browser checks, and no
+**Everything is closed.** 24/24 protocol headers, 97 unit checks, 72 browser checks, and no
 open item left in `VERIFY.md` that was ever in reach.
 
 The overlay stack is built, so `/layer-option` and `/history-in-overlays` have something to
@@ -209,10 +209,13 @@ Spec: <https://unpoly.com/up.protocol>
 
 ## Exercise gaps
 
-- `UpLayout` / `UpEnterLayout` (layout boundaries, added from the Recall app) — unit-checked in
-  `LayoutBoundaryTests`, exercised by Recall's auth and onboarding layouts, but the Jubin sample
-  has one layout, so no browser check here yet. A second sample layout (a checkout without the
-  shop nav) is the natural place for one.
+- ~~`UpLayout` / `UpEnterLayout` (layout boundaries, added from the Recall app)~~ — resolved.
+  Jubin now has a second layout, `CheckoutLayout.razor` (`/checkout`, no shop header, nav or
+  footer, main `.checkout-main`), and both layouts wrap themselves in `<UpLayout Main>`.
+  Browser-checked in `LayoutBoundaryTests.cs`: `/shop` → `/checkout` asks for `.content` and is
+  answered `X-Up-Target: body` (shop chrome gone, no reload); the link back asks for
+  `.checkout-main` and gets `body` too (chrome restored); a link inside the shop still gets a
+  chrome-less `.content` fragment with no retarget. Removing both wrappers fails the first two.
 
 One method is covered by a unit test but has never run in the sample:
 

@@ -13,14 +13,14 @@ No Blazor internals are touched. No extra dependencies.
 src/Unpoly.Blazor      the library (Razor Class Library)
 sample/Jubin           e-commerce sample, static SSR — the lab
 templates/             `dotnet new unpoly-blazor` — starter app, optional Tailwind
-tests/                 9 header tests + 68 browser tests (Playwright), one dotnet test
+tests/                 17 unit tests + 72 browser tests (Playwright), one dotnet test
 ```
 
 ## Run
 
 ```bash
 dotnet build
-dotnet test                                      # 77 tests: 9 header + 68 browser
+dotnet test                                      # 89 tests: 17 unit + 72 browser
 dotnet run --project sample/Jubin
 ```
 
@@ -81,7 +81,7 @@ an agent will confidently suggest `UpAcceptLayer` and hand you a `NotImplemented
 
 ## Status
 
-**All 7 phases complete · 24/24 protocol headers · every documented concept demonstrated · 77 tests.**
+**All 7 phases complete · 24/24 protocol headers · every documented concept demonstrated · 89 tests.**
 Nothing in the library throws any more.
 
 - [`TASKS.md`](TASKS.md) — the phase-by-phase plan and what to do next

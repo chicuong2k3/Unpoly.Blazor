@@ -1,0 +1,29 @@
+@page "/checkout"
+@layout CheckoutLayout
+
+@* The only page on CheckoutLayout. It exists to cross a layout boundary in both directions:
+   the link here comes from /shop (asks for .content), the link back goes from here (asks for
+   .checkout-main). Both are answered X-Up-Target: body by the destination layout's UpLayout.
+   📖 https://unpoly.com/main *@
+
+<PageTitle>Thanh toán — JUBIN</PageTitle>
+
+<div class="page-head">
+    <h2>Thanh toán</h2>
+    <p class="count">Giỏ hàng có @Cart.Count sản phẩm</p>
+</div>
+
+<div class="checkout-box">
+    @if (Cart.Count == 0)
+    {
+        <p class="empty">Giỏ hàng đang trống. Hãy chọn vài món trước khi thanh toán.</p>
+    }
+    else
+    {
+        <p>Đơn hàng sẽ được giao trong 2–4 ngày làm việc. Thanh toán khi nhận hàng.</p>
+    }
+
+    @* A plain link: no [up-target]. On this page the first main target present is
+       .checkout-main, so that is what the request asks for. *@
+    <a href="/shop" class="back back-to-shop">← Quay lại cửa hàng</a>
+</div>

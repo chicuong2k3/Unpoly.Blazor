@@ -20,7 +20,7 @@ done on code review — every item below is a command to run or a thing to watch
 (Playwright for .NET), and run in the same command as everything else:
 
 ```bash
-dotnet test          # 77 tests
+dotnet test          # 89 tests
 HEADED=1 dotnet test # watch the browser do it
 ```
 
@@ -64,6 +64,10 @@ curl -s -H "X-Up-Version: 3.10.2" -H "X-Up-Target: .content" $U | grep -c 'class
 
 - [x] Clicking a category swaps the grid with no white flash and no full reload
 - [x] The clicked category gets `.up-current` styling; the nav itself never re-renders
+- [x] Crossing into a second Blazor layout (`/shop` → `/checkout`) is answered
+      `X-Up-Target: body` by `<UpLayout>`: shop chrome gone, `.checkout-main` present, URL
+      updated, no reload. The way back restores the chrome; a link inside the shop still
+      swaps only `.content` (`LayoutBoundaryTests.cs`)
 - [x] Screenshots are a `page.ScreenshotAsync` call away in any browser test. The visual
       judgement is the user's;
       the tooling no longer blocks it
@@ -318,9 +322,9 @@ curl -s -o /dev/null -w "%{http_code}
 ## Cross-cutting, re-check at every phase
 
 - [x] `dotnet build` — 0 errors, 0 warnings
-- [x] `dotnet test` — 77 tests, all green
+- [x] `dotnet test` — 89 tests, all green
 - [x] `SKILL.md` carries no "not available yet" list any more — nothing throws
-- [x] **No route stopped working with JavaScript disabled** — 6/6 routes render over plain
+- [x] **No route stopped working with JavaScript disabled** — 7/7 routes render over plain
       HTTP. Measured with `urllib`, not the browser: `setScriptExecutionDisabled` also stops
       `Runtime.evaluate`, so the page cannot report on itself. A raw HTTP client *is* a
       browser with JavaScript off

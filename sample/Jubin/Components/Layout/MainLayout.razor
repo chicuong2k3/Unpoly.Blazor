@@ -1,5 +1,16 @@
 @inherits LayoutComponentBase
 
+@* ── LAYOUT BOUNDARY ─────────────────────────────────────────────────────
+   This app has two layouts: this one (main = .content) and CheckoutLayout
+   (main = .checkout-main). A link on /checkout asks for .checkout-main, which
+   this layout does not have; UpLayout answers that request with
+   X-Up-Target: body, and because it wraps everything, the UpChrome below then
+   renders in full. A link inside the shop asks for .content and is left alone.
+   It must WRAP the layout: it has to run before the first UpChrome decides.
+   📖 https://unpoly.com/main · https://unpoly.com/X-Up-Target
+   ───────────────────────────────────────────────────────────────────────*@
+<UpLayout Main=".content">
+
 @* ── CHROME ──────────────────────────────────────────────────────────────
    Wrapped in <UpChrome>, so when Unpoly requests a fragment (.content) the
    header and footer are not rendered at all. Their child components are never
@@ -73,3 +84,4 @@
         This chrome disappears from fragment responses. That is the point of the exercise.
     </footer>
 </UpChrome>
+</UpLayout>

@@ -7,8 +7,11 @@ builder.Services.AddRazorComponents();
 
 builder.Services.AddUnpoly(o =>
 {
-    // Links and forms without an explicit [up-target] swap this region.
-    o.MainTargets = [".content"];
+    // Links and forms without an explicit [up-target] swap this region. One main per
+    // layout: .checkout-main is CheckoutLayout's, so a link ON /checkout finds a main too.
+    // Each layout's <UpLayout Main> widens a request for the OTHER one to body.
+    // 📖 https://unpoly.com/main
+    o.MainTargets = [".content", ".checkout-main"];
 
     o.ExtraScript = """
         // Customizing navigation defaults. Navigation applies a bundle of options that
