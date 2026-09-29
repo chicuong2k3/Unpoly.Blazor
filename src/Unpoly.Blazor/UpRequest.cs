@@ -45,6 +45,11 @@ public static class UpRequest
     {
         if (!c.IsUnpoly()) return false;
 
+        // The server may already have overridden the target (UpRetarget). A retarget to the whole
+        // page means everything after this point must render as a full page — including chrome
+        // that the client's own target would have let us skip.
+        if (UpResponse.RetargetedTo(c) is { } retarget && IsWholePage(retarget)) return false;
+
         var targets = c.UpTargets();
         if (targets.Length == 0) return false;
 
@@ -55,11 +60,15 @@ public static class UpRequest
         // Rendering chrome that turns out unnecessary costs bytes; omitting it breaks a page.
         // 📖 https://unpoly.com/failed-responses
         foreach (var t in targets.Concat(c.UpFailTargets()))
-            if (BaseTarget(t) is "body" or "html" or ":main" or ":layer")
+            if (IsWholePage(t))
                 return false;
 
         return true;
     }
+
+    /// <summary>True for a target that means "the whole page": body, html, :main or :layer.</summary>
+    internal static bool IsWholePage(string target) =>
+        BaseTarget(target) is "body" or "html" or ":main" or ":layer";
 
     /// <summary>
     /// True when either branch asks for one of <paramref name="selectors"/>.
@@ -104,7 +113,7 @@ public static class UpRequest
     /// Strips trailing modifiers so ".tasks:after" compares as ".tasks" and "body:after"
     /// still compares as "body". Loops because more than one may be appended.
     /// </summary>
-    private static string BaseTarget(string target)
+    internal static string BaseTarget(string target)
     {
         bool stripped;
         do

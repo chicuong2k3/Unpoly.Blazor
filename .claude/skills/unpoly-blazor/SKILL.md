@@ -393,6 +393,34 @@ that, not the byte count, is where the saving comes from.
 that targets `.cart-badge` gets a response the chrome was stripped from, the selector is
 absent, and the swap silently does nothing.
 
+### `<UpLayout Main>` — more than one Blazor layout
+
+```razor
+@* AuthLayout.razor — every layout that is NOT the default one wraps itself in UpLayout *@
+<UpLayout Main=".auth-main">
+    <main class="auth-main">@Body</main>
+</UpLayout>
+
+@* MainLayout.razor — and the default one does too, so the way back works *@
+<UpLayout Main=".app-main"> ... <main class="app-main">@Body</main> ... </UpLayout>
+```
+
+```csharp
+builder.Services.AddUnpoly(o => o.MainTargets = [".app-main", ".auth-main"]);   // every layout's main
+```
+
+Unpoly swaps the main element of the page the link is **on**. A link from a page with a sidebar
+to a sign-in page asks for `.app-main`, and without a boundary the sign-in form is poured into
+the app's frame (or the swap finds nothing). `UpLayout` sees that the client asked for a
+*different* layout's main, answers with `X-Up-Target: body`, and — because `IsUpFragment()`
+honours a retarget to the whole page — every `UpChrome` rendered after it renders in full.
+Overlays are left alone: a modal extracts the main element of whatever it opens.
+
+`Ctx.UpEnterLayout(main, mainTargets)` is the same check without the component.
+
+`UpRetarget("body")` in general now makes `IsUpFragment()` false for the rest of the render,
+so chrome is never missing from a response the server itself widened to the whole page.
+
 ### `<UnpolyHead />` — assets, config, CSRF
 
 Once, inside `<head>`, inside `<UpChrome>`.
@@ -548,7 +576,11 @@ client-only by design.
     first apostrophe in the data. Serialize it:
     `up-accept="@JsonSerializer.Serialize(new { slug, name })"`.
 
-15. **`up.emit()` fired but the overlay did not close.** Close conditions listen on the
+15. **A page on a second layout (sign-in, onboarding) renders inside the first layout's frame,
+    or the link does nothing.** The link asked for the other layout's main. Wrap each layout in
+    `<UpLayout Main="…">` and list every main in `MainTargets`.
+
+16. **`up.emit()` fired but the overlay did not close.** Close conditions listen on the
     *layer*; `up.emit()` lands on `document`. Use `up.layer.emit()`.
 
 ## CSRF

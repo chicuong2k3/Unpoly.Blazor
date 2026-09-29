@@ -209,6 +209,11 @@ Spec: <https://unpoly.com/up.protocol>
 
 ## Exercise gaps
 
+- `UpLayout` / `UpEnterLayout` (layout boundaries, added from the Recall app) — unit-checked in
+  `LayoutBoundaryTests`, exercised by Recall's auth and onboarding layouts, but the Jubin sample
+  has one layout, so no browser check here yet. A second sample layout (a checkout without the
+  shop nav) is the natural place for one.
+
 One method is covered by a unit test but has never run in the sample:
 
 - `UpKeepCache()` — needs a POST that changes nothing the user can see, such as recording

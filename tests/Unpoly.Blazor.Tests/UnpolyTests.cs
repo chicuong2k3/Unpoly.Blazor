@@ -393,3 +393,61 @@ public class EventTests
     }
 
 }
+
+public class LayoutBoundaryTests
+{
+    static readonly string[] Mains = [".app-main", ".auth-main"];
+
+    [Fact]
+    public void RetargetToBodyEndsFragmentRendering()
+    {
+        var c = Req.Ctx(".app-main");
+        Assert.True(c.IsUpFragment(), "precondition: .app-main is a fragment request");
+
+        c.UpRetarget("body");
+
+        Assert.False(c.IsUpFragment(), "after UpRetarget(body) the response is a whole page, so chrome must render");
+        Assert.Equal("body", c.Response.Headers["X-Up-Target"].ToString());
+    }
+
+    [Fact]
+    public void RetargetToAnotherFragmentKeepsFragmentRendering()
+    {
+        var c = Req.Ctx(".cart-badge");
+        c.UpRetarget(".flash");
+        Assert.True(c.IsUpFragment(), "a retarget to another fragment is still a fragment response");
+    }
+
+    [Theory]
+    [InlineData(".app-main", ".auth-main", true)]   // link in the app, page on the auth layout
+    [InlineData(".auth-main", ".auth-main", false)] // same layout: swap as asked
+    [InlineData(".flash", ".auth-main", false)]     // not a main target: not a layout question
+    [InlineData("body", ".auth-main", false)]       // already a whole page
+    public void EnterLayoutRetargetsOnlyAcrossLayouts(string asked, string main, bool retargets)
+    {
+        var c = Req.Ctx(asked);
+
+        var result = c.UpEnterLayout(main, Mains);
+
+        Assert.Equal(retargets, result);
+        Assert.Equal(retargets ? "body" : "", c.Response.Headers["X-Up-Target"].ToString());
+    }
+
+    [Fact]
+    public void EnterLayoutLeavesOverlaysAlone()
+    {
+        var c = Req.Ctx(".app-main");
+        c.Request.Headers["X-Up-Mode"] = "modal";
+
+        Assert.False(c.UpEnterLayout(".auth-main", Mains), "a modal renders any layout's main; nothing to retarget");
+    }
+
+    [Fact]
+    public void EnterLayoutConsidersTheFailTarget()
+    {
+        var c = Req.Ctx(".flash");
+        c.Request.Headers["X-Up-Fail-Target"] = ".app-main";
+
+        Assert.True(c.UpEnterLayout(".auth-main", Mains), "a failed response would land in the other layout's main");
+    }
+}

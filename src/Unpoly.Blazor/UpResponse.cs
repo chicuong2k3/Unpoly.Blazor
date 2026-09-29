@@ -27,7 +27,38 @@ public static class UpResponse
     /// Pass ":none" to make the client swap nothing.
     /// </summary>
     public static void UpRetarget(this HttpContext c, string cssSelector)
-        => c.Response.Headers["X-Up-Target"] = cssSelector;
+    {
+        c.Response.Headers["X-Up-Target"] = cssSelector;
+        c.Items[RetargetKey] = cssSelector;
+    }
+
+    const string RetargetKey = "Unpoly.Blazor.Retarget";
+
+    /// <summary>The selector <see cref="UpRetarget"/> set on this response, if any.</summary>
+    internal static string? RetargetedTo(HttpContext c) => c.Items[RetargetKey] as string;
+
+    /// <summary>
+    /// Layout boundary: called by a layout (through <see cref="UpLayout"/>) with the selector of
+    /// its own main element and every main selector the app has. When the client asked for a
+    /// DIFFERENT layout's main — a link on a page with a sidebar leading to a sign-in page
+    /// without one — swapping that selector would pour this layout's content into the other
+    /// layout's frame. The response is retargeted to <c>body</c> instead, and returns true.
+    ///
+    /// Overlays are left alone: a modal extracts the main element of whatever it opens, so a
+    /// page on any layout renders correctly inside one.
+    /// 📖 https://unpoly.com/X-Up-Target · https://unpoly.com/main
+    /// </summary>
+    public static bool UpEnterLayout(this HttpContext c, string main, IEnumerable<string> mainTargets)
+    {
+        if (!c.IsUpFragment() || c.IsUpOverlay()) return false;
+
+        var mains = mainTargets.ToHashSet(StringComparer.Ordinal);
+        var asked = c.UpTargets().Concat(c.UpFailTargets()).Select(UpRequest.BaseTarget).ToList();
+        if (asked.Contains(main, StringComparer.Ordinal) || !asked.Any(mains.Contains)) return false;
+
+        c.UpRetarget("body");
+        return true;
+    }
 
     // ─────────────────────────────────────────────────────────────
     // PHASE B · Cache                          📖 /caching
