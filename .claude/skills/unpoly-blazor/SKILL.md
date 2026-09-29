@@ -393,6 +393,34 @@ that, not the byte count, is where the saving comes from.
 that targets `.cart-badge` gets a response the chrome was stripped from, the selector is
 absent, and the swap silently does nothing.
 
+### `<UpLayout Main>` — more than one Blazor layout
+
+```razor
+@* AuthLayout.razor — every layout that is NOT the default one wraps itself in UpLayout *@
+<UpLayout Main=".auth-main">
+    <main class="auth-main">@Body</main>
+</UpLayout>
+
+@* MainLayout.razor — and the default one does too, so the way back works *@
+<UpLayout Main=".app-main"> ... <main class="app-main">@Body</main> ... </UpLayout>
+```
+
+```csharp
+builder.Services.AddUnpoly(o => o.MainTargets = [".app-main", ".auth-main"]);   // every layout's main
+```
+
+Unpoly swaps the main element of the page the link is **on**. A link from a page with a sidebar
+to a sign-in page asks for `.app-main`, and without a boundary the sign-in form is poured into
+the app's frame (or the swap finds nothing). `UpLayout` sees that the client asked for a
+*different* layout's main, answers with `X-Up-Target: body`, and — because `IsUpFragment()`
+honours a retarget to the whole page — every `UpChrome` rendered after it renders in full.
+Overlays are left alone: a modal extracts the main element of whatever it opens.
+
+`Ctx.UpEnterLayout(main, mainTargets)` is the same check without the component.
+
+`UpRetarget("body")` in general now makes `IsUpFragment()` false for the rest of the render,
+so chrome is never missing from a response the server itself widened to the whole page.
+
 ### `<UnpolyHead />` — assets, config, CSRF
 
 Once, inside `<head>`, inside `<UpChrome>`.
@@ -548,8 +576,37 @@ client-only by design.
     first apostrophe in the data. Serialize it:
     `up-accept="@JsonSerializer.Serialize(new { slug, name })"`.
 
-15. **`up.emit()` fired but the overlay did not close.** Close conditions listen on the
+15. **A page on a second layout (sign-in, onboarding) renders inside the first layout's frame,
+    or the link does nothing.** The link asked for the other layout's main. Wrap each layout in
+    `<UpLayout Main="…">` and list every main in `MainTargets`.
+
+16. **`up.emit()` fired but the overlay did not close.** Close conditions listen on the
     *layer*; `up.emit()` lands on `document`. Use `up.layer.emit()`.
+
+17. **A form POST answers `400 Cannot submit the form 'x' because no form on the page currently
+    has that name`, or a successful POST answers 400 with a `Location` header.** Blazor dispatches a
+    POST to the `@formname` it finds in the render that follows the request. Two ways to lose it:
+    the page handled the POST in `OnInitializedAsync` and then rendered a result *instead of* the
+    form ("12 cards imported"), or it called `NavigationManager.NavigateTo` there, which aborts
+    that render. Keep the form in the output (an empty hidden `<form @formname="x">` will do), and
+    do the redirect in the form's `@onsubmit` callback — it runs after the render — rather than in
+    `OnInitializedAsync`.
+
+18. **Text typed into an editor vanishes a moment after the overlay opens.** Unpoly served the
+    editor from its cache, then revalidated and swapped the fresh copy in under the cursor. Keep
+    editors out of the cache once, centrally:
+
+    ```csharp
+    o.ExtraScript = """
+        const cacheByDefault = up.network.config.autoCache;
+        up.network.config.autoCache = (request) =>
+            cacheByDefault(request) && !/\/(new|edit)(?:[?#]|$)/.test(request.url);
+        """;
+    ```
+
+19. **⌘/Ctrl+Enter submits a form without the intent of the button it was meant to press.**
+    `form.requestSubmit(button)` does not tell Unpoly which button submitted; `button.click()`
+    does. Map a shortcut to `.click()` on the button.
 
 ## CSRF
 

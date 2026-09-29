@@ -31,7 +31,8 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <!-- No Microsoft.SourceLink.GitHub package: the .NET 8+ SDK ships Source Link itself, and the
+         last standalone package (8.0.0) carries GHSA-23fw-v26w-5fgq with no patched release. -->
   </ItemGroup>
 
   <ItemGroup>

@@ -8,6 +8,9 @@
 <div class="page-head">
     <h2>@Heading</h2>
     <p class="count">@Items.Count sản phẩm</p>
+    @* Crosses into CheckoutLayout. An ordinary link: it asks for .content, and the
+       checkout page answers X-Up-Target: body. 📖 https://unpoly.com/main *@
+    <a href="/checkout" class="checkout-link">Thanh toán →</a>
 </div>
 
 @* [up-etag] gives this fragment its own version, so reloading just this region can be

@@ -474,3 +474,40 @@ h4.overlay-title { margin-top: 2rem; font-size: 1.05rem; }
 .lab-skeleton { opacity: .6; }
 .is-previewing { outline: 1px dashed var(--line); }
 .is-optimistic { opacity: .55; font-style: italic; }
+
+/* ── checkout layout ───────────────────────────────────────────────────
+   A second Blazor layout with no shop header, nav or footer. */
+
+.checkout-link {
+    display: inline-block;
+    margin-top: .75rem;
+    font-size: .78rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+}
+.checkout-link:hover { border-bottom-color: var(--ink); }
+
+.checkout-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 1.5rem 1.5rem 0;
+    border-bottom: 1px solid var(--line);
+}
+.checkout-header .brand { margin: 0 0 1rem; }
+
+.checkout-main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+}
+
+.checkout-box {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 2rem 1.5rem;
+}
+.checkout-box p { margin: 0 0 1.5rem; }

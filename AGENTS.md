@@ -99,7 +99,7 @@ Do not "fix" these without reading the reasoning:
 
 ```bash
 dotnet build
-dotnet test                        # 77 tests: 9 header + 68 browser (Playwright)
+dotnet test                        # 89 tests: 17 unit + 72 browser (Playwright)
 dotnet run --project sample/Jubin  # to look at it by hand
 ```
 

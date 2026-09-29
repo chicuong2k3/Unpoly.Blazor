@@ -65,7 +65,7 @@ server load — sweeping a mouse across a product grid fires one request per car
 | 1 | Swapping a fragment | ✅ explicit `[up-target]` now used, not only `mainTargets` | `Home.razor` · `up-target` · `Shop.razor` · `refresh` |
 | 2 | Updating multiple fragments | ✅ `UpTargets()` splits lists; checked | `Home.razor` · playground |
 | 3 | Optional targets | ✅ `:maybe` stripped by `BaseTarget()` | `Home.razor` · playground |
-| 4 | Targeting the main element | ✅ `:main` is whole-page; checked | `Program.cs:11` · `MainTargets` |
+| 4 | Targeting the main element | ✅ `:main` is whole-page; checked. One main per Blazor layout; `<UpLayout Main>` widens a request for another layout's main to `body` | `Program.cs:14` · `MainTargets` · `CheckoutLayout.razor:17` · `UpLayout` · `MainLayout.razor:12` · `UpLayout` |
 | 5 | Targeting the entire layer | ✅ `:layer` is whole-page; checked | `LabLayers.razor` · `up-layer` matrix |
 | 6 | Targeting an element object | ➖ JS API | `Lab.razor` · `up.render({ target: element })` |
 | 7 | Appending or prepending children | ✅ `:after` / `:before` stripped; checked | `Shop.razor` · `.listing:after` |
@@ -941,7 +941,7 @@ Passes unit checks, never runs in the sample. Gaps in the *lab*, not the library
 | `:before` / `:after` | infinite scroll — Phase E |
 | `up.network.config.fail` widening (§3 of /failed-responses) | a 401 route |
 
-Closed so far: `UpRetarget`, `UpExpireCache`, `WantsNothing`/`:none`, explicit
+Closed so far: `UpRetarget`, `UpExpireCache`, `UpLayout`/`UpEnterLayout` (the checkout layout), `WantsNothing`/`:none`, explicit
 `[up-target]`, `[up-fallback]`, `Catalog.Touch()`, and — through the target-syntax
 playground on the home page — target lists, `:maybe`, `:content`, `:origin`, missing-target
 fallback, `[up-instant]` and `[up-preload]`.

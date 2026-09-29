@@ -1,0 +1,34 @@
+@using Microsoft.AspNetCore.Http
+@inject UnpolyOptions Options
+@*
+    Marks a Blazor layout's boundary for Unpoly. Put it at the root of every layout OTHER than
+    the one that owns the default main target — a sign-in layout, an onboarding layout — and
+    name the layout's own main element:
+
+        <UpLayout Main=".auth-main"> ... <main class="auth-main">@Body</main> ... </UpLayout>
+
+    and list every layout's main in UnpolyOptions.MainTargets, so a link on either kind of page
+    finds a main to swap.
+
+    Why: Unpoly swaps the main element of the page the link is ON. A link from a page with a
+    sidebar to a page on a different layout asks for `.app-main`; the response has no such
+    element (or has one that means something else), and the swap either fails or pours the new
+    page into the old frame. This retargets that one response to `body`, and — because
+    IsUpFragment() honours the retarget — any UpChrome rendered after it renders in full.
+
+    It has to run before the layout's own UpChrome, so it wraps the layout rather than sitting
+    inside it.
+    📖 https://unpoly.com/main · https://unpoly.com/X-Up-Target
+*@
+@ChildContent
+
+@code {
+    [CascadingParameter] public HttpContext? Ctx { get; set; }
+
+    /// <summary>The selector of this layout's main element, as it appears in MainTargets.</summary>
+    [Parameter, EditorRequired] public string Main { get; set; } = default!;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnInitialized() => Ctx?.UpEnterLayout(Main, Options.MainTargets);
+}

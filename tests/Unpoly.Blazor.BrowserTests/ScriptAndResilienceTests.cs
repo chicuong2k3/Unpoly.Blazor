@@ -110,6 +110,7 @@ public class WithoutJavaScriptTests(UnpolyFixture fx)
         { "/login", "form-wrap" },
         { "/p/dam-4/size", "sizes" },
         { "/size-guide", "size-table" },
+        { "/checkout", "checkout-main" },
     };
 
     /// <summary>

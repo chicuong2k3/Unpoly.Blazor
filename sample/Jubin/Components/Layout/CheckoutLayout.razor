@@ -1,0 +1,28 @@
+@inherits LayoutComponentBase
+
+@* ── A SECOND LAYOUT ─────────────────────────────────────────────────────
+   Checkout drops the shop's header, nav, cart badge and footer. That makes it a
+   layout boundary: a link from /shop asks for .content, and this page has no
+   .content -- without UpLayout the swap finds nothing to replace and Unpoly
+   falls back or fails, depending on the link.
+
+   UpLayout sees the client asked for ANOTHER layout's main (.content is in
+   MainTargets, .checkout-main was not asked for) and answers X-Up-Target: body,
+   so the whole page is swapped and the shop chrome goes away.
+
+   .checkout-main is listed in MainTargets too (Program.cs), so a plain link on
+   this page asks for it, and MainLayout's own UpLayout widens the way back.
+   📖 https://unpoly.com/main · https://unpoly.com/X-Up-Target
+   ───────────────────────────────────────────────────────────────────────*@
+<UpLayout Main=".checkout-main">
+    <UpChrome>
+        <header class="checkout-header">
+            <p class="brand">JUBIN</p>
+            <p class="meta">Thanh toán an toàn</p>
+        </header>
+    </UpChrome>
+
+    <main class="checkout-main">
+        @Body
+    </main>
+</UpLayout>
